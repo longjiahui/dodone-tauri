@@ -1,0 +1,31 @@
+{
+  "name": "dodone",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "build:nobundle": "tauri build --no-bundle",
+    "build:appstore": "tauri build --bundles app --target universal-apple-darwin",
+    "listCertificatesIdentities": "security find-identity -v -p codesigning",
+    "codesign": "xcrun codesign --force --deep -s E09DEA328D8E96BB097C43D0F32F9823F0486D18 --entitlements ./src-tauri/mas/entitlements.mas.plist src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.app ",
+    "signToPKG": "xcrun productbuild --sign 5E2F2F220F3CC2415CC6A2DB8B8D9D3AD3488A37 --component \"src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.app\" /Applications \"src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.pkg\"",
+    "build:appstorePKG": "pnpm run build:appstore && pnpm run codesign && pnpm run signToPKG",
+    "notarize": "xcrun notarytool submit --apple-id longjiahui@hotmail.com --password haps-rzgl-rwmb-ezjs --team-id 5HG3AVT8V2 src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.pkg"
+  },
+  "dependencies": {
+    "vue": "^3.5.13",
+    "@tauri-apps/api": "^2.9",
+    "@tauri-apps/plugin-opener": "^2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3",
+    "vue-tsc": "^2.1.10",
+    "@tauri-apps/cli": "^2"
+  }
+}
