@@ -10,11 +10,13 @@
     "tauri": "tauri",
     "build:nobundle": "tauri build --no-bundle",
     "build:appstore": "tauri build --bundles app --target universal-apple-darwin",
-    "listCertificatesIdentities": "security find-identity -v -p codesigning",
-    "codesign": "xcrun codesign --force --deep -s E09DEA328D8E96BB097C43D0F32F9823F0486D18 --entitlements ./src-tauri/mas/entitlements.mas.plist src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.app ",
+    "listCertificatesIdentities": "security find-identity -v -p macappstore",
+    "codesign": "xcrun codesign --force --deep -o runtime --timestamp -s E09DEA328D8E96BB097C43D0F32F9823F0486D18 --entitlements ./src-tauri/mas/entitlements.mas.plist src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.app",
+    "zip": "zip -r src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.zip src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.app",
     "signToPKG": "xcrun productbuild --sign 5E2F2F220F3CC2415CC6A2DB8B8D9D3AD3488A37 --component \"src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.app\" /Applications \"src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.pkg\"",
     "build:appstorePKG": "pnpm run build:appstore && pnpm run codesign && pnpm run signToPKG",
-    "notarize": "xcrun notarytool submit --apple-id longjiahui@hotmail.com --password haps-rzgl-rwmb-ezjs --team-id 5HG3AVT8V2 src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.pkg"
+    "notarize": "xcrun notarytool submit --apple-id longjiahui@hotmail.com --password haps-rzgl-rwmb-ezjs --team-id 5HG3AVT8V2 src-tauri/target/universal-apple-darwin/release/bundle/macos/dodone.zip --wait",
+    "logNotarization": "xcrun notarytool log a29e8436-648c-46ed-a8dc-f5cd162cc552 --apple-id longjiahui@hotmail.com --password haps-rzgl-rwmb-ezjs --team-id 5HG3AVT8V2 > src-tauri/target/universal-apple-darwin/release/bundle/macos/log.json"
   },
   "dependencies": {
     "vue": "^3.5.13",
