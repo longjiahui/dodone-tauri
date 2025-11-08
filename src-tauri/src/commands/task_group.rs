@@ -21,7 +21,6 @@ pub async fn create_task_group(
     db_manage: tauri::State<'_, DbState>,
     data: task_group::CreateModel,
 ) -> Result<Value, String> {
-    println!("Creating task group: {:?}", data);
     let active_model: task_group::ActiveModel = task_group::ActiveModel {
         sort_order: ActiveValue::Set(0),
         id: ActiveValue::Set(uuid::Uuid::new_v4()),
@@ -39,7 +38,6 @@ pub async fn create_task_group(
         .exec_with_returning(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    println!("Created task group: {:?}", res);
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
@@ -98,7 +96,7 @@ pub async fn delete_task_group_by_id(
         .ok_or_else(|| "TaskGroup not found".to_string())?
         .into_active_model();
 
-    let res = task_group::Entity::delete(active_model)
+    task_group::Entity::delete(active_model)
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
