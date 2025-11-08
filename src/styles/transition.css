@@ -1,0 +1,88 @@
+.fade-enter-active,
+.fade-leave-active {
+    transition: opacity 0.3s;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+    opacity: 0;
+}
+
+.fade-translate-from-top-enter-active,
+.fade-translate-from-top-leave-active {
+    transition:
+        opacity 0.3s,
+        transform 0.3s;
+}
+
+.fade-translate-from-top-enter-from,
+.fade-translate-from-top-leave-to {
+    opacity: 0;
+    transform: translateY(-4px);
+}
+
+.fade-translate-from-left-enter-active,
+.fade-translate-from-left-leave-active {
+    transition:
+        opacity 0.3s,
+        transform 0.3s;
+}
+
+.fade-translate-from-left-enter-from,
+.fade-translate-from-left-leave-to {
+    opacity: 0;
+}
+.fade-translate-from-left-enter-from {
+    transform: translateX(-4px);
+}
+.fade-translate-from-left-leave-to {
+    transform: translateX(4px);
+}
+
+.fade-translate-from-bottom-fast-enter-active,
+.fade-translate-from-bottom-fast-leave-active {
+    transition:
+        opacity 0.1s,
+        transform 0.1s;
+}
+
+.fade-translate-from-bottom-fast-enter-from,
+.fade-translate-from-bottom-fast-leave-to {
+    transform: translateY(4px);
+    opacity: 0;
+}
+
+
+.fade-translate-from-top-fast-enter-active,
+.fade-translate-from-top-fast-leave-active {
+    transition:
+        opacity 0.1s,
+        transform 0.1s;
+}
+
+.fade-translate-from-top-fast-enter-from,
+.fade-translate-from-top-fast-leave-to {
+    transform: translateY(-4px);
+    opacity: 0;
+}
+
+.fade-fast-enter-active,
+.fade-fast-leave-active {
+    transition: opacity 0.1s;
+}
+
+.fade-fast-enter-from,
+.fade-fast-leave-to {
+    opacity: 0;
+}
+
+.fade-slow-enter-active,
+.fade-slow-leave-active {
+    transition: opacity 0.7s;
+}
+
+.fade-slow-enter-from,
+.fade-slow-leave-to {
+    opacity: 0;
+}
+

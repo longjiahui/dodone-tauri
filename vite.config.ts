@@ -1,12 +1,101 @@
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
+import tailwindcss from "@tailwindcss/vite";
+import AutoImport from "unplugin-auto-import/vite";
+import AutoImportComponents from "unplugin-vue-components/vite";
+import { AntDesignVueResolver } from "unplugin-vue-components/resolvers";
 
 // @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [vue()],
+  optimizeDeps: {
+    include: [
+      "@vueuse/components",
+
+      "echarts/charts",
+      "echarts/components",
+      "echarts/renderers",
+      "echarts",
+      "vue-echarts",
+    ],
+  },
+  plugins: [
+    vue(),
+    tailwindcss(),
+    AutoImport({
+      imports: [
+        "vue",
+        "@vueuse/core",
+        {
+          echarts: ["graphic"],
+          "echarts/renderers": ["CanvasRenderer"],
+          "echarts/components": [
+            "LegendComponent",
+            "TitleComponent",
+            "TooltipComponent",
+            "GridComponent",
+            "DatasetComponent",
+            "TransformComponent",
+            "TitleComponentOption",
+            "TooltipComponentOption",
+            "GridComponentOption",
+            "DatasetComponentOption",
+            "TransformComponentOption",
+            "LegendComponentOption",
+            "MarkLineComponent",
+          ],
+          "echarts/charts": [
+            "LineChart",
+            // "GraphChart",
+            // "BarChart",
+            // "PieChart",
+            // "SankeyChart",
+          ],
+          "echarts/core": ["use"],
+        },
+        {
+          from: "echarts/core",
+          type: true,
+          imports: ["ComposeOption"],
+        },
+        {
+          from: "echarts",
+          type: true,
+          imports: [
+            "EChartsOption",
+            // 'PieSeriesOption',
+            // 'BarSeriesOption',
+            // 'LineSeriesOption',
+            // 'PieChartSeriesOption',
+            // 'XAxisOption',
+            // 'YAxisOption',
+            // 'TitleComponentOption',
+            // 'LegendComponentOption',
+            // 'GridComponentOption',
+            // 'TransformComponentOption',
+            // 'TooltipComponentOption',
+          ],
+        },
+      ],
+      dts: "src/auto-imports.d.ts",
+      resolvers: [AntDesignVueResolver()],
+    }),
+    AutoImportComponents({
+      // default: src.components
+      dirs: ["src/components", "src/bizComponents", "src/viewComponents"],
+      extensions: ["vue"],
+      deep: true,
+      dts: "src/components.d.ts",
+      resolvers: [
+        AntDesignVueResolver({
+          resolveIcons: true,
+          importStyle: false,
+        }),
+      ],
+    }),
+  ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -27,6 +116,11 @@ export default defineConfig(async () => ({
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
       ignored: ["**/src-tauri/**"],
+    },
+  },
+  resolve: {
+    alias: {
+      "@": "/src",
     },
   },
 }));
