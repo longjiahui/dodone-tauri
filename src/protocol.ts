@@ -263,7 +263,7 @@ export const protocols = {
           update?: (Pick<Task, "id"> & Partial<Task>)[];
         },
       ],
-      { create: ProtocolReturnTask[]; update: ProtocolReturnTask[] }
+      { created: ProtocolReturnTask[]; updated: ProtocolReturnTask[] }
     >()
   ),
   restADay: defineAPI(

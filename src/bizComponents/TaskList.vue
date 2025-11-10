@@ -8,22 +8,22 @@
           (channel, d) => {
             // order
             if (channel === 'order-task') {
-              const newDatas = [...datas]
-              const ds = d.datas as ReadOnlyTaskWithChildren[]
+              const newDatas = [...datas];
+              const ds = d.datas as ReadOnlyTaskWithChildren[];
               // 如果有旧数据先取出来
               ds.forEach((d) => {
-                const ind = newDatas.findIndex((data) => data.id === d.id)
+                const ind = newDatas.findIndex((data) => data.id === d.id);
                 if (ind > -1) {
-                  newDatas.splice(ind, 1)
+                  newDatas.splice(ind, 1);
                 }
-              })
+              });
               // 查找新的index
-              const newIndex = newDatas.findIndex((d) => d.id === task.id)
+              const newIndex = newDatas.findIndex((d) => d.id === task.id);
               if (newIndex > -1) {
                 // 如果task 和d 不是一个groupid，需要更新groupid
                 // 如果task 和d 不是一个parentId，需要更新parentId
-                const toIndex = isTop ? newIndex : newIndex + 1
-                newDatas.splice(toIndex, 0, ...ds)
+                const toIndex = isTop ? newIndex : newIndex + 1;
+                newDatas.splice(toIndex, 0, ...ds);
                 return taskStore.changeOrders(
                   newDatas,
                   ds.map((d) => ({
@@ -34,12 +34,13 @@
                     ...(d.parentId !== task.parentId
                       ? { parentId: task.parentId }
                       : {}),
-                  })),
-                )
+                  }))
+                );
               } else {
-                return dialogs.MessageDialog({
-                  content: $t('cannotAdjustTaskOrderCausePositionNotExist'),
-                })
+                // return dialogs.MessageDialog({
+                //   content: $t('cannotAdjustTaskOrderCausePositionNotExist'),
+                // });
+                console.warn($t('cannotAdjustTaskOrderCausePositionNotExist'));
               }
             }
           }
@@ -113,17 +114,17 @@
           @drop="
             (channel, d) => {
               if (channel === 'move-tasks') {
-                const datas = d.datas as ReadOnlyTaskWithChildren[]
+                const datas = d.datas as ReadOnlyTaskWithChildren[];
                 datas.forEach(async (d) => {
                   // 如果t 是d的子孙任务 或t和d一致，则不允许移动
                   if (d.id === t.id) {
-                    console.warn('无法将任务移动到其自身')
-                    return
+                    console.warn('无法将任务移动到其自身');
+                    return;
                   }
                   if (traverseSome(d.children.slice(), (d) => d.id === t.id)) {
                     return dialogs.MessageDialog({
                       content: $t('cannotMoveTaskToDescendant'),
-                    })
+                    });
                   } else {
                     return taskStore.updateTaskParent(d.id, t.id, {
                       ...(d.groupId !== t.groupId
@@ -131,9 +132,9 @@
                             groupId: t.groupId,
                           }
                         : {}),
-                    })
+                    });
                   }
-                })
+                });
               }
             }
           "
@@ -146,8 +147,8 @@
             ]"
             :ref="
               (el) => {
-                setRef(el)
-                bizDropSetRef(el)
+                setRef(el);
+                bizDropSetRef(el);
               }
             "
           >
@@ -186,30 +187,30 @@
   <Empty v-else></Empty>
 </template>
 <script setup lang="ts">
-import { dialogs } from "@/components/dialog"
-import { useTaskStore } from "@/store/task"
-import type { ReadOnlyTaskWithChildren } from "@/types"
-import { sortTasks } from "@/utils/biz"
-import { mapTree, traverseSome } from "@/utils/traverse"
-import { CaretRightOutlined } from "@ant-design/icons-vue"
-import { DragData } from "./drag/drag"
-import { type TaskSort } from "./sort"
+import { dialogs } from "@/components/dialog";
+import { useTaskStore } from "@/store/task";
+import type { ReadOnlyTaskWithChildren } from "@/types";
+import { sortTasks } from "@/utils/biz";
+import { mapTree, traverseSome } from "@/utils/traverse";
+import { CaretRightOutlined } from "@ant-design/icons-vue";
+import { DragData } from "./drag/drag";
+import { type TaskSort } from "./sort";
 
 const props = withDefaults(
   defineProps<{
-    modelValue: ReadOnlyTaskWithChildren[]
-    background?: number
+    modelValue: ReadOnlyTaskWithChildren[];
+    background?: number;
 
-    taskDropdownHideDelete?: boolean
-    disableOrder?: boolean
-    taskHideGroupName?: boolean
+    taskDropdownHideDelete?: boolean;
+    disableOrder?: boolean;
+    taskHideGroupName?: boolean;
   }>(),
-  {},
-)
+  {}
+);
 
 defineEmits<{
-  (e: "order", val: ReadOnlyTaskWithChildren[]): void
-}>()
+  (e: "order", val: ReadOnlyTaskWithChildren[]): void;
+}>();
 
 // const taskSort = ref<TaskSort>({
 //   field: "priority",
@@ -221,13 +222,13 @@ defineEmits<{
 //   })
 // })
 
-const taskStore = useTaskStore()
+const taskStore = useTaskStore();
 
 const [Define, Template] = createReusableTemplate<{
-  isTop: boolean
-  isBottom: boolean
-  datas: ReadOnlyTaskWithChildren[]
-  task: ReadOnlyTaskWithChildren
-  index: number
-}>()
+  isTop: boolean;
+  isBottom: boolean;
+  datas: ReadOnlyTaskWithChildren[];
+  task: ReadOnlyTaskWithChildren;
+  index: number;
+}>();
 </script>

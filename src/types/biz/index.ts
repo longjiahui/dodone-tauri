@@ -32,9 +32,18 @@ export type TaskGroupWithExtra = TaskGroup & {
 export type ReadOnlyTaskGroupWithExtra = DeepReadonly<TaskGroupWithExtra>;
 
 export function task2TaskWithChildren(t: ProtocolReturnTask): TaskWithChildren {
+  return taskLocal2TaskWithChildren(task2TaskLocal(t));
+}
+export function taskLocal2TaskWithChildren(t: TaskLocal): TaskWithChildren {
   return {
     ...t,
     children: [],
+  };
+}
+type TaskLocal = Omit<TaskWithChildren, "children">;
+export function task2TaskLocal(t: ProtocolReturnTask): TaskLocal {
+  return {
+    ...t,
     startAt: t.startAt ? new Date(t.startAt) : null,
     endAt: t.endAt ? new Date(t.endAt) : null,
     doneAt: t.doneAt ? new Date(t.doneAt) : null,

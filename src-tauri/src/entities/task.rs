@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::entities::task;
+use crate::{entities::task, utils::option3::Option3};
 
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
@@ -144,15 +144,15 @@ pub struct UpdateModel {
     pub create_index: Option<i32>,
     pub priority: Option<i32>,
     pub factor: Option<i32>,
-    pub description: Option<Option<String>>,
-    pub parent_id: Option<Option<String>>,
-    pub state: Option<Option<TaskState>>,
-    pub target: Option<Option<Decimal>>,
-    pub target_type: Option<Option<String>>,
-    pub start_at: Option<Option<String>>,
-    pub end_at: Option<Option<String>>,
-    pub done_at: Option<Option<String>>,
-    pub created_by_task_id: Option<Option<String>>,
+    pub description: Option3<String>,
+    pub parent_id: Option3<String>,
+    pub state: Option3<TaskState>,
+    pub target: Option3<Decimal>,
+    pub target_type: Option3<String>,
+    pub start_at: Option3<String>,
+    pub end_at: Option3<String>,
+    pub done_at: Option3<String>,
+    pub created_by_task_id: Option3<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

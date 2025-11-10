@@ -11,6 +11,8 @@ import {
   ReadOnlyTaskWithChildren,
   task2TaskWithChildren,
   TaskWithChildren,
+  task2TaskLocal,
+  taskLocal2TaskWithChildren,
 } from "@/types";
 import { flatMapTree, traverse, traverseSome } from "@/utils/traverse";
 import { groupBy } from "@/utils/groupBy";
@@ -84,9 +86,9 @@ export const useTaskStore = defineStore("task", () => {
     creates: ProtocolReturnTask[],
     updates: ProtocolReturnTask[] = []
   ) {
-    const updateTasks = updates.map((t) => task2TaskWithChildren(t));
+    const updateTaskLocals = updates.map((t) => task2TaskLocal(t));
     // update
-    updateTasks.forEach((t) => {
+    updateTaskLocals.forEach((t) => {
       if (tasksDict.value[t.id]) {
         Object.assign(tasksDict.value[t.id]!, t);
       }
@@ -110,6 +112,9 @@ export const useTaskStore = defineStore("task", () => {
       }
     });
     const promises: Promise<any>[] = [];
+    const updateTasks = updateTaskLocals.map((d) =>
+      taskLocal2TaskWithChildren(d)
+    );
     promises.push(...createTasks.map((t) => taskEvent.emit("createTask", t)));
     promises.push(...updateTasks.map((t) => taskEvent.emit("updateTask", t)));
     // parents
@@ -370,7 +375,14 @@ export const useTaskStore = defineStore("task", () => {
       }
     },
     batchEditTasks(...rest: Parameters<typeof backend.batchEditTasks>) {
-      return backend.batchEditTasks(...rest);
+      const d = rest?.[0] || {};
+      if (!d.create) {
+        d.create = [];
+      }
+      if (!d.update) {
+        d.update = [];
+      }
+      return backend.batchEditTasks(d);
     },
     deleteTaskById(id: string) {
       return backend.deleteTaskById({ id });
@@ -529,17 +541,28 @@ export const useTaskStore = defineStore("task", () => {
           return [u.id, t ? t.parentId : null];
         })
       );
+      const pendingUpdates = [
+        ...tasks.map((t, ind) => ({
+          id: t.id,
+          sortOrder: ind,
+        })),
+        ...extraUpdates,
+      ];
+      // 合并pendingUpdates中id一致的更新，后者覆盖前者
+      const mergedUpdates = Object.values(
+        pendingUpdates.reduce(
+          (acc, update) => {
+            acc[update.id] = { ...(acc[update.id] || {}), ...update };
+            return acc;
+          },
+          {} as Record<string, (typeof pendingUpdates)[0]>
+        )
+      );
       return this.batchEditTasks({
-        update: [
-          ...tasks.map((t, ind) => ({
-            id: t.id,
-            sortOrder: ind,
-          })),
-          ...extraUpdates,
-        ],
-      }).then(({ update }) => {
+        update: mergedUpdates,
+      }).then((d) => {
         return modifiedParentUpdates.map(async (u) => {
-          const found = update.find((t) => t.id === u.id);
+          const found = d.updated.find((t) => t.id === u.id);
           if (found) {
             return _updateTaskParent(found, oldParentIdDict[found.id]);
           }

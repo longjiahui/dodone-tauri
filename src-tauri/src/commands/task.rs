@@ -6,7 +6,7 @@ use sea_orm::{
     ActiveValue, ColumnTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait, QueryFilter,
     TransactionTrait,
 };
-use serde::{ser, Serialize};
+use serde::Serialize;
 use serde_json::Value;
 use tauri::Emitter;
 use uuid::Uuid;
@@ -18,17 +18,11 @@ use crate::{
         task::{self, BatchEditTasksResult},
         task_group, task_view_task,
     },
+    utils::{
+        event::{broadcast_batch_upsert_tasks, broadcast_delete_task},
+        option3::Option3,
+    },
 };
-
-fn broadcast_batch_upsert_tasks(
-    app_handler: &tauri::AppHandle,
-    results: impl Serialize + Clone,
-) -> Result<(), String> {
-    app_handler
-        .emit("batch_upsert_tasks", results)
-        .map_err(|err| err.to_string())?;
-    Ok(())
-}
 
 fn parse_datetime_string(date_str: &str) -> Result<DateTime<Utc>, String> {
     // 尝试 RFC 3339 格式
@@ -130,6 +124,7 @@ fn update_task_by_active_model(
     model: &mut task::ActiveModel,
     data: task::UpdateModel,
 ) -> Result<(), String> {
+    println!("Updating task model with data: {:?}", data);
     if let Some(group_id) = data.group_id {
         model.group_id =
             ActiveValue::Set(Uuid::parse_str(&group_id).map_err(|err| err.to_string())?)
@@ -139,22 +134,28 @@ fn update_task_by_active_model(
     if let Some(content) = data.content {
         model.content = ActiveValue::Set(content);
     }
-    if let Some(description) = data.description {
-        model.description = ActiveValue::Set(if let Some(desc) = description {
-            Some(desc)
+    if data.description != Option3::Undefined {
+        model.description = ActiveValue::Set(if let Some(desc) = data.description.as_option() {
+            Some(desc.to_string())
         } else {
             None
         });
     }
-    if let Some(parent_id) = data.parent_id {
-        model.parent_id = if let Some(pid) = parent_id {
-            ActiveValue::Set(Some(Uuid::parse_str(&pid).map_err(|err| err.to_string())?))
+    if data.parent_id != Option3::Undefined {
+        model.parent_id = if let Some(parent_id) = data.parent_id.as_option() {
+            ActiveValue::Set(Some(
+                Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
+            ))
         } else {
-            ActiveValue::NotSet
+            ActiveValue::Set(None)
         };
     }
-    if let Some(state) = data.state {
-        model.state = ActiveValue::Set(if let Some(st) = state { Some(st) } else { None });
+    if data.state != Option3::Undefined {
+        model.state = ActiveValue::Set(if let Some(st) = data.state.as_option() {
+            Some(st.clone())
+        } else {
+            None
+        });
     }
     if let Some(priority) = data.priority {
         model.priority = ActiveValue::Set(priority);
@@ -162,49 +163,49 @@ fn update_task_by_active_model(
     if let Some(factor) = data.factor {
         model.factor = ActiveValue::Set(factor);
     }
-    if let Some(done_at) = data.done_at {
-        model.done_at = ActiveValue::Set(if let Some(da) = done_at {
+    if data.done_at != Option3::Undefined {
+        model.done_at = ActiveValue::Set(if let Some(da) = data.done_at.as_option() {
             Some(parse_datetime_string(&da)?)
         } else {
             None
         });
     }
-    if let Some(start_at) = data.start_at {
-        model.start_at = ActiveValue::Set(if let Some(sa) = start_at {
+    if data.start_at != Option3::Undefined {
+        model.start_at = ActiveValue::Set(if let Some(sa) = data.start_at.as_option() {
             Some(parse_datetime_string(&sa)?)
         } else {
             None
         });
     }
-    if let Some(end_at) = data.end_at {
-        model.end_at = ActiveValue::Set(if let Some(ea) = end_at {
+    if data.end_at != Option3::Undefined {
+        model.end_at = ActiveValue::Set(if let Some(ea) = data.end_at.as_option() {
             Some(parse_datetime_string(&ea)?)
         } else {
             None
         });
     }
-    if let Some(created_by_task_id) = data.created_by_task_id {
-        model.created_by_task_id = if let Some(cbtid) = created_by_task_id {
+    if data.created_by_task_id != Option3::Undefined {
+        model.created_by_task_id = if let Some(cbtid) = data.created_by_task_id.as_option() {
             ActiveValue::Set(Some(
                 Uuid::parse_str(&cbtid).map_err(|err| err.to_string())?,
             ))
         } else {
-            ActiveValue::NotSet
+            ActiveValue::Set(None)
         };
     }
     if let Some(create_index) = data.create_index {
         model.create_index = ActiveValue::Set(create_index);
     }
-    if let Some(target) = data.target {
-        model.target = ActiveValue::Set(if let Some(tgt) = target {
-            Some(tgt)
+    if data.target != Option3::Undefined {
+        model.target = ActiveValue::Set(if let Some(tgt) = data.target.as_option() {
+            Some(tgt.clone())
         } else {
             None
         });
     }
-    if let Some(target_type) = data.target_type {
-        model.target_type = ActiveValue::Set(if let Some(tt) = target_type {
-            Some(tt)
+    if data.target_type != Option3::Undefined {
+        model.target_type = ActiveValue::Set(if let Some(tt) = data.target_type.as_option() {
+            Some(tt.to_string())
         } else {
             None
         });
@@ -276,21 +277,25 @@ pub async fn update_task_by_id(
 
 #[tauri::command]
 pub async fn delete_task_by_id(
+    app_handler: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
     let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
-    let active_model = pk
+    let deleted_task = pk
         .one(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?
-        .ok_or_else(|| "Task not found".to_string())?
-        .into_active_model();
+        .ok_or_else(|| "Task not found".to_string())?;
+
+    let task_for_broadcast = deleted_task.clone();
+    let active_model = deleted_task.into_active_model();
 
     task::Entity::delete(active_model)
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
+    let _ = broadcast_delete_task(&app_handler, task_for_broadcast);
     Ok(())
 }
 
@@ -393,7 +398,7 @@ pub async fn batch_edit_tasks(
     db_manage: tauri::State<'_, DbState>,
     create: Vec<task::BatchCreateTaskModel>,
     update: Vec<task::UpdateModel>,
-) -> Result<Vec<Value>, String> {
+) -> Result<Value, String> {
     let mut ret = db_manage
         .lock()
         .await
@@ -407,7 +412,9 @@ pub async fn batch_edit_tasks(
                 // Promise.all
                 let mut update_futures = Vec::new();
                 for item in update {
+                    println!("Updating task: {:?}", item.id);
                     if let Some(id) = &item.id {
+                        println!("Found task id: {}", id);
                         let task_id = uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?;
                         let pk = task::Entity::find_by_id(task_id);
 
@@ -488,5 +495,5 @@ pub async fn batch_edit_tasks(
         "updated": updates,
     });
     let _ = broadcast_batch_upsert_tasks(&app_handler, &final_ret);
-    Ok(vec![final_ret])
+    Ok(final_ret)
 }

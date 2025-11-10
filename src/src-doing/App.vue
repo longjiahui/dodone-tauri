@@ -4,6 +4,7 @@ import {
   DoingWindowType,
   ReadOnlyTaskInDayWithExtra,
   ReadOnlyTaskWithChildren,
+  task2TaskLocal,
   task2TaskWithChildren,
 } from "@/types";
 import { backend } from "@/utils/backend";
@@ -29,7 +30,7 @@ function handleSetDoingWindowParams(t: DoingWindowType, taskId?: string): void {
 }
 async function handleBatchUpsertTasks(d: BatchEditTasksResult) {
   let { updated } = d || {};
-  updated = updated.map((u) => task2TaskWithChildren(u));
+  updated = updated.map((u) => task2TaskLocal(u));
   if (
     (
       await Promise.all(

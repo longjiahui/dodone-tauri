@@ -11,6 +11,7 @@ use crate::{
 mod constants;
 mod database;
 mod entities;
+mod utils;
 
 mod commands;
 
