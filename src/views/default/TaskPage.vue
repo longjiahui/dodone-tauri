@@ -764,8 +764,8 @@
         </template>
       </ResizeDiv>
       <div v-else class="h size-full items-center justify-center">
-        <div class="v gap-4">
-          <div class="text-md">
+        <div class="v gap-4 max-w-80">
+          <div class="text-md leading-multi">
             {{ $t("createTutorialDescription") }}
           </div>
           <Input
@@ -946,7 +946,9 @@ const finalGroup = computed(() =>
   taskGroups.value.find((f) => f.id === finalGroupId.value)
 );
 
-async function createTask(task: GetAPIParams<typeof protocols.createTask>[0]) {
+async function createTask(
+  task: GetAPIParams<typeof protocols.createTask>[0]["data"]
+) {
   await taskStore.createTask(task.content, task.groupId, task);
 }
 

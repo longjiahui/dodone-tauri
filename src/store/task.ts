@@ -84,8 +84,9 @@ export const useTaskStore = defineStore("task", () => {
     creates: ProtocolReturnTask[],
     updates: ProtocolReturnTask[] = []
   ) {
+    const updateTasks = updates.map((t) => task2TaskWithChildren(t));
     // update
-    updates.forEach((t) => {
+    updateTasks.forEach((t) => {
       if (tasksDict.value[t.id]) {
         Object.assign(tasksDict.value[t.id]!, t);
       }
@@ -109,7 +110,6 @@ export const useTaskStore = defineStore("task", () => {
       }
     });
     const promises: Promise<any>[] = [];
-    const updateTasks = updates.map((t) => task2TaskWithChildren(t));
     promises.push(...createTasks.map((t) => taskEvent.emit("createTask", t)));
     promises.push(...updateTasks.map((t) => taskEvent.emit("updateTask", t)));
     // parents
@@ -126,8 +126,11 @@ export const useTaskStore = defineStore("task", () => {
     await Promise.all(promises);
   }
 
-  backend.on_batchUpsertTasks(async (creates, updates) => {
-    return _upsertTasks2Tree(creates, updates);
+  backend.on_batchUpsertTasks(async (d) => {
+    const { created, updated } = d || {};
+    if (created.length || updated.length) {
+      return _upsertTasks2Tree(created || [], updated || []);
+    }
   });
   // function _upsertTasks2Tree(ts: ProtocolReturnTask[]) {
   //   // update
@@ -340,7 +343,7 @@ export const useTaskStore = defineStore("task", () => {
       });
     },
     updateTaskById(id: string, data: Partial<Task>) {
-      return backend.updateTaskById(id, data);
+      return backend.updateTaskById({ id, data });
     },
     async updateTaskParent(
       id: string,
@@ -353,7 +356,7 @@ export const useTaskStore = defineStore("task", () => {
         const newParentId = parentId;
         if (oldParentId !== newParentId || Object.keys(extra).length > 0) {
           return backend
-            .updateTaskById(id, { parentId, ...extra })
+            .updateTaskById({ id, data: { parentId, ...extra } })
             .then(async (t) => {
               if (t) {
                 return _updateTaskParent(t, oldParentId);
@@ -370,7 +373,7 @@ export const useTaskStore = defineStore("task", () => {
       return backend.batchEditTasks(...rest);
     },
     deleteTaskById(id: string) {
-      return backend.deleteTaskById(id);
+      return backend.deleteTaskById({ id });
     },
 
     async finishTask(taskId: string) {

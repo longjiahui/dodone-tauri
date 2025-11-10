@@ -63,17 +63,27 @@ pub async fn update_task_group_by_id(
         active_model.name = ActiveValue::Set(name);
     }
     if let Some(icon) = data.icon {
-        active_model.icon = ActiveValue::Set(Some(icon));
+        active_model.icon = ActiveValue::Set(icon);
     }
     if let Some(description) = data.description {
-        active_model.description = ActiveValue::Set(Some(description));
+        active_model.description = ActiveValue::Set(description);
     }
     if let Some(is_archived) = data.is_archived {
-        active_model.is_archived = ActiveValue::Set(is_archived);
+        active_model.is_archived = ActiveValue::Set(if let Some(is_archived) = is_archived {
+            is_archived
+        } else {
+            false
+        });
     }
     if let Some(is_hide_anchors) = data.is_hide_anchors {
-        active_model.is_hide_anchors = ActiveValue::Set(is_hide_anchors);
+        active_model.is_hide_anchors =
+            ActiveValue::Set(if let Some(is_hide_anchors) = is_hide_anchors {
+                is_hide_anchors
+            } else {
+                false
+            });
     }
+
     active_model.updated_at = ActiveValue::Set(Utc::now());
 
     let res = task_group::Entity::update(active_model)

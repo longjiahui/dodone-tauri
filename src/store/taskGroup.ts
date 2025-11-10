@@ -15,6 +15,7 @@ import {
 } from "@/utils/biz";
 import { TaskGroup } from "@/types";
 import { GetAPIParams, protocols } from "@/protocol";
+import { omit } from "@/utils/field";
 
 export const useTaskGroupStore = defineStore("taskGroup", () => {
   const taskGroups = ref<TaskGroupWithExtra[]>([]);
@@ -88,12 +89,20 @@ export const useTaskGroupStore = defineStore("taskGroup", () => {
       return this.updateTaskGroupById(id, { isArchived });
     },
     updateTaskGroupById(id: string, taskGroup: Partial<TaskGroup>) {
-      return backend.updateTaskGroupById({ id, data: taskGroup }).then((g) => {
-        const taskGroup = taskGroups.value.find((v) => v.id === id);
-        if (taskGroup) {
-          Object.assign(taskGroup, g);
-        }
-      });
+      return backend
+        .updateTaskGroupById({
+          id,
+          data: taskGroup,
+        })
+        .then((g) => {
+          const taskGroup = taskGroups.value.find((v) => v.id === id);
+          if (taskGroup && g) {
+            Object.assign(taskGroup, {
+              ...omit(g, "createdAt"),
+              updatedAt: new Date(g.updatedAt),
+            });
+          }
+        });
     },
     deleteTaskGroupById(id: string) {
       return backend.deleteTaskGroupById({ id }).then(async () => {

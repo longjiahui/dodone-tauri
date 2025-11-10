@@ -20,7 +20,7 @@
       >
         <div class="v gap-1">
           <div
-            v-if="taskGroup || parents.length > 0"
+            v-if="(taskGroup && !hideGroupName) || parents.length > 0"
             :class="['text-light self-start rounded px-1 py-0.5 text-xs']"
           >
             <template v-if="taskGroup && !hideGroupName">
@@ -127,7 +127,7 @@
                   <Button type="text">
                     <PieChartOutlined></PieChartOutlined>
                   </Button>
-                  <div class="text-light px-2">
+                  <div class="text-light">
                     {{ modelValue.factor }}
                   </div>
                 </div>

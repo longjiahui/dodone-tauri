@@ -35,6 +35,11 @@ export function task2TaskWithChildren(t: ProtocolReturnTask): TaskWithChildren {
   return {
     ...t,
     children: [],
+    startAt: t.startAt ? new Date(t.startAt) : null,
+    endAt: t.endAt ? new Date(t.endAt) : null,
+    doneAt: t.doneAt ? new Date(t.doneAt) : null,
+    createdAt: new Date(t.createdAt),
+    updatedAt: new Date(t.updatedAt),
     targetType: t.targetType ?? defaultTaskTargetType,
   };
 }

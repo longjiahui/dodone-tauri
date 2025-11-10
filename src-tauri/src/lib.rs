@@ -3,8 +3,12 @@ use std::sync::Arc;
 use futures::lock::Mutex;
 use tauri::Manager;
 
-use crate::database::{init_database, DbState};
+use crate::{
+    constants::{get_database_dir, get_user_data_dir},
+    database::{init_database, DbState},
+};
 
+mod constants;
 mod database;
 mod entities;
 
@@ -15,6 +19,12 @@ pub fn run() {
     tauri::Builder::default()
         .setup(|app: &mut tauri::App| {
             let handle = app.handle().clone();
+
+            // log all directorires
+            let user_data_dir = get_user_data_dir(&handle);
+            let database_dir = get_database_dir(&handle);
+            println!("User data directory: {:?}", user_data_dir);
+            println!("Database directory: {:?}", database_dir);
 
             // Initialize database in async context
             tauri::async_runtime::spawn(async move {
@@ -40,10 +50,17 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
+            // task group commands
             commands::task_group::get_task_groups,
             commands::task_group::create_task_group,
             commands::task_group::update_task_group_by_id,
             commands::task_group::delete_task_group_by_id,
+            // task commands
+            commands::task::get_tasks,
+            commands::task::create_task,
+            commands::task::update_task_by_id,
+            commands::task::delete_task_by_id,
+            commands::task::batch_edit_tasks,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

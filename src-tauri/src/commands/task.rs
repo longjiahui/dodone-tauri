@@ -1,0 +1,492 @@
+use std::vec;
+
+use chrono::{DateTime, TimeZone, Utc};
+use futures::{future::BoxFuture, FutureExt};
+use sea_orm::{
+    ActiveValue, ColumnTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait, QueryFilter,
+    TransactionTrait,
+};
+use serde::{ser, Serialize};
+use serde_json::Value;
+use tauri::Emitter;
+use uuid::Uuid;
+
+use crate::{
+    database::DbState,
+    entities::{
+        prelude::Task,
+        task::{self, BatchEditTasksResult},
+        task_group, task_view_task,
+    },
+};
+
+fn broadcast_batch_upsert_tasks(
+    app_handler: &tauri::AppHandle,
+    results: impl Serialize + Clone,
+) -> Result<(), String> {
+    app_handler
+        .emit("batch_upsert_tasks", results)
+        .map_err(|err| err.to_string())?;
+    Ok(())
+}
+
+fn parse_datetime_string(date_str: &str) -> Result<DateTime<Utc>, String> {
+    // 尝试 RFC 3339 格式
+    if let Ok(dt) = DateTime::parse_from_rfc3339(date_str) {
+        return Ok(dt.with_timezone(&Utc));
+    }
+
+    // 尝试 ISO 8601 格式
+    if let Ok(dt) = DateTime::parse_from_str(date_str, "%Y-%m-%dT%H:%M:%S%.fZ") {
+        return Ok(dt.with_timezone(&Utc));
+    }
+
+    // 尝试简单格式
+    if let Ok(dt) = DateTime::parse_from_str(date_str, "%Y-%m-%d %H:%M:%S") {
+        return Ok(dt.with_timezone(&Utc));
+    }
+
+    // 尝试只有日期的格式
+    if let Ok(naive_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d") {
+        let naive_datetime = naive_date.and_hms_opt(0, 0, 0).unwrap();
+        return Ok(Utc.from_utc_datetime(&naive_datetime));
+    }
+
+    Err(format!("Unable to parse date string: {}", date_str))
+}
+
+#[tauri::command]
+pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value>, String> {
+    let db_guard = db_manage.lock().await;
+    let db = db_guard.get_connection();
+    let tasks = Task::find().all(db).await.map_err(|e| e.to_string())?;
+    // 加载关联数据
+    let task_groups = tasks
+        .load_one(task_group::Entity, db)
+        .await
+        .map_err(|e| e.to_string())?;
+    let task_view_tasks = tasks
+        .load_many(task_view_task::Entity, db)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 组合数据
+    let result: Vec<_> = tasks
+        .into_iter()
+        .zip(task_groups.into_iter())
+        .zip(task_view_tasks.into_iter())
+        .map(|((task, group), view_tasks)| {
+            let mut task_json = serde_json::to_value(&task).unwrap();
+            if let serde_json::Value::Object(ref mut map) = task_json {
+                map.insert(
+                    "taskViewTasks".to_string(),
+                    serde_json::to_value(&view_tasks).unwrap(),
+                );
+            }
+            task_json
+        })
+        .collect();
+    Ok(result)
+}
+
+#[tauri::command]
+pub async fn create_task(
+    app_handler: tauri::AppHandle,
+    db_manage: tauri::State<'_, DbState>,
+    data: task::CreateModel,
+) -> Result<Value, String> {
+    let active_model: task::ActiveModel = task::ActiveModel {
+        sort_order: ActiveValue::Set(0),
+        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        content: ActiveValue::Set(data.content),
+        description: ActiveValue::Set(data.description),
+        group_id: ActiveValue::Set(Uuid::parse_str(&data.group_id).map_err(|err| err.to_string())?),
+        parent_id: if let Some(parent_id) = data.parent_id {
+            ActiveValue::Set(Some(
+                Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
+            ))
+        } else {
+            ActiveValue::NotSet
+        },
+        created_at: ActiveValue::Set(Utc::now()),
+        updated_at: ActiveValue::Set(Utc::now()),
+        ..Default::default()
+    };
+    let res = task::Entity::insert(active_model)
+        .exec_with_returning(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+    let _ = broadcast_batch_upsert_tasks(
+        &app_handler,
+        BatchEditTasksResult {
+            created: vec![res.clone()],
+            updated: vec![],
+        },
+    );
+    serde_json::to_value(res).map_err(|e| e.to_string())
+}
+
+fn update_task_by_active_model(
+    model: &mut task::ActiveModel,
+    data: task::UpdateModel,
+) -> Result<(), String> {
+    if let Some(group_id) = data.group_id {
+        model.group_id =
+            ActiveValue::Set(Uuid::parse_str(&group_id).map_err(|err| err.to_string())?)
+    } else {
+        model.group_id = ActiveValue::NotSet
+    };
+    if let Some(content) = data.content {
+        model.content = ActiveValue::Set(content);
+    }
+    if let Some(description) = data.description {
+        model.description = ActiveValue::Set(if let Some(desc) = description {
+            Some(desc)
+        } else {
+            None
+        });
+    }
+    if let Some(parent_id) = data.parent_id {
+        model.parent_id = if let Some(pid) = parent_id {
+            ActiveValue::Set(Some(Uuid::parse_str(&pid).map_err(|err| err.to_string())?))
+        } else {
+            ActiveValue::NotSet
+        };
+    }
+    if let Some(state) = data.state {
+        model.state = ActiveValue::Set(if let Some(st) = state { Some(st) } else { None });
+    }
+    if let Some(priority) = data.priority {
+        model.priority = ActiveValue::Set(priority);
+    }
+    if let Some(factor) = data.factor {
+        model.factor = ActiveValue::Set(factor);
+    }
+    if let Some(done_at) = data.done_at {
+        model.done_at = ActiveValue::Set(if let Some(da) = done_at {
+            Some(parse_datetime_string(&da)?)
+        } else {
+            None
+        });
+    }
+    if let Some(start_at) = data.start_at {
+        model.start_at = ActiveValue::Set(if let Some(sa) = start_at {
+            Some(parse_datetime_string(&sa)?)
+        } else {
+            None
+        });
+    }
+    if let Some(end_at) = data.end_at {
+        model.end_at = ActiveValue::Set(if let Some(ea) = end_at {
+            Some(parse_datetime_string(&ea)?)
+        } else {
+            None
+        });
+    }
+    if let Some(created_by_task_id) = data.created_by_task_id {
+        model.created_by_task_id = if let Some(cbtid) = created_by_task_id {
+            ActiveValue::Set(Some(
+                Uuid::parse_str(&cbtid).map_err(|err| err.to_string())?,
+            ))
+        } else {
+            ActiveValue::NotSet
+        };
+    }
+    if let Some(create_index) = data.create_index {
+        model.create_index = ActiveValue::Set(create_index);
+    }
+    if let Some(target) = data.target {
+        model.target = ActiveValue::Set(if let Some(tgt) = target {
+            Some(tgt)
+        } else {
+            None
+        });
+    }
+    if let Some(target_type) = data.target_type {
+        model.target_type = ActiveValue::Set(if let Some(tt) = target_type {
+            Some(tt)
+        } else {
+            None
+        });
+    }
+    model.updated_at = ActiveValue::Set(Utc::now());
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn update_task_by_id(
+    app_handler: tauri::AppHandle,
+    db_manage: tauri::State<'_, DbState>,
+    id: String,
+    data: task::UpdateModel,
+) -> Result<Value, String> {
+    let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let mut active_model = pk
+        .one(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Task not found".to_string())?
+        .into_active_model();
+
+    update_task_by_active_model(&mut active_model, data)?;
+
+    let res = task::Entity::update(active_model)
+        .exec(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // search for taskviewtasks
+    let task_view_tasks = task_view_task::Entity::find()
+        .filter(task_view_task::Column::TaskId.eq(res.id))
+        .all(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // 拼接数据并返回
+    // serde_json::to_value(res).map_err(|e| e.to_string())
+    let mut task_json = serde_json::to_value(&res).unwrap();
+    if let serde_json::Value::Object(ref mut map) = task_json {
+        map.insert(
+            "task_view_tasks".to_string(),
+            serde_json::to_value(&task_view_tasks).unwrap(),
+        );
+    }
+
+    let mut result_json = serde_json::to_value(&BatchEditTasksResult {
+        created: vec![],
+        updated: vec![],
+    })
+    .unwrap();
+    if let serde_json::Value::Object(ref mut map) = result_json {
+        map.insert(
+            "updated".to_string(),
+            serde_json::Value::Array(vec![serde_json::to_value(&res).unwrap()]),
+        );
+    }
+    let _ = broadcast_batch_upsert_tasks(
+        &app_handler,
+        result_json,
+        // BatchEditTasksResult {
+        //     created: vec![],
+        //     updated: vec![serde_json::to_value(&res).unwrap()],
+        // },
+    );
+    Ok(task_json)
+}
+
+#[tauri::command]
+pub async fn delete_task_by_id(
+    db_manage: tauri::State<'_, DbState>,
+    id: String,
+) -> Result<(), String> {
+    let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let active_model = pk
+        .one(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Task not found".to_string())?
+        .into_active_model();
+
+    task::Entity::delete(active_model)
+        .exec(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn batch_create_tasks<'a>(
+    txn: &'a sea_orm::DatabaseTransaction,
+    create: Vec<task::BatchCreateTaskModel>,
+    id: Option<Uuid>,
+) -> BoxFuture<'a, Result<Vec<task::Model>, String>> {
+    async move {
+        let mut all_results = Vec::new();
+
+        for data in create {
+            let create_id = if let Some(id) = id {
+                id
+            } else {
+                uuid::Uuid::new_v4()
+            };
+            let active_model = task::ActiveModel {
+                id: ActiveValue::Set(create_id),
+                sort_order: ActiveValue::Set(0),
+                content: ActiveValue::Set(data.task.content),
+                description: ActiveValue::Set(data.task.description),
+                group_id: ActiveValue::Set(
+                    Uuid::parse_str(&data.task.group_id).map_err(|err| err.to_string())?,
+                ),
+                parent_id: if let Some(parent_id) = data.task.parent_id {
+                    ActiveValue::Set(Some(
+                        Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
+                    ))
+                } else {
+                    ActiveValue::NotSet
+                },
+                created_at: ActiveValue::Set(Utc::now()),
+                updated_at: ActiveValue::Set(Utc::now()),
+                done_at: if let Some(done_at) = data.task.done_at {
+                    ActiveValue::Set(Some(parse_datetime_string(&done_at)?))
+                } else {
+                    ActiveValue::NotSet
+                },
+                start_at: if let Some(start_at) = data.task.start_at {
+                    ActiveValue::Set(Some(parse_datetime_string(&start_at)?))
+                } else {
+                    ActiveValue::NotSet
+                },
+                end_at: if let Some(end_at) = data.task.end_at {
+                    ActiveValue::Set(Some(parse_datetime_string(&end_at)?))
+                } else {
+                    ActiveValue::NotSet
+                },
+                state: ActiveValue::Set(data.task.state),
+                priority: if let Some(priority) = data.task.priority {
+                    ActiveValue::Set(priority)
+                } else {
+                    ActiveValue::NotSet
+                },
+                factor: if let Some(factor) = data.task.factor {
+                    ActiveValue::Set(factor)
+                } else {
+                    ActiveValue::NotSet
+                },
+                created_by_task_id: if let Some(cbtid) = data.task.created_by_task_id {
+                    ActiveValue::Set(Some(
+                        Uuid::parse_str(&cbtid).map_err(|err| err.to_string())?,
+                    ))
+                } else {
+                    ActiveValue::NotSet
+                },
+                create_index: if let Some(create_index) = data.task.create_index {
+                    ActiveValue::Set(create_index)
+                } else {
+                    ActiveValue::NotSet
+                },
+                target: ActiveValue::Set(data.task.target),
+                target_type: ActiveValue::Set(data.task.target_type),
+
+                ..Default::default()
+            };
+
+            let model = task::Entity::insert(active_model)
+                .exec_with_returning(txn)
+                .await
+                .map_err(|err| err.to_string())?;
+
+            all_results.push(model);
+
+            if let Some(children) = data.children {
+                let child_results = batch_create_tasks(txn, children, Some(create_id)).await?;
+                all_results.extend(child_results);
+            }
+        }
+
+        Ok(all_results)
+    }
+    .boxed()
+}
+
+#[tauri::command]
+pub async fn batch_edit_tasks(
+    app_handler: tauri::AppHandle,
+    db_manage: tauri::State<'_, DbState>,
+    create: Vec<task::BatchCreateTaskModel>,
+    update: Vec<task::UpdateModel>,
+) -> Result<Vec<Value>, String> {
+    let mut ret = db_manage
+        .lock()
+        .await
+        .get_connection()
+        .transaction::<_, BatchEditTasksResult, String>(|txn| {
+            Box::pin(async move {
+                // create
+                // Promise.all
+                let created = batch_create_tasks(txn, create, None).await?;
+                // update
+                // Promise.all
+                let mut update_futures = Vec::new();
+                for item in update {
+                    if let Some(id) = &item.id {
+                        let task_id = uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?;
+                        let pk = task::Entity::find_by_id(task_id);
+
+                        let mut active_model = pk
+                            .one(txn)
+                            .await
+                            .map_err(|err| err.to_string())?
+                            .ok_or_else(|| DbErr::Custom("Task not found".to_string()))
+                            .map_err(|err| err.to_string())?
+                            .into_active_model();
+
+                        update_task_by_active_model(&mut active_model, item)?;
+
+                        update_futures.push(task::Entity::update(active_model).exec(txn));
+                    }
+                }
+                let updated = futures::future::try_join_all(update_futures)
+                    .await
+                    .map_err(|err| err.to_string())?;
+                Ok(BatchEditTasksResult { created, updated })
+            })
+        })
+        .await
+        .map_err(|e| e.to_string());
+    // search all ret 's taskviewtasks
+    let task_ids = ret
+        .as_ref()
+        .map_err(|e| e.to_string())?
+        .created
+        .iter()
+        .chain(ret.as_ref().map_err(|e| e.to_string())?.updated.iter())
+        .map(|task| task.id)
+        .collect::<Vec<Uuid>>();
+    // 根据task_ids 搜索taskViewTasks
+    let task_view_tasks = task_view_task::Entity::find()
+        .filter(task_view_task::Column::TaskId.is_in(task_ids))
+        .all(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+    // 将taskViewTasks 拼接到ret 里,收集结果
+    let mut creates: Vec<Value> = vec![];
+    let mut updates: Vec<Value> = vec![];
+    for task in ret.as_mut().map_err(|e| e.to_string())?.created.iter_mut() {
+        let related_view_tasks = task_view_tasks
+            .iter()
+            .filter(|tvt| tvt.task_id == task.id)
+            .cloned()
+            .collect::<Vec<task_view_task::Model>>();
+        // 拼接
+        let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
+        if let serde_json::Value::Object(ref mut map) = task_json {
+            map.insert(
+                "task_view_tasks".to_string(),
+                serde_json::to_value(&related_view_tasks).map_err(|e| e.to_string())?,
+            );
+        }
+        creates.push(task_json)
+    }
+    for task in ret.as_mut().map_err(|e| e.to_string())?.updated.iter_mut() {
+        let related_view_tasks = task_view_tasks
+            .iter()
+            .filter(|tvt| tvt.task_id == task.id)
+            .cloned()
+            .collect::<Vec<task_view_task::Model>>();
+        // 拼接
+        let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
+        if let serde_json::Value::Object(ref mut map) = task_json {
+            map.insert(
+                "task_view_tasks".to_string(),
+                serde_json::to_value(&related_view_tasks).map_err(|e| e.to_string())?,
+            );
+        }
+        updates.push(task_json)
+    }
+
+    let final_ret = serde_json::json!({
+        "created": creates,
+        "updated": updates,
+    });
+    let _ = broadcast_batch_upsert_tasks(&app_handler, &final_ret);
+    Ok(vec![final_ret])
+}

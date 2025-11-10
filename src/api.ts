@@ -18,19 +18,19 @@ function camelToSnakeCase(str: string) {
     .toLowerCase()
     .replace(/^_/, "");
 }
-function camelObjectToSnakeCase(obj: Record<string, any>) {
-  if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+function camelObjectToSnakeCase(obj: any): any {
+  if (typeof obj !== "object" || obj === null) {
+    return obj;
+  } else if (Array.isArray(obj)) {
+    return obj.map((item) => camelObjectToSnakeCase(item));
+  } else if (obj instanceof Date) {
     return obj;
   }
   const newObj: Record<string, any> = {};
   for (const key in obj) {
     const newKey = camelToSnakeCase(key);
     newObj[newKey] = obj[key];
-    if (
-      typeof obj[key] === "object" &&
-      obj[key] !== null &&
-      !Array.isArray(obj[key])
-    ) {
+    if (typeof obj[key] === "object" && obj[key] !== null) {
       newObj[newKey] = camelObjectToSnakeCase(obj[key]);
     }
   }
@@ -40,19 +40,19 @@ function camelObjectToSnakeCase(obj: Record<string, any>) {
 function snakeToCamelCase(str: string) {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
-function snakeObjectToCamelCase(obj: Record<string, any>) {
-  if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
+function snakeObjectToCamelCase(obj: Record<string, any>): any {
+  if (typeof obj !== "object" || obj === null) {
+    return obj;
+  } else if (Array.isArray(obj)) {
+    return obj.map((item) => snakeObjectToCamelCase(item));
+  } else if (obj instanceof Date) {
     return obj;
   }
   const newObj: Record<string, any> = {};
   for (const key in obj) {
     const newKey = snakeToCamelCase(key);
     newObj[newKey] = obj[key];
-    if (
-      typeof obj[key] === "object" &&
-      obj[key] !== null &&
-      !Array.isArray(obj[key])
-    ) {
+    if (typeof obj[key] === "object" && obj[key] !== null) {
       newObj[newKey] = snakeObjectToCamelCase(obj[key]);
     }
   }
@@ -82,6 +82,10 @@ export default {
   ...Object.entries(protocols).reduce(
     (t, [_k, a]) => {
       t[a.name] = ((...rest: any[]) => {
+        // console.debug(
+        //   camelToSnakeCase(a.name),
+        //   rest.map((d) => camelObjectToSnakeCase(d))
+        // );
         return invoke(
           camelToSnakeCase(a.name),
           ...rest.map((d) => camelObjectToSnakeCase(d))
@@ -111,9 +115,10 @@ export default {
 
   ...Object.entries(webProtocols).reduce((t, [_k, a]) => {
     t[`on_${a.name}`] = (callback: any) => {
-      return listen(camelToSnakeCase(a.name), (_, ...rest) =>
-        callback(...rest.map((d) => snakeObjectToCamelCase(d)))
-      );
+      return listen(camelToSnakeCase(a.name), (e) => {
+        const { event: __, payload, id: _ } = e;
+        callback(snakeObjectToCamelCase(payload as any));
+      });
     };
     return t;
   }, {} as WebProtocolObject),

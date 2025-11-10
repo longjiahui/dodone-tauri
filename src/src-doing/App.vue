@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  BatchEditTasksResult,
   DoingWindowType,
   ReadOnlyTaskInDayWithExtra,
   ReadOnlyTaskWithChildren,
@@ -26,14 +27,13 @@ function handleSetDoingWindowParams(t: DoingWindowType, taskId?: string): void {
   params.type = t;
   params.taskId = taskId;
 }
-async function handleBatchUpsertTasks(
-  _: ProtocolReturnTask[],
-  updates: ProtocolReturnTask[]
-) {
+async function handleBatchUpsertTasks(d: BatchEditTasksResult) {
+  let { updated } = d || {};
+  updated = updated.map((u) => task2TaskWithChildren(u));
   if (
     (
       await Promise.all(
-        updates.map(async (update) => {
+        updated.map(async (update) => {
           if (update.state === "UNDONE") {
             const taskInDays = await backend.getTaskInDaysByTaskId(update.id);
             // 如果比现在晚、比current早、则刷新
@@ -53,7 +53,7 @@ async function handleBatchUpsertTasks(
       )
     ).every((d) => !d)
   ) {
-    const updateIds = updates.map((u) => u.id);
+    const updateIds = updated.map((u) => u.id);
     if (tasks.value.some((t) => updateIds.includes(t.id))) {
       refreshTasks();
     }

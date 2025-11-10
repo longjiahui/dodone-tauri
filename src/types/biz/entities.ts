@@ -142,3 +142,8 @@ export type TaskViewGetType = TaskView & {
 };
 
 export type TaskInDayGetType = TaskInDay;
+
+export type BatchEditTasksResult = {
+  created: ProtocolReturnTask[];
+  updated: ProtocolReturnTask[];
+};

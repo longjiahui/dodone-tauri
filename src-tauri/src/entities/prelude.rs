@@ -2,7 +2,6 @@
 
 pub use super::next_task::Entity as NextTask;
 pub use super::notification::Entity as Notification;
-pub use super::report::Entity as Report;
 pub use super::task::Entity as Task;
 pub use super::task_anchor::Entity as TaskAnchor;
 pub use super::task_group::Entity as TaskGroup;

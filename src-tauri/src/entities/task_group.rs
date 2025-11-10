@@ -27,7 +27,6 @@ pub struct Model {
     pub updated_at: DateTimeUtc,
     #[sea_orm(column_name = "isHideAnchors")]
     pub is_hide_anchors: bool,
-    #[serde(skip)]
     #[sea_orm(has_many)]
     pub tasks: HasMany<super::task::Entity>,
 }
@@ -46,8 +45,8 @@ pub struct CreateModel {
 pub struct UpdateModel {
     pub color: Option<String>,
     pub name: Option<String>,
-    pub icon: Option<String>,
-    pub description: Option<String>,
-    pub is_archived: Option<bool>,
-    pub is_hide_anchors: Option<bool>,
+    pub icon: Option<Option<String>>,
+    pub description: Option<Option<String>>,
+    pub is_archived: Option<Option<bool>>,
+    pub is_hide_anchors: Option<Option<bool>>,
 }

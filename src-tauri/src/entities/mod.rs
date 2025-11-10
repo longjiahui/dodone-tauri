@@ -4,7 +4,6 @@ pub mod prelude;
 
 pub mod next_task;
 pub mod notification;
-pub mod report;
 pub mod task;
 pub mod task_anchor;
 pub mod task_group;

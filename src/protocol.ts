@@ -162,7 +162,6 @@ export const protocols = {
     TaskGroup,
     {
       required: "name" | "color";
-      // GetAllParams: [{ test: "hello" }];
     }
   >()("TaskGroup"),
   ...crud<
@@ -170,7 +169,7 @@ export const protocols = {
     {
       required: TaskRequiredKeys;
       GetType: ProtocolReturnTask;
-      GetAllParams: [{ test: "hello" }];
+      // GetAllParams: [];
     }
   >()("Task"),
   ...crud<TaskAnchor, { required: "taskId" }>()("TaskAnchor"),
@@ -445,7 +444,15 @@ export const webProtocols = {
   batchUpsertTasks: defineAPI(
     "batchUpsertTasks",
     // params: [creates, updates]
-    defineAPIFunction<[ProtocolReturnTask[], ProtocolReturnTask[]], void>()
+    defineAPIFunction<
+      [
+        {
+          created: ProtocolReturnTask[];
+          updated: ProtocolReturnTask[];
+        },
+      ],
+      void
+    >()
   ),
   // 更改任务父任务独立于updateTask 因为有特殊处理
   // changeTaskParent: defineAPI(
