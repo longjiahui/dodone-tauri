@@ -98,7 +98,6 @@ function droppable(e: DragEvent) {
 function handleDragOver(e: DragEvent) {
   // dragover无法获取data内容，为了安全、因为用户不希望把数据暴露给 over的元素上、例如跨网站。天啊、太细了
   // let dragData = getDragData(e)
-  console.debug("droppable", droppable(e));
   if (droppable(e)) {
     e.preventDefault();
   }
