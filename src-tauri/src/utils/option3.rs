@@ -41,10 +41,13 @@ where
     where
         D: Deserializer<'de>,
     {
-        let opt = Option::<T>::deserialize(deserializer)?;
+        let opt = Option::<Option<T>>::deserialize(deserializer)?;
         match opt {
-            Some(value) => Ok(Option3::Value(value)),
-            None => Ok(Option3::Null),
+            Some(value) => match value {
+                Some(v) => Ok(Option3::Value(v)),
+                None => Ok(Option3::Null),
+            },
+            None => Ok(Option3::Undefined),
         }
     }
 }

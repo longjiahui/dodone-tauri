@@ -149,6 +149,10 @@ fn update_task_by_active_model(
             None
         });
     }
+    println!(
+        "start_at before update: {:?}, data.start_at: {:?}",
+        model.start_at, data.start_at
+    );
     if data.start_at != Option3::Undefined {
         model.start_at = ActiveValue::Set(if let Some(sa) = data.start_at.as_option() {
             Some(parse_datetime_string(&sa)?)

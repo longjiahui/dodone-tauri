@@ -230,7 +230,19 @@
               >
                 {{ d }} {{ weekdayCH[(m.date(d).weekday() - 1 + 7) % 7] }}
               </div>
-              <div :class="['stretch relative', bgColor1]">
+              <div
+                v-if="
+                  m
+                    .date(d)
+                    .isBetween(
+                      currentViewWindow[0],
+                      currentViewWindow[1],
+                      'day',
+                      '[]'
+                    )
+                "
+                :class="['stretch relative', bgColor1]"
+              >
                 <div class="absolute flex size-full flex-col">
                   <!-- 做格子 -->
                   <BizDrop
@@ -249,10 +261,6 @@
                         now.isAfter(m.date(d).hour(h + 1 + minDayTime))
                           ? [bgColor2, `dhover:${bgColor3}`].join(' ')
                           : [bgColor1, `dhover:${bgColor2}`].join(' '),
-                        // now.startOf('day').isSame(m.date(d)) &&
-                        // now.hour() === h + minDayTime
-                        //   ? 'bg-white'
-                        //   : '',
                         isDroppingActive ? 'dropping-active' : '',
                       ]"
                       @click="
@@ -266,7 +274,6 @@
                         )
                       "
                     >
-                      <!-- 当前的格子、部分灰色、部分背景色 -->
                       <div
                         v-if="
                           now.startOf('hour').isSame(
@@ -285,184 +292,204 @@
                     </div>
                   </BizDrop>
                 </div>
-                <div class="pointer-events-none relative size-full px-1">
-                  <Scope
-                    v-for="(data, dataInd) in datasInDate[
-                      m.date(d).format(dataDateFormat)
-                    ]"
-                    :d="{
-                      prevData:
-                        datasInDate[m.date(d).format(dataDateFormat)]?.[
-                          dataInd - 1
-                        ],
-                      top: Math.min(
-                        // 防止超过边界看不见，但实际可以设置到超过边界
-                        // 最小8px
-                        // maxDayTime - minDayTime - 1,
-                        (maxDayTime - minDayTime) * dayTimeBarUnitHeight - 8,
-                        (dayjs(data.start).hour() -
-                          minDayTime +
-                          dayjs(data.start).minute() / 60 +
-                          /* interactoffset */ (interactType ===
-                            'resizeStart' && interactData?.id === data.id
-                            ? interactHourOffset
-                            : 0)) *
-                          dayTimeBarUnitHeight
-                      ),
-                      bottom:
-                        (-dayjs(data.end).diff(
-                          dayjs(data.end)
-                            .endOf('day')
-                            .subtract(24 - maxDayTime, 'hour'),
-                          'minute'
-                        ) /
-                          60 +
-                          /* interactoffset */ (interactType === 'resizeEnd' &&
-                          interactData?.id === data.id
-                            ? interactHourOffset
-                            : 0)) *
-                        dayTimeBarUnitHeight,
-                      isAfterEnd: now.isAfter(
-                        makeDayjsByDateTime(data.date, data.end)
-                      ),
-                      isAfterStart: now.isAfter(
-                        makeDayjsByDateTime(data.date, data.start)
-                      ),
-                      task: taskStore.tasksDict[data.data.taskId],
-                      taskGroup:
-                        taskGroupStore.taskGroupsDict[
-                          taskStore.tasksDict[data.data.taskId]?.groupId!
-                        ],
-                    }"
-                    v-slot="{
-                      top,
-                      bottom,
-                      isAfterEnd,
-                      isAfterStart,
-                      task,
-                      taskGroup,
-                      prevData,
-                    }"
+                <Scope
+                  :d="{
+                    datas:
+                      datasInDate[m.date(d).format(dataDateFormat)]?.filter(
+                        (d) =>
+                          dayjs(d.date).isBetween(
+                            currentViewWindow[0],
+                            currentViewWindow[1],
+                            'day',
+                            '[]'
+                          )
+                      ) || [],
+                  }"
+                  #default="{ datas }"
+                >
+                  <div
+                    v-if="datas.length > 0"
+                    class="pointer-events-none relative size-full px-1"
                   >
                     <Scope
+                      v-for="(data, dataInd) in datas"
                       :d="{
-                        isTooNarrow:
-                          containerHeight - headerHeight - top - bottom < 12,
-                        isDone: task?.state === 'DONE',
+                        prevData:
+                          datasInDate[m.date(d).format(dataDateFormat)]?.[
+                            dataInd - 1
+                          ],
+                        top: Math.min(
+                          // 防止超过边界看不见，但实际可以设置到超过边界
+                          // 最小8px
+                          // maxDayTime - minDayTime - 1,
+                          (maxDayTime - minDayTime) * dayTimeBarUnitHeight - 8,
+                          (dayjs(data.start).hour() -
+                            minDayTime +
+                            dayjs(data.start).minute() / 60 +
+                            /* interactoffset */ (interactType ===
+                              'resizeStart' && interactData?.id === data.id
+                              ? interactHourOffset
+                              : 0)) *
+                            dayTimeBarUnitHeight
+                        ),
+                        bottom:
+                          (-dayjs(data.end).diff(
+                            dayjs(data.end)
+                              .endOf('day')
+                              .subtract(24 - maxDayTime, 'hour'),
+                            'minute'
+                          ) /
+                            60 +
+                            /* interactoffset */ (interactType ===
+                              'resizeEnd' && interactData?.id === data.id
+                              ? interactHourOffset
+                              : 0)) *
+                          dayTimeBarUnitHeight,
+                        isAfterEnd: now.isAfter(
+                          makeDayjsByDateTime(data.date, data.end)
+                        ),
+                        isAfterStart: now.isAfter(
+                          makeDayjsByDateTime(data.date, data.start)
+                        ),
+                        task: taskStore.tasksDict[data.data.taskId],
+                        taskGroup:
+                          taskGroupStore.taskGroupsDict[
+                            taskStore.tasksDict[data.data.taskId]?.groupId!
+                          ],
                       }"
-                      #default="{ isTooNarrow, isDone }"
+                      v-slot="{
+                        top,
+                        bottom,
+                        isAfterEnd,
+                        isAfterStart,
+                        task,
+                        taskGroup,
+                        prevData,
+                      }"
                     >
-                      <div
-                        v-if="task"
-                        :class="[
-                          interactData?.id === data.id ? 'z-50' : '',
-                          hoveringId === data.id ? 'z-40' : '',
-                          'pointer-events-none absolute top-0 z-30 h-full w-[calc(100%_-_8px)] [&>div]:pointer-events-auto',
-                        ]"
-                        :style="{
-                          ...calculateTheme(
-                            isUsingGroupColor ? taskGroup?.color : data.color!,
-                            {
-                              s: taskScheduleHSColorS,
-                              l: taskScheduleHSColorL,
-                              a: taskScheduleHSColorA,
-                            }
-                          ).cssVariables,
-                          transform:
-                            interactData?.id === data.id &&
-                            interactType === 'move'
-                              ? `translateY(${interactOffset}px)`
-                              : '',
+                      <Scope
+                        :d="{
+                          isTooNarrow:
+                            containerHeight - headerHeight - top - bottom < 12,
+                          isDone: task?.state === 'DONE',
                         }"
-                        @mousedown="handleDataMouseDown(data, top)"
+                        #default="{ isTooNarrow, isDone }"
                       >
                         <div
-                          @mouseenter="hoveringId = data.id"
-                          @mouseleave="
-                            hoveringId =
-                              hoveringId === data.id ? undefined : hoveringId
-                          "
+                          v-if="task"
                           :class="[
-                            'group/card h absolute cursor-pointer items-center gap-1 overflow-hidden rounded px-2 shadow-xl outline-1 -outline-offset-1 outline-transparent select-none',
-                            hoveringId === data.id
-                              ? 'opacity-100 !outline-current outline-solid'
-                              : '',
-                            isTooNarrow
-                              ? 'text-xs !outline-[var(--theme-dark)] outline-dashed'
-                              : 'text-sm',
-                            isAfterEnd ? 'opacity-60' : '',
+                            interactData?.id === data.id ? 'z-50' : '',
+                            hoveringId === data.id ? 'z-40' : '',
+                            'pointer-events-none absolute top-0 z-30 h-full w-[calc(100%_-_8px)] [&>div]:pointer-events-auto',
                           ]"
                           :style="{
-                            background: 'var(--theme-text-background)',
-                            color: 'var(--theme-text-color)',
-                            top: top + 'px',
-                            // 如果有碰撞需要调整宽度和位置
-                            ...(data.collide?.total! > 1
-                              ? {
-                                  left: `${((data.collide?.index || 0) / data.collide!.total) * 100}%`,
-                                  width: `${(1 / data.collide!.total) * 100}%`,
-                                }
-                              : {
-                                  width: 'calc(100%)',
-                                }),
-                            minHeight: `${Math.min(dayTimeBarUnitHeight, minHeight)}px`,
-
-                            bottom: bottom + 'px',
+                            ...calculateTheme(
+                              isUsingGroupColor
+                                ? taskGroup?.color
+                                : data.color!,
+                              {
+                                s: taskScheduleHSColorS,
+                                l: taskScheduleHSColorL,
+                                a: taskScheduleHSColorA,
+                              }
+                            ).cssVariables,
+                            transform:
+                              interactData?.id === data.id &&
+                              interactType === 'move'
+                                ? `translateY(${interactOffset}px)`
+                                : '',
                           }"
+                          @mousedown="handleDataMouseDown(data, top)"
                         >
                           <div
-                            @mousedown.stop="
-                              handleDataResizeStartMouseDown(data, top)
+                            @mouseenter="hoveringId = data.id"
+                            @mouseleave="
+                              hoveringId =
+                                hoveringId === data.id ? undefined : hoveringId
                             "
-                            class="absolute top-0 z-10 h-1 w-full cursor-n-resize"
-                          ></div>
-                          <div
-                            @mousedown.stop="
-                              handleDataResizeEndMouseDown(data, bottom)
-                            "
-                            class="absolute bottom-0 z-10 h-1 w-full cursor-n-resize"
-                          ></div>
-                          <div class="v stretch relative h-full">
-                            <div class="stretch h h-full items-center gap-2">
-                              <Tooltip
-                                v-if="
-                                  !!data.data.notificationId && !isAfterStart
-                                "
-                                :content="$t('useNotification')"
-                              >
-                                <div class="text-[var(--theme-text-color)]">
-                                  <NotificationOutlined></NotificationOutlined>
-                                </div>
-                              </Tooltip>
-                              <!-- <Tooltip
+                            :class="[
+                              'group/card h absolute cursor-pointer items-center gap-1 overflow-hidden rounded px-2 shadow-xl outline-1 -outline-offset-1 outline-transparent select-none',
+                              hoveringId === data.id
+                                ? 'opacity-100 !outline-current outline-solid'
+                                : '',
+                              isTooNarrow
+                                ? 'text-xs !outline-[var(--theme-dark)] outline-dashed'
+                                : 'text-sm',
+                              isAfterEnd ? 'opacity-60' : '',
+                            ]"
+                            :style="{
+                              background: 'var(--theme-text-background)',
+                              color: 'var(--theme-text-color)',
+                              top: top + 'px',
+                              // 如果有碰撞需要调整宽度和位置
+                              ...(data.collide?.total! > 1
+                                ? {
+                                    left: `${((data.collide?.index || 0) / data.collide!.total) * 100}%`,
+                                    width: `${(1 / data.collide!.total) * 100}%`,
+                                  }
+                                : {
+                                    width: 'calc(100%)',
+                                  }),
+                              minHeight: `${Math.min(dayTimeBarUnitHeight, minHeight)}px`,
+
+                              bottom: bottom + 'px',
+                            }"
+                          >
+                            <div
+                              @mousedown.stop="
+                                handleDataResizeStartMouseDown(data, top)
+                              "
+                              class="absolute top-0 z-10 h-1 w-full cursor-n-resize"
+                            ></div>
+                            <div
+                              @mousedown.stop="
+                                handleDataResizeEndMouseDown(data, bottom)
+                              "
+                              class="absolute bottom-0 z-10 h-1 w-full cursor-n-resize"
+                            ></div>
+                            <div class="v stretch relative h-full">
+                              <div class="stretch h h-full items-center gap-2">
+                                <Tooltip
+                                  v-if="
+                                    !!data.data.notificationId && !isAfterStart
+                                  "
+                                  :content="$t('useNotification')"
+                                >
+                                  <div class="text-[var(--theme-text-color)]">
+                                    <NotificationOutlined></NotificationOutlined>
+                                  </div>
+                                </Tooltip>
+                                <!-- <Tooltip
                                 :content="interactType ? '' : task?.content"
                               > -->
-                              <div
-                                :class="[
-                                  'stretch leading-multi h h-full items-center gap-1',
-                                  isDone ? 'line-through' : '',
-                                ]"
-                              >
-                                <Checkbox
-                                  @mousedown.stop
-                                  v-if="!isDone"
-                                  :model-value="isDone"
-                                  @update:model-value="
-                                    () => {
-                                      return taskStore.toggleTaskState(task.id);
-                                    }
-                                  "
-                                ></Checkbox>
-                                <div class="max-h-full" :title="task.content">
-                                  <template v-if="!isTooNarrow">
-                                    {{ task.content }}
-                                  </template>
-                                  <span v-else> </span>
+                                <div
+                                  :class="[
+                                    'stretch leading-multi h h-full items-center gap-1',
+                                    isDone ? 'line-through' : '',
+                                  ]"
+                                >
+                                  <Checkbox
+                                    @mousedown.stop
+                                    v-if="!isDone"
+                                    :model-value="isDone"
+                                    @update:model-value="
+                                      () => {
+                                        return taskStore.toggleTaskState(
+                                          task.id
+                                        );
+                                      }
+                                    "
+                                  ></Checkbox>
+                                  <div class="max-h-full" :title="task.content">
+                                    <template v-if="!isTooNarrow">
+                                      {{ task.content }}
+                                    </template>
+                                    <span v-else> </span>
+                                  </div>
                                 </div>
+                                <!-- </Tooltip> -->
                               </div>
-                              <!-- </Tooltip> -->
-                            </div>
-                            <!-- <TaskDescription
+                              <!-- <TaskDescription
                                 v-if="showDescription"
                                 class="line-clamp-1 text-sm"
                                 :title="task?.description!"
@@ -470,172 +497,173 @@
                                 no-image
                               >
                               </TaskDescription> -->
-                          </div>
-                          <DefaultDropdown
-                            trigger="click"
-                            @mousedown.stop
-                            placement="bottomRight"
-                          >
-                            <MoreOutlined
-                              class="cursor-pointer rounded p-0.5 opacity-0 duration-300 group-hover/card:opacity-100 hover:bg-[rgba(0,0,0,0.1)]"
-                            ></MoreOutlined>
-                            <template #body>
-                              <Tools>
-                                <div class="h items-center gap-2">
+                            </div>
+                            <DefaultDropdown
+                              trigger="click"
+                              @mousedown.stop
+                              placement="bottomRight"
+                            >
+                              <MoreOutlined
+                                class="cursor-pointer rounded p-0.5 opacity-0 duration-300 group-hover/card:opacity-100 hover:bg-[rgba(0,0,0,0.1)]"
+                              ></MoreOutlined>
+                              <template #body>
+                                <Tools>
+                                  <div class="h items-center gap-2">
+                                    <ToolItem
+                                      :icon="EditOutlined"
+                                      :tooltip="$t('editSchedule')"
+                                      @click="
+                                        () =>
+                                          dialogs
+                                            .EditTaskScheduleDialog({
+                                              taskSchedule: data,
+                                            })
+                                            .finishPromise((d) => {
+                                              if (
+                                                d?.type === 'update' &&
+                                                d.data
+                                              ) {
+                                                Object.assign(
+                                                  data,
+                                                  task2ChartData(d.data)
+                                                );
+                                              } else if (d?.type === 'delete') {
+                                                const ind = datas.findIndex(
+                                                  (dd) => dd.id === data.id
+                                                );
+                                                if (ind > -1) {
+                                                  datas.splice(ind, 1);
+                                                }
+                                              }
+                                            })
+                                      "
+                                    ></ToolItem>
+                                  </div>
+                                  <div class="h items-center gap-2">
+                                    <ToolItem
+                                      :icon="UploadOutlined"
+                                      :tooltip="$t('upTight')"
+                                      @click="
+                                        () => {
+                                          if (prevData) {
+                                            const newStart = copy(prevData.end);
+                                            const newEnd = dayjs(prevData.end)
+                                              .add(
+                                                dayjs(data.end).diff(
+                                                  dayjs(data.start),
+                                                  'second'
+                                                ),
+                                                'second'
+                                              )
+                                              .toDate();
+                                            return backend
+                                              .updateTaskInDayById(data.id, {
+                                                startTime: newStart,
+                                                endTime: newEnd,
+                                              })
+                                              .then(() => {
+                                                data.start = newStart;
+                                                data.end = newEnd;
+                                              });
+                                          }
+                                        }
+                                      "
+                                    ></ToolItem>
+                                    <ToolItem
+                                      :icon="ClockCircleOutlined"
+                                      :menus="[
+                                        {
+                                          name: $t('10minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 10),
+                                        },
+                                        {
+                                          name: $t('20minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 20),
+                                        },
+                                        {
+                                          name: $t('30minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 30),
+                                        },
+                                        {
+                                          name: $t('40minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 40),
+                                        },
+                                        {
+                                          name: $t('45minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 45),
+                                        },
+                                        {
+                                          name: $t('50minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 50),
+                                        },
+                                        {
+                                          name: $t('60minutes'),
+                                          click: () =>
+                                            quickSettingMinutes(data, 60),
+                                        },
+                                      ]"
+                                    >
+                                    </ToolItem>
+                                  </div>
+                                  <Tooltip
+                                    :content="
+                                      task.state === 'DONE'
+                                        ? $t('cancelFinish')
+                                        : $t('finish')
+                                    "
+                                  >
+                                    <Checkbox
+                                      :model-value="task?.state === 'DONE'"
+                                      @update:model-value="
+                                        () => {
+                                          return taskStore.toggleTaskState(
+                                            task!.id!
+                                          );
+                                        }
+                                      "
+                                    ></Checkbox>
+                                  </Tooltip>
                                   <ToolItem
-                                    :icon="EditOutlined"
-                                    :tooltip="$t('editSchedule')"
+                                    :icon="CloseOutlined"
+                                    :tooltip="$t('removeFromSchedule')"
+                                    danger
                                     @click="
                                       () =>
                                         dialogs
-                                          .EditTaskScheduleDialog({
-                                            taskSchedule: data,
+                                          .ConfirmDialog({
+                                            content: $t(
+                                              'removeFromScheduleConfirm'
+                                            ),
                                           })
-                                          .finishPromise((d) => {
-                                            if (
-                                              d?.type === 'update' &&
-                                              d.data
-                                            ) {
-                                              Object.assign(
-                                                data,
-                                                task2ChartData(d.data)
-                                              );
-                                            } else if (d?.type === 'delete') {
-                                              const ind = datas.findIndex(
-                                                (dd) => dd.id === data.id
-                                              );
-                                              if (ind > -1) {
-                                                datas.splice(ind, 1);
-                                              }
-                                            }
+                                          .finishPromise(() => {
+                                            return backend
+                                              .deleteTaskInDayById(data.id)
+                                              .then(() => {
+                                                const ind = datas.findIndex(
+                                                  (d) => d.id === data.id
+                                                );
+                                                if (ind > -1) {
+                                                  datas.splice(ind, 1);
+                                                }
+                                              });
                                           })
                                     "
                                   ></ToolItem>
-                                </div>
-                                <div class="h items-center gap-2">
-                                  <ToolItem
-                                    :icon="UploadOutlined"
-                                    :tooltip="$t('upTight')"
-                                    @click="
-                                      () => {
-                                        if (prevData) {
-                                          const newStart = copy(prevData.end);
-                                          const newEnd = dayjs(prevData.end)
-                                            .add(
-                                              dayjs(data.end).diff(
-                                                dayjs(data.start),
-                                                'second'
-                                              ),
-                                              'second'
-                                            )
-                                            .toDate();
-                                          return backend
-                                            .updateTaskInDayById(data.id, {
-                                              startTime: newStart,
-                                              endTime: newEnd,
-                                            })
-                                            .then(() => {
-                                              data.start = newStart;
-                                              data.end = newEnd;
-                                            });
-                                        }
-                                      }
-                                    "
-                                  ></ToolItem>
-                                  <ToolItem
-                                    :icon="ClockCircleOutlined"
-                                    :menus="[
-                                      {
-                                        name: $t('10minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 10),
-                                      },
-                                      {
-                                        name: $t('20minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 20),
-                                      },
-                                      {
-                                        name: $t('30minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 30),
-                                      },
-                                      {
-                                        name: $t('40minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 40),
-                                      },
-                                      {
-                                        name: $t('45minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 45),
-                                      },
-                                      {
-                                        name: $t('50minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 50),
-                                      },
-                                      {
-                                        name: $t('60minutes'),
-                                        click: () =>
-                                          quickSettingMinutes(data, 60),
-                                      },
-                                    ]"
-                                  >
-                                  </ToolItem>
-                                </div>
-                                <Tooltip
-                                  :content="
-                                    task.state === 'DONE'
-                                      ? $t('cancelFinish')
-                                      : $t('finish')
-                                  "
-                                >
-                                  <Checkbox
-                                    :model-value="task?.state === 'DONE'"
-                                    @update:model-value="
-                                      () => {
-                                        return taskStore.toggleTaskState(
-                                          task!.id!
-                                        );
-                                      }
-                                    "
-                                  ></Checkbox>
-                                </Tooltip>
-                                <ToolItem
-                                  :icon="CloseOutlined"
-                                  :tooltip="$t('removeFromSchedule')"
-                                  danger
-                                  @click="
-                                    () =>
-                                      dialogs
-                                        .ConfirmDialog({
-                                          content: $t(
-                                            'removeFromScheduleConfirm'
-                                          ),
-                                        })
-                                        .finishPromise(() => {
-                                          return backend
-                                            .deleteTaskInDayById(data.id)
-                                            .then(() => {
-                                              const ind = datas.findIndex(
-                                                (d) => d.id === data.id
-                                              );
-                                              if (ind > -1) {
-                                                datas.splice(ind, 1);
-                                              }
-                                            });
-                                        })
-                                  "
-                                ></ToolItem>
-                              </Tools>
-                            </template>
-                          </DefaultDropdown>
+                                </Tools>
+                              </template>
+                            </DefaultDropdown>
+                          </div>
                         </div>
-                      </div>
+                      </Scope>
                     </Scope>
-                  </Scope>
-                </div>
+                  </div>
+                </Scope>
               </div>
             </div>
           </div>
@@ -666,7 +694,11 @@ export interface ChartData {
 <script setup lang="ts">
 import { copy } from "fast-copy";
 import { DragData, DragDataType } from "@/bizComponents/drag/drag";
-import { ReadOnlyTaskInDayWithExtra, ReadOnlyTaskWithChildren } from "@/types";
+import {
+  ReadOnlyTaskInDayWithExtra,
+  ReadOnlyTaskWithChildren,
+  TaskInDay,
+} from "@/types";
 import { backend } from "@/utils/backend";
 import { Dayjs, dayjs, makeDayjsByDateTime } from "@/utils/time";
 import {
@@ -691,7 +723,6 @@ import {
 } from "@/const";
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { calculateTheme } from "@/utils/color";
-import { TaskInDay } from "@/types";
 import { useI18n } from "vue-i18n";
 
 const props = withDefaults(
@@ -773,8 +804,10 @@ const inst = setInterval(() => {
 }, 5000);
 onBeforeUnmount(() => clearInterval(inst));
 const currentMonth = ref(today.value.startOf("month"));
+const currentWindow = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
 const monthShouldRender = ref([currentMonth.value]);
 const firstShouldRenderMonth = computed(() => monthShouldRender.value[0]);
+const firstDate = computed(() => firstShouldRenderMonth.value.startOf("month"));
 
 function scrollToToday() {
   scrollContainerRef.value?.scrollTo({
@@ -816,7 +849,7 @@ function filterData(d: ChartData) {
     d.end.getHours() <= maxDayTime.value
   );
 }
-const currentViewWindow = ref<number[]>([]);
+const currentViewWindow = ref<Dayjs[]>([dayjs(), dayjs()]);
 const datas = ref<ChartData[]>([]);
 const datasDict = computed(() =>
   Object.fromEntries(datas.value.map((d) => [d.id, d]))
@@ -928,9 +961,12 @@ function handleScroll(el: HTMLElement) {
     monthShouldRender.value = [...monthShouldRender.value, addMonth];
   }
 
-  const currentViewN = Math.ceil(scrollLeft / dateUnitWidth.value);
+  const currentViewN = Math.floor(scrollLeft / dateUnitWidth.value);
   const viewWidth = Math.ceil(scrollContainerWidth / dateUnitWidth.value);
-  currentViewWindow.value = [currentViewN, currentViewN + viewWidth];
+  currentViewWindow.value = [
+    firstDate.value.add(currentViewN, "day"),
+    firstDate.value.add(currentViewN + viewWidth, "day"),
+  ];
 }
 
 function refetchDatas() {
