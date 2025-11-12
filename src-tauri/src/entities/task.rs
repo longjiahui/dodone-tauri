@@ -132,7 +132,7 @@ pub struct CreateModel {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct BatchCreateTaskModel {
     pub task: CreateModel,
-    pub next_task: Option<super::next_task::CreateModel>,
+    pub next_task: Option<super::next_task::CreateModelForBatchCreateTask>,
     pub children: Option<Vec<BatchCreateTaskModel>>,
 }
 

@@ -15,7 +15,7 @@
           @click="
             openDialog(DatePickerDialog, {
               title: $t('setEndDate'),
-              value: dayjs(entity.endDate),
+              value: entity.endDate ? dayjs(entity.endDate) : undefined,
             }).finishPromise((d) => {
               entity.endDate = d?.toDate();
             })

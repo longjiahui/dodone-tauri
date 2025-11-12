@@ -3,40 +3,35 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::utils::option3::Option3;
+
+#[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum NextTaskMode {
+    #[sea_orm(string_value = "SIMPLE")]
+    SIMPLE,
+    #[sea_orm(string_value = "COMPLEX")]
+    COMPLEX,
+}
+
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "NextTask")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: String,
+    pub id: Uuid,
     #[sea_orm(column_type = "Text", nullable)]
-    pub mode: Option<String>,
+    pub mode: NextTaskMode,
     pub a: i32,
     pub b: i32,
-    #[sea_orm(
-        column_name = "endDate",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text",
-        nullable
-    )]
-    pub end_date: Option<String>,
+    #[sea_orm(column_name = "endDate")]
+    pub end_date: Option<DateTimeUtc>,
     #[sea_orm(column_name = "taskId", column_type = "Text", unique)]
-    pub task_id: String,
-    #[sea_orm(
-        column_name = "createdAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub created_at: String,
-    #[sea_orm(
-        column_name = "updatedAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub updated_at: String,
+    pub task_id: Uuid,
+    #[sea_orm(column_name = "createdAt")]
+    pub created_at: DateTimeUtc,
+    #[sea_orm(column_name = "updatedAt")]
+    pub updated_at: DateTimeUtc,
     #[sea_orm(
         belongs_to,
         from = "task_id",
@@ -51,9 +46,25 @@ impl ActiveModelBehavior for ActiveModel {}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateModel {
-    pub mode: String,
+    // pub mode: NextTaskMode,
     pub a: i32,
     pub b: i32,
     pub task_id: String,
     pub end_date: Option<String>,
+}
+#[derive(Deserialize, Serialize, Debug)]
+pub struct CreateModelForBatchCreateTask {
+    // pub mode: NextTaskMode,
+    pub a: i32,
+    pub b: i32,
+    // pub task_id: String,
+    pub end_date: Option<String>,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct UpdateModel {
+    pub mode: Option<NextTaskMode>,
+    pub a: Option<i32>,
+    pub b: Option<i32>,
+    pub end_date: Option3<String>,
 }

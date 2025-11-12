@@ -148,7 +148,7 @@
                             @mouseleave="currentHover = undefined"
                             :class="[
                               'relative h-[32px] overflow-hidden px-4 text-sm leading-[32px] duration-300',
-                              task?.state === 'UNDONE' ? '' : '!opacity-40',
+                              task?.state !== 'DONE' ? '' : '!opacity-40',
                               isModifying && isModifyingId !== task?.id
                                 ? 'opacity-30'
                                 : '',

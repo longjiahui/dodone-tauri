@@ -13,6 +13,7 @@ import {
   TaskWithChildren,
   task2TaskLocal,
   taskLocal2TaskWithChildren,
+  nextTask2NextTaskLocal,
 } from "@/types";
 import { flatMapTree, traverse, traverseSome } from "@/utils/traverse";
 import { groupBy } from "@/utils/groupBy";
@@ -494,15 +495,21 @@ export const useTaskStore = defineStore("task", () => {
       if (task) {
         let ret: Promise<GetAPIReturnType<typeof protocols.getNextTaskById>>;
         if (task.nextTask) {
-          ret = backend.updateNextTaskById(task.nextTask.id, nextTask);
+          ret = backend.updateNextTaskById({
+            id: task.nextTask.id,
+            data: nextTask,
+          });
         } else {
           ret = backend.createNextTask({
-            taskId,
-            ...nextTask,
+            data: {
+              taskId,
+              ...nextTask,
+            },
           });
         }
         return ret.then((nt) => {
           if (nt) {
+            nt = nextTask2NextTaskLocal(nt);
             if (task.nextTask) {
               Object.assign(task.nextTask, nt);
             } else {
@@ -519,7 +526,7 @@ export const useTaskStore = defineStore("task", () => {
     deleteNextTask(taskId: string) {
       const task = tasksDict.value[taskId];
       if (task && task.nextTask) {
-        return backend.deleteNextTaskById(task.nextTask.id).then(() => {
+        return backend.deleteNextTaskById({ id: task.nextTask.id }).then(() => {
           task.nextTask = null;
           taskEvent.emit("updateTask", task);
         });

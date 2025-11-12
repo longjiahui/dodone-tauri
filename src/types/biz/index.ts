@@ -1,4 +1,5 @@
 import type {
+  NextTask,
   TaskGroup,
   TaskInDay,
   TaskTargetType,
@@ -50,6 +51,14 @@ export function task2TaskLocal(t: ProtocolReturnTask): TaskLocal {
     createdAt: new Date(t.createdAt),
     updatedAt: new Date(t.updatedAt),
     targetType: t.targetType ?? defaultTaskTargetType,
+    nextTask: t.nextTask ? nextTask2NextTaskLocal(t.nextTask) : t.nextTask,
+  };
+}
+
+export function nextTask2NextTaskLocal(t: NextTask): NextTask {
+  return {
+    ...t,
+    endDate: t.endDate ? new Date(t.endDate) : null,
   };
 }
 

@@ -28,4 +28,20 @@ pub fn broadcast_delete_task(
     Ok(())
 }
 
+pub fn broadcast_delete_task_group(
+    app_handler: &tauri::AppHandle,
+    deleted_task_group: impl Serialize + Clone,
+) -> Result<(), String> {
+    broadcast(app_handler, "delete_task_group", deleted_task_group)?;
+    Ok(())
+}
+
+pub fn broadcast_create_task_group(
+    app_handler: &tauri::AppHandle,
+    created_task_group: impl Serialize + Clone,
+) -> Result<(), String> {
+    broadcast(app_handler, "create_task_group", created_task_group)?;
+    Ok(())
+}
+
 // pub fn broadcast_delete_task_view_tasks

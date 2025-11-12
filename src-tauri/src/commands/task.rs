@@ -6,48 +6,23 @@ use sea_orm::{
     ActiveValue, ColumnTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait, QueryFilter,
     TransactionTrait,
 };
-use serde::Serialize;
 use serde_json::Value;
-use tauri::Emitter;
 use uuid::Uuid;
 
 use crate::{
     database::DbState,
     entities::{
+        next_task,
         prelude::Task,
         task::{self, BatchEditTasksResult},
         task_group, task_view_task,
     },
     utils::{
+        datetime::parse_datetime_string,
         event::{broadcast_batch_upsert_tasks, broadcast_delete_task},
         option3::Option3,
     },
 };
-
-fn parse_datetime_string(date_str: &str) -> Result<DateTime<Utc>, String> {
-    // 尝试 RFC 3339 格式
-    if let Ok(dt) = DateTime::parse_from_rfc3339(date_str) {
-        return Ok(dt.with_timezone(&Utc));
-    }
-
-    // 尝试 ISO 8601 格式
-    if let Ok(dt) = DateTime::parse_from_str(date_str, "%Y-%m-%dT%H:%M:%S%.fZ") {
-        return Ok(dt.with_timezone(&Utc));
-    }
-
-    // 尝试简单格式
-    if let Ok(dt) = DateTime::parse_from_str(date_str, "%Y-%m-%d %H:%M:%S") {
-        return Ok(dt.with_timezone(&Utc));
-    }
-
-    // 尝试只有日期的格式
-    if let Ok(naive_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d") {
-        let naive_datetime = naive_date.and_hms_opt(0, 0, 0).unwrap();
-        return Ok(Utc.from_utc_datetime(&naive_datetime));
-    }
-
-    Err(format!("Unable to parse date string: {}", date_str))
-}
 
 #[tauri::command]
 pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value>, String> {
@@ -55,8 +30,8 @@ pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value
     let db = db_guard.get_connection();
     let tasks = Task::find().all(db).await.map_err(|e| e.to_string())?;
     // 加载关联数据
-    let task_groups = tasks
-        .load_one(task_group::Entity, db)
+    let next_tasks = tasks
+        .load_one(next_task::Entity, db)
         .await
         .map_err(|e| e.to_string())?;
     let task_view_tasks = tasks
@@ -67,14 +42,18 @@ pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value
     // 组合数据
     let result: Vec<_> = tasks
         .into_iter()
-        .zip(task_groups.into_iter())
+        .zip(next_tasks.into_iter())
         .zip(task_view_tasks.into_iter())
-        .map(|((task, group), view_tasks)| {
+        .map(|((task, next_task), view_tasks)| {
             let mut task_json = serde_json::to_value(&task).unwrap();
             if let serde_json::Value::Object(ref mut map) = task_json {
                 map.insert(
                     "taskViewTasks".to_string(),
                     serde_json::to_value(&view_tasks).unwrap(),
+                );
+                map.insert(
+                    "nextTask".to_string(),
+                    serde_json::to_value(&next_task).unwrap(),
                 );
             }
             task_json
@@ -302,32 +281,23 @@ pub async fn delete_task_by_id(
 fn batch_create_tasks<'a>(
     txn: &'a sea_orm::DatabaseTransaction,
     create: Vec<task::BatchCreateTaskModel>,
-    id: Option<Uuid>,
+    parent_id: Option<Uuid>,
 ) -> BoxFuture<'a, Result<Vec<task::Model>, String>> {
     async move {
         let mut all_results = Vec::new();
 
         for data in create {
-            let create_id = if let Some(id) = id {
-                id
-            } else {
-                uuid::Uuid::new_v4()
-            };
+            let task_id = uuid::Uuid::new_v4();
+
             let active_model = task::ActiveModel {
-                id: ActiveValue::Set(create_id),
+                id: ActiveValue::Set(task_id),
                 sort_order: ActiveValue::Set(0),
                 content: ActiveValue::Set(data.task.content),
                 description: ActiveValue::Set(data.task.description),
                 group_id: ActiveValue::Set(
                     Uuid::parse_str(&data.task.group_id).map_err(|err| err.to_string())?,
                 ),
-                parent_id: if let Some(parent_id) = data.task.parent_id {
-                    ActiveValue::Set(Some(
-                        Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
-                    ))
-                } else {
-                    ActiveValue::NotSet
-                },
+                parent_id: ActiveValue::Set(parent_id),
                 created_at: ActiveValue::Set(Utc::now()),
                 updated_at: ActiveValue::Set(Utc::now()),
                 done_at: if let Some(done_at) = data.task.done_at {
@@ -373,16 +343,30 @@ fn batch_create_tasks<'a>(
 
                 ..Default::default()
             };
-
             let model = task::Entity::insert(active_model)
                 .exec_with_returning(txn)
                 .await
                 .map_err(|err| err.to_string())?;
-
+            if let Some(nt) = data.next_task {
+                let active_model: next_task::ActiveModel = next_task::ActiveModel {
+                    id: ActiveValue::Set(uuid::Uuid::new_v4()),
+                    mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
+                    a: ActiveValue::Set(nt.a),
+                    b: ActiveValue::Set(nt.b),
+                    task_id: ActiveValue::Set(task_id),
+                    created_at: ActiveValue::Set(Utc::now()),
+                    updated_at: ActiveValue::Set(Utc::now()),
+                    ..Default::default()
+                };
+                let res = next_task::Entity::insert(active_model)
+                    .exec_with_returning(txn)
+                    .await
+                    .map_err(|e| e.to_string())?;
+            }
             all_results.push(model);
 
             if let Some(children) = data.children {
-                let child_results = batch_create_tasks(txn, children, Some(create_id)).await?;
+                let child_results = batch_create_tasks(txn, children, Some(task_id)).await?;
                 all_results.extend(child_results);
             }
         }
@@ -450,7 +434,13 @@ pub async fn batch_edit_tasks(
         .collect::<Vec<Uuid>>();
     // 根据task_ids 搜索taskViewTasks
     let task_view_tasks = task_view_task::Entity::find()
-        .filter(task_view_task::Column::TaskId.is_in(task_ids))
+        .filter(task_view_task::Column::TaskId.is_in(task_ids.clone()))
+        .all(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+    // 根据task_ids 搜索nextTasks
+    let _next_tasks = next_task::Entity::find()
+        .filter(next_task::Column::TaskId.is_in(task_ids))
         .all(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
@@ -463,12 +453,17 @@ pub async fn batch_edit_tasks(
             .filter(|tvt| tvt.task_id == task.id)
             .cloned()
             .collect::<Vec<task_view_task::Model>>();
+        let related_next_task = _next_tasks.iter().find(|nt| nt.task_id == task.id).cloned();
         // 拼接
         let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
         if let serde_json::Value::Object(ref mut map) = task_json {
             map.insert(
                 "task_view_tasks".to_string(),
                 serde_json::to_value(&related_view_tasks).map_err(|e| e.to_string())?,
+            );
+            map.insert(
+                "next_task".to_string(),
+                serde_json::to_value(&related_next_task).map_err(|e| e.to_string())?,
             );
         }
         creates.push(task_json)
@@ -479,12 +474,17 @@ pub async fn batch_edit_tasks(
             .filter(|tvt| tvt.task_id == task.id)
             .cloned()
             .collect::<Vec<task_view_task::Model>>();
+        let related_next_task = _next_tasks.iter().find(|nt| nt.task_id == task.id).cloned();
         // 拼接
         let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
         if let serde_json::Value::Object(ref mut map) = task_json {
             map.insert(
                 "task_view_tasks".to_string(),
                 serde_json::to_value(&related_view_tasks).map_err(|e| e.to_string())?,
+            );
+            map.insert(
+                "next_task".to_string(),
+                serde_json::to_value(&related_next_task).map_err(|e| e.to_string())?,
             );
         }
         updates.push(task_json)
