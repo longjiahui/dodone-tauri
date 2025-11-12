@@ -9,7 +9,6 @@ pub fn upload_images(
 ) -> Result<serde_json::Value, String> {
     // received images and md5 image and use md5 as filename save to image folder
     // return md5 s
-    println!("upload_images: received {} files", files.len());
     // let images: Vec<Vec<u8>> ;
     let mut md5s: Vec<String> = vec![];
     for file in files {
@@ -35,7 +34,6 @@ pub fn open_image(app_handle: tauri::AppHandle, url: String) {
     // slice image://
     let path = url.trim_start_matches(format!("{}://", IMAGE_PROTOCOL_NAME).as_str());
     let image_path = get_image_dir(&app_handle).join(path);
-    println!("open image path: {:?}", image_path);
     app_handle
         .opener()
         .open_path(image_path.to_string_lossy().to_string(), Some("Preview"))

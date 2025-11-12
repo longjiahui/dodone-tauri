@@ -53,7 +53,6 @@ fn update_next_task_by_active_model(
     model: &mut next_task::ActiveModel,
     data: next_task::UpdateModel,
 ) -> Result<(), String> {
-    println!("Updating next_task model with data: {:?}", data);
     if let Some(mode) = data.mode {
         model.mode = ActiveValue::Set(mode);
     }

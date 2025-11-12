@@ -106,8 +106,6 @@ async fn update_task_by_active_model(
     model: &mut task::ActiveModel,
     data: task::UpdateModel,
 ) -> Result<(), String> {
-    println!("Updating task model with data: {:?}", data);
-
     if let Some(sort_order) = data.sort_order {
         model.sort_order = ActiveValue::Set(sort_order);
     }
@@ -191,10 +189,6 @@ async fn update_task_by_active_model(
             None
         });
     }
-    println!(
-        "start_at before update: {:?}, data.start_at: {:?}",
-        model.start_at, data.start_at
-    );
     if data.start_at != Option3::Undefined {
         model.start_at = ActiveValue::Set(if let Some(sa) = data.start_at.as_option() {
             Some(parse_datetime_string(&sa)?)
@@ -465,9 +459,7 @@ pub async fn batch_edit_tasks(
                 // Promise.all
                 let mut update_futures = Vec::new();
                 for item in update {
-                    println!("Updating task: {:?}", item.id);
                     if let Some(id) = &item.id {
-                        println!("Found task id: {}", id);
                         let task_id = uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?;
                         let pk = task::Entity::find_by_id(task_id);
 

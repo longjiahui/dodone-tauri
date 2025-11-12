@@ -97,7 +97,6 @@ pub fn run() {
             let path = uri.trim_start_matches(&format!("{}://", IMAGE_PROTOCOL_NAME)); // Extract the path from the URI
             let image_path =
                 get_image_dir(&app.app_handle()).join(path[..path.len() - 1].to_string());
-            println!("image path: {:?}", image_path);
             match std::fs::read(&image_path) {
                 Ok(data) => {
                     // Determine the MIME type based on the file extension

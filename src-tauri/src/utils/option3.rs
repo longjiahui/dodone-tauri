@@ -47,7 +47,6 @@ where
     where
         S: Serializer,
     {
-        println!("Serializing Option3");
         match self {
             Option3::Undefined => serializer.serialize_none(), // 或者跳过字段
             Option3::Null => serializer.serialize_none(),
