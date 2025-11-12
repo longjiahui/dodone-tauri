@@ -34,7 +34,7 @@ function handleClickCapture(event: MouseEvent) {
     // 图片事件捕获、打开图片本身
     event.preventDefault();
     event.stopPropagation();
-    backend.openImage(target.src);
+    backend.openImage({ url: target.src });
   }
 }
 

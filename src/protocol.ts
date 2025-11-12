@@ -335,12 +335,12 @@ export const protocols = {
   // uploadImageFiles
   uploadImages: defineAPI(
     "uploadImages",
-    defineAPIFunction<[ArrayBuffer[]], string[]>()
+    defineAPIFunction<[{ files: number[][] }], string[]>()
   ),
   openImage: defineAPI(
     "openImage",
     // image://xxx
-    defineAPIFunction<[string], void>()
+    defineAPIFunction<[{ url: string }], void>()
   ),
   getConst: defineAPI(
     "getConst",

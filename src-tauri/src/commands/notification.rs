@@ -19,7 +19,7 @@ pub async fn get_task_groups(db_manage: tauri::State<'_, DbState>) -> Result<Vec
 
 #[tauri::command]
 pub async fn create_task_group(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     data: task_group::CreateModel,
 ) -> Result<Value, String> {
@@ -40,7 +40,7 @@ pub async fn create_task_group(
         .exec_with_returning(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_create_task_group(&app_handler, res.clone());
+    let _ = broadcast_create_task_group(&app_handle, res.clone());
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
@@ -98,7 +98,7 @@ pub async fn update_task_group_by_id(
 
 #[tauri::command]
 pub async fn delete_task_group_by_id(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
@@ -116,6 +116,6 @@ pub async fn delete_task_group_by_id(
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_delete_task_group(&app_handler, task_group_for_broadcast);
+    let _ = broadcast_delete_task_group(&app_handle, task_group_for_broadcast);
     Ok(())
 }

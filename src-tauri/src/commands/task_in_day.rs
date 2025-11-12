@@ -83,7 +83,7 @@ pub async fn get_task_in_days(
 
 #[tauri::command]
 pub async fn create_task_in_day(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     data: task_in_day::CreateModel,
 ) -> Result<Value, String> {
@@ -113,13 +113,13 @@ pub async fn create_task_in_day(
         .exec_with_returning(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_create_task_in_day(&app_handler, res.clone());
+    let _ = broadcast_create_task_in_day(&app_handle, res.clone());
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn update_task_in_day_by_id(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
     data: task_in_day::UpdateModel,
@@ -165,14 +165,14 @@ pub async fn update_task_in_day_by_id(
         .await
         .map_err(|e| e.to_string())?;
 
-    let _ = broadcast_update_task_in_days(&app_handler, vec![res.clone()]);
+    let _ = broadcast_update_task_in_days(&app_handle, vec![res.clone()]);
 
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn delete_task_in_day_by_id(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
@@ -191,6 +191,6 @@ pub async fn delete_task_in_day_by_id(
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_delete_task_in_day(&app_handler, task_in_day_for_broadcast);
+    let _ = broadcast_delete_task_in_day(&app_handle, task_in_day_for_broadcast);
     Ok(())
 }

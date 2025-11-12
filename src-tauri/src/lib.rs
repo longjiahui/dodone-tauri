@@ -4,7 +4,7 @@ use futures::lock::Mutex;
 use tauri::Manager;
 
 use crate::{
-    constants::{get_database_dir, get_user_data_dir},
+    constants::{get_app_data_dir, get_database_dir, get_image_dir, IMAGE_PROTOCOL_NAME},
     database::{init_database, DbState},
 };
 
@@ -22,10 +22,12 @@ pub fn run() {
             let handle = app.handle().clone();
 
             // log all directorires
-            let user_data_dir = get_user_data_dir(&handle);
+            let app_data_dir = get_app_data_dir(&handle);
             let database_dir = get_database_dir(&handle);
-            println!("User data directory: {:?}", user_data_dir);
+            let image_dir = get_image_dir(&handle);
+            println!("App data directory: {:?}", app_data_dir);
             println!("Database directory: {:?}", database_dir);
+            println!("Image directory: {:?}", image_dir);
 
             // Initialize database in async context
             tauri::async_runtime::spawn(async move {
@@ -85,7 +87,37 @@ pub fn run() {
             commands::task_in_day::create_task_in_day,
             commands::task_in_day::update_task_in_day_by_id,
             commands::task_in_day::delete_task_in_day_by_id,
+            // image commands
+            commands::image::upload_images,
+            commands::image::open_image,
         ])
+        .register_uri_scheme_protocol(IMAGE_PROTOCOL_NAME, move |app, request| {
+            // Inside the register_uri_scheme_protocol handler:
+            let uri = request.uri().to_string();
+            let path = uri.trim_start_matches(&format!("{}://", IMAGE_PROTOCOL_NAME)); // Extract the path from the URI
+            let image_path =
+                get_image_dir(&app.app_handle()).join(path[..path.len() - 1].to_string());
+            println!("image path: {:?}", image_path);
+            match std::fs::read(&image_path) {
+                Ok(data) => {
+                    // Determine the MIME type based on the file extension
+                    let mime = "image/*";
+                    tauri::http::Response::builder()
+                        .header("Content-Length", data.len())
+                        .header("Content-Type", mime)
+                        .status(200)
+                        .body(data)
+                        .unwrap()
+                }
+                Err(e) => {
+                    println!("Error reading file {}: {}", path, e);
+                    tauri::http::Response::builder()
+                        .status(404)
+                        .body(Vec::new())
+                        .unwrap()
+                }
+            }
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

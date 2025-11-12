@@ -1,7 +1,13 @@
 import { Plugin } from "vue";
 import { createI18n } from "vue-i18n";
 import * as locales from "../tauri-public/locales";
-import { standardizeLocale } from "../tauri-public/utils";
+
+function standardizeLocale(
+  locale: string | undefined,
+  defaultLocale?: string
+): string {
+  return locale ? locale.split("-")[0] : standardizeLocale(defaultLocale, "en");
+}
 
 const getBrowserLocale = () => {
   const navigatorLocale = navigator.language || navigator.languages[0];

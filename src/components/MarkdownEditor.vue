@@ -74,9 +74,15 @@ onMounted(() => {
 async function insertImages(imageFiles: File[]) {
   if (imageFiles.length > 0) {
     // upload imagefiles
-    const imageURLs = await backend.uploadImages(
-      await Promise.all(imageFiles.map(async (f) => f.arrayBuffer()))
+    const files = await Promise.all(
+      imageFiles.map(async (f) => f.arrayBuffer())
     );
+    // convert array buffer to uint8array
+    const imageURLs = await backend.uploadImages({
+      files: files.map((f) => {
+        return Array.from(new Uint8Array(f));
+      }),
+    });
     // insert markdown image links
     const insertTexts =
       imageURLs.map((url) => `![image](${url})`).join("\n") + "\n";

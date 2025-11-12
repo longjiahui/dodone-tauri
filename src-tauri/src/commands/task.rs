@@ -66,7 +66,7 @@ pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value
 
 #[tauri::command]
 pub async fn create_task(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     data: task::CreateModel,
 ) -> Result<Value, String> {
@@ -92,7 +92,7 @@ pub async fn create_task(
         .await
         .map_err(|e| e.to_string())?;
     let _ = broadcast_batch_upsert_tasks(
-        &app_handler,
+        &app_handle,
         BatchEditTasksResult {
             created: vec![res.clone()],
             updated: vec![],
@@ -241,7 +241,7 @@ async fn update_task_by_active_model(
 
 #[tauri::command]
 pub async fn update_task_by_id(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
     data: task::UpdateModel,
@@ -291,7 +291,7 @@ pub async fn update_task_by_id(
         );
     }
     let _ = broadcast_batch_upsert_tasks(
-        &app_handler,
+        &app_handle,
         result_json,
         // BatchEditTasksResult {
         //     created: vec![],
@@ -303,7 +303,7 @@ pub async fn update_task_by_id(
 
 #[tauri::command]
 pub async fn delete_task_by_id(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
@@ -335,8 +335,8 @@ pub async fn delete_task_by_id(
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_delete_task(&app_handler, deleted_task_json);
-    let _ = broadcast_delete_task_view_tasks(&app_handler, deleted_task_view_tasks);
+    let _ = broadcast_delete_task(&app_handle, deleted_task_json);
+    let _ = broadcast_delete_task_view_tasks(&app_handle, deleted_task_view_tasks);
     Ok(())
 }
 
@@ -447,7 +447,7 @@ fn batch_create_tasks<'a>(
 
 #[tauri::command]
 pub async fn batch_edit_tasks(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     create: Vec<task::BatchCreateTaskModel>,
     update: Vec<task::UpdateModel>,
@@ -563,6 +563,6 @@ pub async fn batch_edit_tasks(
         "created": creates,
         "updated": updates,
     });
-    let _ = broadcast_batch_upsert_tasks(&app_handler, &final_ret);
+    let _ = broadcast_batch_upsert_tasks(&app_handle, &final_ret);
     Ok(final_ret)
 }

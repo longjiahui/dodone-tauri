@@ -108,7 +108,7 @@ pub async fn update_task_view_by_id(
 
 #[tauri::command]
 pub async fn delete_task_view_by_id(
-    app_handler: tauri::AppHandle,
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
@@ -133,7 +133,7 @@ pub async fn delete_task_view_by_id(
             .all(db_manage.lock().await.get_connection())
             .await
             .map_err(|e| e.to_string())?;
-        let _ = broadcast_delete_task_view_tasks(&app_handler, deleted_task_view_tasks);
+        let _ = broadcast_delete_task_view_tasks(&app_handle, deleted_task_view_tasks);
     }
     Ok(())
 }
