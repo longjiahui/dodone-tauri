@@ -12,23 +12,13 @@ pub struct Model {
     #[sea_orm(column_name = "sortOrder")]
     pub sort_order: i32,
     #[sea_orm(column_name = "taskViewId", column_type = "Text")]
-    pub task_view_id: String,
+    pub task_view_id: Uuid,
     #[sea_orm(column_name = "taskId", column_type = "Text")]
     pub task_id: Uuid,
-    #[sea_orm(
-        column_name = "createdAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub created_at: String,
-    #[sea_orm(
-        column_name = "updatedAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub updated_at: String,
+    #[sea_orm(column_name = "createdAt")]
+    pub created_at: DateTimeUtc,
+    #[sea_orm(column_name = "updatedAt")]
+    pub updated_at: DateTimeUtc,
     #[sea_orm(
         belongs_to,
         from = "task_id",
@@ -48,3 +38,10 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CreateModel {
+    // pub sort_order: i32,
+    pub task_view_id: String,
+    pub task_id: String,
+}

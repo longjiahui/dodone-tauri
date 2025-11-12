@@ -67,6 +67,24 @@ pub fn run() {
             commands::next_task::create_next_task,
             commands::next_task::update_next_task_by_id,
             commands::next_task::delete_next_task_by_id,
+            // task view commands
+            commands::task_view::get_task_views,
+            commands::task_view::create_task_view,
+            commands::task_view::update_task_view_by_id,
+            commands::task_view::delete_task_view_by_id,
+            // task anchor commands
+            commands::task_anchor::get_task_anchors,
+            commands::task_anchor::create_task_anchor,
+            commands::task_anchor::delete_task_anchor_by_id,
+            // task view task commands
+            commands::task_view_task::get_task_view_tasks,
+            commands::task_view_task::create_task_view_task,
+            commands::task_view_task::delete_task_view_task_by_id,
+            // task in day commands
+            commands::task_in_day::get_task_in_days,
+            commands::task_in_day::create_task_in_day,
+            commands::task_in_day::update_task_in_day_by_id,
+            commands::task_in_day::delete_task_in_day_by_id,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

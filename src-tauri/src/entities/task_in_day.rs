@@ -3,52 +3,45 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::{
+    entities::notification,
+    utils::option3::{de_option3, Option3},
+};
+
+#[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum TaskInDayType {
+    #[sea_orm(string_value = "TASK")]
+    TASK,
+    #[sea_orm(string_value = "CUSTOM")]
+    CUSTOM,
+}
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
 #[sea_orm(table_name = "TaskInDay")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: String,
+    pub id: Uuid,
     #[sea_orm(column_type = "Text")]
     pub color: String,
     #[sea_orm(column_name = "notificationId", column_type = "Text", nullable, unique)]
-    pub notification_id: Option<String>,
+    pub notification_id: Option<Uuid>,
     #[sea_orm(column_type = "Text")]
-    pub r#type: String,
+    pub r#type: TaskInDayType,
     #[sea_orm(column_type = "Text", nullable)]
     pub content: Option<String>,
     #[sea_orm(column_name = "taskId", column_type = "Text")]
-    pub task_id: String,
-    #[sea_orm(ignore, column_type = "custom(\"DATETIME\")", select_as = "text")]
-    pub date: String,
-    #[sea_orm(
-        column_name = "startTime",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub start_time: String,
-    #[sea_orm(
-        column_name = "endTime",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub end_time: String,
-    #[sea_orm(
-        column_name = "createdAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub created_at: String,
-    #[sea_orm(
-        column_name = "updatedAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub updated_at: String,
+    pub task_id: Uuid,
+    #[sea_orm(column_name = "date")]
+    pub date: DateTimeUtc,
+    #[sea_orm(column_name = "startTime")]
+    pub start_time: DateTimeUtc,
+    #[sea_orm(column_name = "endTime")]
+    pub end_time: DateTimeUtc,
+    #[sea_orm(column_name = "createdAt")]
+    pub created_at: DateTimeUtc,
+    #[sea_orm(column_name = "updatedAt")]
+    pub updated_at: DateTimeUtc,
     #[sea_orm(
         belongs_to,
         from = "notification_id",
@@ -68,3 +61,31 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateModel {
+    pub color: String,
+    pub r#type: TaskInDayType,
+    pub start_time: DateTimeUtc,
+    pub end_time: DateTimeUtc,
+    pub date: DateTimeUtc,
+    pub task_id: String,
+
+    pub notification_id: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UpdateModel {
+    pub color: Option<String>,
+    pub r#type: Option<TaskInDayType>,
+    pub start_time: Option<DateTimeUtc>,
+    pub end_time: Option<DateTimeUtc>,
+    pub date: Option<DateTimeUtc>,
+    pub task_id: Option<String>,
+
+    #[serde(default, deserialize_with = "de_option3")]
+    pub notification_id: Option3<String>,
+
+    pub use_notification: Option<bool>,
+    pub notification: Option<notification::CreateModel>,
+}

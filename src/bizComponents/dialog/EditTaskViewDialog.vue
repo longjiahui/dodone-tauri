@@ -294,7 +294,7 @@
             type: data.type || 'ALTERNATIVE',
             icon: data.icon || null,
             defineMode: currentTab,
-            GUIJSONData: JSON.stringify({
+            guijsonData: JSON.stringify({
               groups,
             }),
           })
@@ -335,7 +335,7 @@ const props = defineProps<{
       | "autoScript"
       | "type"
       | "icon"
-      | "GUIJSONData"
+      | "guijsonData"
       | "defineMode"
     >
   >;

@@ -1,6 +1,29 @@
-use sea_orm::{sea_query::Nullable, ActiveValue};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use std::{
+    fmt::{self, Formatter},
+    marker::PhantomData,
+};
 
+use sea_orm::{sea_query::Nullable, ActiveValue};
+use serde::{
+    de::{Error, Visitor},
+    Deserialize, Deserializer, Serialize, Serializer,
+};
+
+pub fn de_option3<'de, T, D>(de: D) -> Result<Option3<T>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    let result: Option<Option<T>> = Deserialize::deserialize(de).map(Some).unwrap();
+
+    match result {
+        Some(inner) => match inner {
+            Some(val) => Ok(Option3::Value(val)),
+            None => Ok(Option3::Null),
+        },
+        None => Ok(Option3::Undefined),
+    }
+}
 // 自定义类型来处理三种状态: undefined, null, value
 #[derive(Debug, Clone, PartialEq)]
 pub enum Option3<T> {
@@ -24,6 +47,7 @@ where
     where
         S: Serializer,
     {
+        println!("Serializing Option3");
         match self {
             Option3::Undefined => serializer.serialize_none(), // 或者跳过字段
             Option3::Null => serializer.serialize_none(),
@@ -66,9 +90,12 @@ impl<T> Option3<T> {
         matches!(self, Option3::Value(_))
     }
 
-    pub fn as_option(&self) -> Option<&T> {
+    pub fn as_option(&self) -> Option<T>
+    where
+        T: Clone,
+    {
         match self {
-            Option3::Value(ref value) => Some(value),
+            Option3::Value(ref value) => Some(value.clone()),
             _ => None,
         }
     }

@@ -82,10 +82,10 @@ export default {
   ...Object.entries(protocols).reduce(
     (t, [_k, a]) => {
       t[a.name] = ((...rest: any[]) => {
-        // console.debug(
-        //   camelToSnakeCase(a.name),
-        //   rest.map((d) => camelObjectToSnakeCase(d))
-        // );
+        console.debug(
+          camelToSnakeCase(a.name),
+          rest.map((d) => camelObjectToSnakeCase(d))
+        );
         return invoke(
           camelToSnakeCase(a.name),
           ...rest.map((d) => camelObjectToSnakeCase(d))

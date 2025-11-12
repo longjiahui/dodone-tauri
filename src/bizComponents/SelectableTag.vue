@@ -2,7 +2,7 @@
   <div
     v-wave
     :class="[
-      'group/g bg-light-2 shrink-0 cursor-pointer overflow-hidden',
+      'group/g rounded bg-light-2 shrink-0 cursor-pointer overflow-hidden',
       selected
         ? '!bg-[var(--theme)] text-[var(--theme-text-color)]'
         : 'hover:bg-light-3',
@@ -65,39 +65,39 @@
 </template>
 
 <script setup lang="ts">
-import type { Menu } from "@/components/dropdown/DefaultDropdownMenu.vue"
-import { defaultPrimaryHue, themeHSColorL, themeHSColorS } from "@/const"
-import { useTheme } from "@/utils/color"
+import type { Menu } from "@/components/dropdown/DefaultDropdownMenu.vue";
+import { defaultPrimaryHue, themeHSColorL, themeHSColorS } from "@/const";
+import { useTheme } from "@/utils/color";
 
 const props = withDefaults(
   defineProps<{
-    selected?: boolean
-    title?: string | null
-    icon?: string | null
-    content?: string | null
-    menus?: Menu[]
+    selected?: boolean;
+    title?: string | null;
+    icon?: string | null;
+    content?: string | null;
+    menus?: Menu[];
     // 0-100
-    progress?: number
+    progress?: number;
     // hue theme color
-    hue?: string
+    hue?: string;
   }>(),
   {
     hue: defaultPrimaryHue,
-  },
-)
+  }
+);
 
 const isShowProgress = computed(
-  () => props.progress && props.progress > 0 && props.progress < 100,
-)
+  () => props.progress && props.progress > 0 && props.progress < 100
+);
 const theme = useTheme(
   computed(() => props.hue),
   computed(() => ({
     a: 1,
     l: themeHSColorL,
     s: themeHSColorS,
-  })),
-)
+  }))
+);
 
-const slots = useSlots()
-const hasContent = computed(() => !!props.content || slots.content)
+const slots = useSlots();
+const hasContent = computed(() => !!props.content || slots.content);
 </script>

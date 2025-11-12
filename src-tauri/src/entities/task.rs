@@ -3,7 +3,10 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{entities::task, utils::option3::Option3};
+use crate::{
+    entities::task,
+    utils::option3::{de_option3, Option3},
+};
 
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
@@ -139,19 +142,29 @@ pub struct BatchCreateTaskModel {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct UpdateModel {
     pub id: Option<String>,
+    pub sort_order: Option<i32>,
     pub content: Option<String>,
     pub group_id: Option<String>,
     pub create_index: Option<i32>,
     pub priority: Option<i32>,
     pub factor: Option<i32>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub description: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub parent_id: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub state: Option3<TaskState>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub target: Option3<Decimal>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub target_type: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub start_at: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub end_at: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub done_at: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub created_by_task_id: Option3<String>,
 }
 

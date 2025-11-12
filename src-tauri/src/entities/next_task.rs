@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::option3::Option3;
+use crate::utils::option3::{de_option3, Option3};
 
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
@@ -66,5 +66,6 @@ pub struct UpdateModel {
     pub mode: Option<NextTaskMode>,
     pub a: Option<i32>,
     pub b: Option<i32>,
+    #[serde(default, deserialize_with = "de_option3")]
     pub end_date: Option3<String>,
 }

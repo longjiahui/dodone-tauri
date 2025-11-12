@@ -21,11 +21,13 @@ import { dialogs } from "@/components/dialog";
 const scheduleChartRef = ref<InstanceType<typeof ScheduleChart>>();
 
 function handleRequestDatas(start: Date, end: Date) {
-  return backend.getTaskInDays({ startDate: start, endDate: end }).then((d) => {
-    return d.map((d) => {
-      return task2ChartData(d);
+  return backend
+    .getTaskInDays({ search: { startDate: start, endDate: end } })
+    .then((d) => {
+      return d.map((d) => {
+        return task2ChartData(d);
+      });
     });
-  });
 }
 
 async function handleCreateTaskInDay(_date: Date, start: Date) {

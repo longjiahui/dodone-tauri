@@ -8,12 +8,13 @@
 //   TaskTargetRecord,
 //   TaskInDay,
 //   Notification,
+type DateType = string;
 
 export type TaskAnchor = {
   sortOrder: number;
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   taskId: string;
 };
 
@@ -37,13 +38,13 @@ export type Task = {
   sortOrder: number;
   id: string;
   description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   content: string;
   groupId: string;
-  doneAt: Date | null;
-  startAt: Date | null;
-  endAt: Date | null;
+  doneAt: DateType | null;
+  startAt: DateType | null;
+  endAt: DateType | null;
   state: $Enums.TaskState | null;
   priority: number;
   factor: number;
@@ -62,20 +63,20 @@ export type TaskGroup = {
   icon: string | null;
   description: string | null;
   isArchived: boolean;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   isHideAnchors: boolean;
 };
 
 export type NextTask = {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   taskId: string;
   mode: $Enums.NextTaskMode | null;
   a: number;
   b: number;
-  endDate: Date | null;
+  endDate: DateType | null;
 };
 
 export type TaskView = {
@@ -84,51 +85,51 @@ export type TaskView = {
   id: string;
   icon: string | null;
   description: string | null;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   type: $Enums.TaskViewType;
   defineMode: $Enums.TaskViewDefineMode;
-  GUIJSONData: string | null;
+  guijsonData: string | null;
   autoScript: string | null;
 };
 
 export type TaskViewTask = {
   sortOrder: number;
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   taskId: string;
   taskViewId: string;
 };
 
 export type TaskTargetRecord = {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   taskId: string;
   value: number;
-  recordAt: Date;
+  recordAt: DateType;
 };
 export type TaskInDay = {
   id: string;
   color: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   content: string | null;
   taskId: string;
   type: $Enums.TaskInDayType;
   notificationId: string | null;
-  date: Date;
-  startTime: Date;
-  endTime: Date;
+  date: DateType;
+  startTime: DateType;
+  endTime: DateType;
 };
 export type Notification = {
   id: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: DateType;
+  updatedAt: DateType;
   content: string;
   title: string;
-  notifyAt: Date;
+  notifyAt: DateType;
 };
 
 // 一些复合类型

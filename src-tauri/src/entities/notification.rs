@@ -8,42 +8,26 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "Notification")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: String,
+    pub id: Uuid,
     #[sea_orm(column_type = "Text")]
     pub title: String,
     #[sea_orm(column_type = "Text")]
     pub content: String,
-    #[sea_orm(
-        column_name = "notifyAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
+    #[sea_orm(column_name = "notifyAt")]
     pub notify_at: String,
-    #[sea_orm(
-        column_name = "notifiedAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text",
-        nullable
-    )]
-    pub notified_at: Option<String>,
-    #[sea_orm(
-        column_name = "createdAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub created_at: String,
-    #[sea_orm(
-        column_name = "updatedAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub updated_at: String,
+    #[sea_orm(column_name = "createdAt")]
+    pub created_at: DateTimeUtc,
+    #[sea_orm(column_name = "updatedAt")]
+    pub updated_at: DateTimeUtc,
     #[sea_orm(has_one)]
     pub task_in_day: HasOne<super::task_in_day::Entity>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct CreateModel {
+    pub title: String,
+    pub content: String,
+    pub notify_at: Option<i32>,
+}

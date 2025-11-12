@@ -88,8 +88,8 @@ function crud<
         [
           {
             id: string;
-            data?: Partial<D>;
-          } & ExtraUpdateParams,
+            data?: Partial<D> & ExtraUpdateParams;
+          },
         ],
         GetType | undefined
       >()
@@ -185,7 +185,7 @@ export const protocols = {
     TaskViewTask,
     {
       required: "taskId" | "taskViewId";
-      GetAllParams: [{ test: "hello" }];
+      GetAllParams: [{ search: { taskViewId: string } }];
     }
   >()("TaskViewTask"),
   ...crud<
@@ -202,29 +202,25 @@ export const protocols = {
       required: "type" | "taskId" | "date" | "startTime" | "endTime" | "color";
       GetAllParams: [
         {
-          startDate?: Date;
-          endDate?: Date;
-          isTaskDone?: boolean;
-          take?: number;
+          search: {
+            startDate?: Date;
+            endDate?: Date;
+            isTaskDone?: boolean;
+            take?: number;
+            taskId?: string;
+          };
         },
       ];
       GetType: TaskInDayGetType;
-      ExtraUpdateParams: [
-        {
-          useNotification: boolean;
-          notification: EntityWithRequiredKey<
-            Notification,
-            NotificationRequiredKeys
-          > | null;
-        }?,
-      ];
+      ExtraUpdateParams: {
+        useNotification?: boolean;
+        notification?: EntityWithRequiredKey<
+          Notification,
+          NotificationRequiredKeys
+        > | null;
+      };
     }
   >()("TaskInDay"),
-  getTaskInDaysByTaskId: defineAPI(
-    "getTaskInDaysByTaskId",
-    // [taskId]
-    defineAPIFunction<[string], TaskInDay[]>()
-  ),
 
   ...crud<
     Notification,

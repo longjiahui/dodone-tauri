@@ -13,7 +13,6 @@ import {
   TaskWithChildren,
   task2TaskLocal,
   taskLocal2TaskWithChildren,
-  nextTask2NextTaskLocal,
 } from "@/types";
 import { flatMapTree, traverse, traverseSome } from "@/utils/traverse";
 import { groupBy } from "@/utils/groupBy";
@@ -448,7 +447,7 @@ export const useTaskStore = defineStore("task", () => {
             return {
               id,
               state: "DONE",
-              doneAt: new Date(),
+              doneAt: new Date().toISOString(),
             };
           }),
         });
@@ -509,7 +508,6 @@ export const useTaskStore = defineStore("task", () => {
         }
         return ret.then((nt) => {
           if (nt) {
-            nt = nextTask2NextTaskLocal(nt);
             if (task.nextTask) {
               Object.assign(task.nextTask, nt);
             } else {
@@ -565,6 +563,7 @@ export const useTaskStore = defineStore("task", () => {
           {} as Record<string, (typeof pendingUpdates)[0]>
         )
       );
+      console.debug(mergedUpdates, pendingUpdates, "hello world");
       return this.batchEditTasks({
         update: mergedUpdates,
       }).then((d) => {

@@ -45,20 +45,7 @@ type TaskLocal = Omit<TaskWithChildren, "children">;
 export function task2TaskLocal(t: ProtocolReturnTask): TaskLocal {
   return {
     ...t,
-    startAt: t.startAt ? new Date(t.startAt) : null,
-    endAt: t.endAt ? new Date(t.endAt) : null,
-    doneAt: t.doneAt ? new Date(t.doneAt) : null,
-    createdAt: new Date(t.createdAt),
-    updatedAt: new Date(t.updatedAt),
     targetType: t.targetType ?? defaultTaskTargetType,
-    nextTask: t.nextTask ? nextTask2NextTaskLocal(t.nextTask) : t.nextTask,
-  };
-}
-
-export function nextTask2NextTaskLocal(t: NextTask): NextTask {
-  return {
-    ...t,
-    endDate: t.endDate ? new Date(t.endDate) : null,
   };
 }
 
@@ -125,8 +112,6 @@ export function taskGroup2TaskGroupWithExtra(
 ): TaskGroupWithExtra {
   return {
     ...group,
-    createdAt: new Date(group.createdAt),
-    updatedAt: new Date(group.updatedAt),
     finishedFactor: calculateFinishLeaveTasksFactor(tasks),
     totalFactor: calculateTotalLeaveTasksFactor(tasks),
   };
@@ -139,7 +124,7 @@ export function taskView2TaskViewWithExtra(
     groups: [],
   };
   try {
-    GUIData = JSON.parse(view.GUIJSONData || "");
+    GUIData = JSON.parse(view.guijsonData || "");
   } catch (err) {
     console.warn(err);
   }

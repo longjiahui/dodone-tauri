@@ -194,8 +194,8 @@
           ></div> -->
         </div>
       </div>
+      <!-- horizontal-scroll -->
       <Scrollbar
-        horizontal-scroll
         @scroll="handleScroll"
         ref="scrollContainerRef"
         :class="['stretch size-full', bgColor2]"
@@ -557,9 +557,13 @@
                                               )
                                               .toDate();
                                             return backend
-                                              .updateTaskInDayById(data.id, {
-                                                startTime: newStart,
-                                                endTime: newEnd,
+                                              .updateTaskInDayById({
+                                                id: data.id,
+                                                data: {
+                                                  startTime:
+                                                    newStart.toISOString(),
+                                                  endTime: newEnd.toISOString(),
+                                                },
                                               })
                                               .then(() => {
                                                 data.start = newStart;
@@ -643,7 +647,9 @@
                                           })
                                           .finishPromise(() => {
                                             return backend
-                                              .deleteTaskInDayById(data.id)
+                                              .deleteTaskInDayById({
+                                                id: data.id,
+                                              })
                                               .then(() => {
                                                 const ind = datas.findIndex(
                                                   (d) => d.id === data.id
@@ -1092,20 +1098,30 @@ function handleDataMouseUp() {
         )
         .startOf("minute")
         .toDate();
-      backend.updateTaskInDayById(interactData.value.id, {
-        startTime: interactData.value.start,
-        endTime: interactData.value.end,
-        date: interactData.value.date,
+      backend.updateTaskInDayById({
+        id: interactData.value.id,
+        data: {
+          startTime: interactData.value.start.toISOString(),
+          endTime: interactData.value.end.toISOString(),
+          date: interactData.value.date.toISOString(),
+        },
       });
     } else if (interactType.value === "resizeStart") {
       interactData.value.start = interactNewStart.value.toDate();
-      backend.updateTaskInDayById(interactData.value.id, {
-        startTime: interactData.value.start,
+      backend.updateTaskInDayById({
+        id: interactData.value.id,
+        data: {
+          startTime: interactData.value.start.toISOString(),
+          useNotification: false,
+        },
       });
     } else if (interactType.value === "resizeEnd") {
       interactData.value.end = interactNewStart.value.toDate();
-      backend.updateTaskInDayById(interactData.value.id, {
-        endTime: interactData.value.end,
+      backend.updateTaskInDayById({
+        id: interactData.value.id,
+        data: {
+          endTime: interactData.value.end.toISOString(),
+        },
       });
     }
     interactType.value = undefined;
@@ -1152,21 +1168,23 @@ function handleBizDrop(
           createTaskInDay({
             type: "TASK",
             taskId: data.id,
-            date: m.date(d).toDate(),
+            date: m.date(d).toDate().toISOString(),
             startTime: m
               .date(d)
               .hour(h + minDayTime.value)
-              .toDate(),
+              .toDate()
+              .toISOString(),
             endTime: m
               .date(d)
               .hour(h + minDayTime.value + 1)
-              .toDate(),
+              .toDate()
+              .toISOString(),
           }),
           ...(data.startAt
             ? []
             : [
                 taskStore.updateTaskById(data.id, {
-                  startAt: m.date(d).toDate(),
+                  startAt: m.date(d).toDate().toISOString(),
                 }),
               ]),
         ])
@@ -1183,9 +1201,12 @@ function updateData(
   end: Date | undefined
 ) {
   return backend
-    .updateTaskInDayById(chartData.data.id, {
-      ...(start ? { startTime: start } : {}),
-      ...(end ? { endTime: end } : {}),
+    .updateTaskInDayById({
+      id: chartData.data.id,
+      data: {
+        ...(start ? { startTime: start.toISOString() } : {}),
+        ...(end ? { endTime: end.toISOString() } : {}),
+      },
     })
     .then(() =>
       Object.assign(chartData, {

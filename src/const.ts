@@ -57,25 +57,27 @@ export const drawerPaddingLevel = 4;
 export const sidebarPaddingXLevel = 3;
 export const sidebarPaddingX = `px-${sidebarPaddingXLevel}`;
 
-type TaskViewCreatePreset = GetAPIParams<typeof protocols.createTaskView>[0];
+type TaskViewCreatePreset = GetAPIParams<
+  typeof protocols.createTaskView
+>[0]["data"];
 export const taskViewPresets = {
   today: {
     name: "今天",
     type: "AUTO",
     defineMode: "GUI",
-    GUIJSONData: `{"groups":[{"relation":"or","conditions":[],"groups":[{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":0},"operator":">="},{"fieldId":"startAt","value":{"type":"today24","offset":0},"operator":"<="}],"relation":"and"},{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":0},"operator":"<="},{"fieldId":"endAt","value":{"type":"today0","offset":0},"operator":">="}],"relation":"and"}]}]}`,
+    guijsonData: `{"groups":[{"relation":"or","conditions":[],"groups":[{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":0},"operator":">="},{"fieldId":"startAt","value":{"type":"today24","offset":0},"operator":"<="}],"relation":"and"},{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":0},"operator":"<="},{"fieldId":"endAt","value":{"type":"today0","offset":0},"operator":">="}],"relation":"and"}]}]}`,
   } satisfies TaskViewCreatePreset,
   tomorrow: {
     name: "明天",
     type: "AUTO",
     defineMode: "GUI",
-    GUIJSONData: `{"groups":[{"relation":"or","conditions":[],"groups":[{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today24","offset":1},"operator":"<="},{"fieldId":"startAt","value":{"type":"today24","offset":0},"operator":">="}],"relation":"and"},{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":1},"operator":"<="},{"fieldId":"endAt","value":{"type":"today0","offset":1},"operator":">="}],"relation":"and"}]}]}`,
+    guijsonData: `{"groups":[{"relation":"or","conditions":[],"groups":[{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today24","offset":1},"operator":"<="},{"fieldId":"startAt","value":{"type":"today24","offset":0},"operator":">="}],"relation":"and"},{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":1},"operator":"<="},{"fieldId":"endAt","value":{"type":"today0","offset":1},"operator":">="}],"relation":"and"}]}]}`,
   } satisfies TaskViewCreatePreset,
   dayAfterTomorrow: {
     name: "后天",
     type: "AUTO",
     defineMode: "GUI",
-    GUIJSONData: `{"groups":[{"relation":"or","conditions":[],"groups":[{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today24","offset":1},"operator":">="},{"fieldId":"startAt","value":{"type":"today24","offset":2},"operator":"<="}],"relation":"and"},{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":2},"operator":"<="},{"fieldId":"endAt","value":{"type":"today0","offset":2},"operator":">="}],"relation":"and"}]}]}`,
+    guijsonData: `{"groups":[{"relation":"or","conditions":[],"groups":[{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today24","offset":1},"operator":">="},{"fieldId":"startAt","value":{"type":"today24","offset":2},"operator":"<="}],"relation":"and"},{"groups":[],"conditions":[{"fieldId":"startAt","value":{"type":"today0","offset":2},"operator":"<="},{"fieldId":"endAt","value":{"type":"today0","offset":2},"operator":">="}],"relation":"and"}]}]}`,
   } satisfies TaskViewCreatePreset,
   thisWeek: {
     name: "本周",

@@ -50,7 +50,6 @@ export const useTaskViewStore = defineStore("taskView", () => {
 
   Promise.all([
     fetchDataStore.loadTasksPromise(),
-
     fetchDataStore.loadTaskViewsPromise(),
   ]).then(([_, tvs]) => {
     taskViews.value = tvs.map((d) => taskView2TaskViewWithExtra(d));
@@ -313,13 +312,14 @@ export const useTaskViewStore = defineStore("taskView", () => {
     const taskView = getTaskView(taskViewId);
     if (taskView) {
       const item = initTaskViewTasksMapIfNeeded(taskView);
+      console.debug("loading Taskview: ", item);
       if (item.loaded) {
       } else {
         if (item.taskView.type === "ALTERNATIVE") {
           // ALTERNATIVE
           await backend
             .getTaskViewTasks({
-              where: {
+              search: {
                 taskViewId: taskView.id,
               },
             })
@@ -336,6 +336,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
           if (item.taskView.type === "AUTO") {
             try {
               const scriptFunc = getTaskViewAutoScriptFunction(item.taskView);
+              console.debug(taskStore.flatTasks);
               item.tasks = taskStore.flatTasks.filter((t) => {
                 return scriptFunc(t);
               });
@@ -385,15 +386,17 @@ export const useTaskViewStore = defineStore("taskView", () => {
     reloadTasks,
     validateIsTaskInView,
 
-    createTaskView(data: GetAPIParams<typeof protocols.createTaskView>[0]) {
-      return backend.createTaskView(data).then((tv) => {
+    createTaskView(
+      data: GetAPIParams<typeof protocols.createTaskView>[0]["data"]
+    ) {
+      return backend.createTaskView({ data }).then((tv) => {
         if (tv) {
           taskViews.value.push(taskView2TaskViewWithExtra(tv));
         }
       });
     },
     updateTaskViewById(id: string, data: Partial<ReadOnlyTaskViewWithExtra>) {
-      return backend.updateTaskViewById(id, data).then((tv) => {
+      return backend.updateTaskViewById({ id, data }).then((tv) => {
         if (tv) {
           const tvExtra = taskView2TaskViewWithExtra(tv);
           const index = taskViews.value.findIndex((v) => v.id === id);
@@ -406,7 +409,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
       });
     },
     deleteTaskViewById(id: string) {
-      return backend.deleteTaskViewById(id).then(() => {
+      return backend.deleteTaskViewById({ id }).then(() => {
         const index = taskViews.value.findIndex((v) => v.id === id);
         if (index > -1) {
           taskViews.value.splice(index, 1);
@@ -414,12 +417,12 @@ export const useTaskViewStore = defineStore("taskView", () => {
       });
     },
     createTaskViewTask(
-      data: GetAPIParams<typeof protocols.createTaskViewTask>[0]
+      data: GetAPIParams<typeof protocols.createTaskViewTask>[0]["data"]
     ) {
-      return backend.createTaskViewTask(data);
+      return backend.createTaskViewTask({ data });
     },
     deleteTaskViewTaskByTaskViewTask(taskViewTask: TaskViewTask) {
-      return backend.deleteTaskViewTaskById(taskViewTask.id);
+      return backend.deleteTaskViewTaskById({ id: taskViewTask.id });
     },
     changeOrders(views: ReadOnlyTaskViewWithExtra[]) {
       const params = views.map((v, i) => ({ id: v.id, sortOrder: i }));

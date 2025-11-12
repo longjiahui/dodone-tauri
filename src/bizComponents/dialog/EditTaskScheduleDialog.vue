@@ -31,7 +31,7 @@
         @click="
           () => {
             return backend
-              .deleteTaskInDayById(taskSchedule.id)
+              .deleteTaskInDayById({ id: taskSchedule.id })
               .then(() => dialog.finish({ type: 'delete' }));
           }
         "
@@ -84,24 +84,22 @@ const data = ref({
 
 function handleSave() {
   return backend
-    .updateTaskInDayById(
-      props.taskSchedule.id,
-      {
-        startTime: data.value.range[0].toDate(),
-        endTime: data.value.range[1].toDate(),
+    .updateTaskInDayById({
+      id: props.taskSchedule.id,
+      data: {
+        startTime: data.value.range[0].toDate().toISOString(),
+        endTime: data.value.range[1].toDate().toISOString(),
         color: data.value.hue?.toString(),
-      },
-      {
         useNotification: data.value.useNotification,
         notification: data.value.useNotification
           ? {
               title: task.value?.content || "",
               content: task.value?.description || "",
-              notifyAt: data.value.range[0].toDate(),
+              notifyAt: data.value.range[0].toDate().toISOString(),
             }
           : null,
-      }
-    )
+      },
+    })
     .then((d) => {
       if (d) {
         props.dialog.finish({

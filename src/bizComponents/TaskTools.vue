@@ -42,21 +42,29 @@
             name: $t('today'),
             click: () =>
               taskStore.updateTaskById(realTask!.id, {
-                startAt: dayjs().startOf('day').toDate(),
+                startAt: dayjs().startOf('day').toDate().toISOString(),
               }),
           },
           {
             name: $t('tomorrow'),
             click: () =>
               taskStore.updateTaskById(realTask!.id, {
-                startAt: dayjs().add(1, 'day').startOf('day').toDate(),
+                startAt: dayjs()
+                  .add(1, 'day')
+                  .startOf('day')
+                  .toDate()
+                  .toISOString(),
               }),
           },
           {
             name: $t('dayAfterTomorrow'),
             click: () =>
               taskStore.updateTaskById(realTask!.id, {
-                startAt: dayjs().add(2, 'day').startOf('day').toDate(),
+                startAt: dayjs()
+                  .add(2, 'day')
+                  .startOf('day')
+                  .toDate()
+                  .toISOString(),
               }),
           },
           {

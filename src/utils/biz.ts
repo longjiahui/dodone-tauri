@@ -140,7 +140,7 @@ export function sortTasks(
       return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
     } else {
       // 一样的sortOrder则根据创建日期
-      return b.createdAt.getTime() - a.createdAt.getTime();
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     }
     //
     // }
@@ -156,7 +156,7 @@ export function sortTaskViews(
     return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
   } else {
     // createdAt
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   }
 }
 
@@ -168,7 +168,7 @@ export function sortTaskGroups(
     return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
   } else {
     // createdAt
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   }
 }
 
@@ -180,7 +180,7 @@ export function sortTaskAnchors(
     return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
   } else {
     // createdAt
-    return b.createdAt.getTime() - a.createdAt.getTime();
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   }
 }
 
@@ -223,13 +223,17 @@ export function task2ChartData(data: ReadOnlyTaskInDayWithExtra): ChartData {
   };
 }
 
-type _CreateTaskInDayParam = GetAPIParams<typeof protocols.createTaskInDay>[0];
+type _CreateTaskInDayParam = GetAPIParams<
+  typeof protocols.createTaskInDay
+>[0]["data"];
 export function createTaskInDay(
   taskInDay: Partial<_CreateTaskInDayParam> &
     Omit<_CreateTaskInDayParam, "color">
 ) {
   return backend.createTaskInDay({
-    ...taskInDay,
-    color: getHSLHash(taskInDay.taskId).toString(),
+    data: {
+      ...taskInDay,
+      color: getHSLHash(taskInDay.taskId).toString(),
+    },
   });
 }

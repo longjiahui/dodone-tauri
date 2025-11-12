@@ -181,7 +181,7 @@ export function useDefinedConditions() {
         },
         validate: (t) =>
           backend
-            .getTaskInDaysByTaskId(t.id)
+            .getTaskInDays({ search: { taskId: t.id } })
             .then((days) => !dayjs || days.length === 0),
         valueDesc() {
           return undefined;

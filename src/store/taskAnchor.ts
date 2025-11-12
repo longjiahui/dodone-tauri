@@ -59,7 +59,7 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
     createTaskAnchor(taskId: string) {
       return backend
         .createTaskAnchor({
-          taskId,
+          data: { taskId },
         })
         .then((v) => {
           taskAnchors.value.push(taskAnchor2TaskAnchorWithTaskGroupId(v));
@@ -71,7 +71,7 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
       );
       if (taskAnchorInd > -1) {
         const taskAnchor = taskAnchors.value[taskAnchorInd];
-        return backend.deleteTaskAnchorById(taskAnchor.id).then(() => {
+        return backend.deleteTaskAnchorById({ id: taskAnchor.id }).then(() => {
           taskAnchors.value.splice(taskAnchorInd, 1);
         });
       } else {

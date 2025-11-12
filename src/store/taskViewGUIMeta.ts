@@ -111,11 +111,26 @@ export const useTaskViewGUIMetaStore = defineStore("taskViewGUIMeta", () => {
     (
       [
         ["groupId", "groupId", "分组", "select", taskGroupStore.taskGroups],
-        ["startAt", "startAt", "开始时间", "datetime-select"],
-        ["endAt", "endAt", "结束时间", "datetime-select"],
+        [
+          "startAt",
+          (d) => (d.startAt ? new Date(d.startAt) : d.startAt),
+          "开始时间",
+          "datetime-select",
+        ],
+        [
+          "endAt",
+          (d) => (d.endAt ? new Date(d.endAt) : d.endAt),
+          "结束时间",
+          "datetime-select",
+        ],
         ["priority", "priority", "优先级", "number-input"],
         ["content", "content", "内容", "text-input"],
-        ["doneAt", "doneAt", "完成时间", "datetime-select"],
+        [
+          "doneAt",
+          (d) => (d.doneAt ? new Date(d.doneAt) : d.doneAt),
+          "完成时间",
+          "datetime-select",
+        ],
         ["factor", "factor", "工作量", "number-input"],
         ["parentId", "parentId", "父任务", "task-select"],
         [

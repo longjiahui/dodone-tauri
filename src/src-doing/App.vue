@@ -36,7 +36,9 @@ async function handleBatchUpsertTasks(d: BatchEditTasksResult) {
       await Promise.all(
         updated.map(async (update) => {
           if (update.state === "UNDONE") {
-            const taskInDays = await backend.getTaskInDaysByTaskId(update.id);
+            const taskInDays = await backend.getTaskInDays({
+              search: { taskId: update.id },
+            });
             // 如果比现在晚、比current早、则刷新
             if (
               taskInDays.some((d) => {
@@ -95,26 +97,30 @@ async function refreshTasks() {
     const today = dayjs();
     taskInDays.value = [
       ...(await backend.getTaskInDays({
-        startDate: today.startOf("date").toDate(),
-        endDate: today.endOf("date").toDate(),
-        isTaskDone: false,
+        search: {
+          startDate: today.startOf("date").toDate(),
+          endDate: today.endOf("date").toDate(),
+          isTaskDone: false,
+        },
       })),
       // 查找未来的一个任务
       ...(await backend.getTaskInDays({
-        startDate: today.add(1, "day").startOf("date").toDate(),
-        isTaskDone: false,
-        take: 1,
+        search: {
+          startDate: today.add(1, "day").startOf("date").toDate(),
+          isTaskDone: false,
+          take: 1,
+        },
       })),
     ];
     tasks.value = (
       await Promise.all(
-        taskInDays.value.map((d) => backend.getTaskById(d.taskId))
+        taskInDays.value.map((d) => backend.getTaskById({ id: d.taskId }))
       )
     )
       .filter((t) => !!t)
       .map((t) => task2TaskWithChildren(t!));
   } else if (val === "specific-task" && params.taskId) {
-    tasks.value = [await backend.getTaskById(params.taskId)]
+    tasks.value = [await backend.getTaskById({ id: params.taskId })]
       .filter((d) => !!d)
       .map((d) => task2TaskWithChildren(d!));
   }
@@ -196,7 +202,7 @@ onMounted(() => {
 });
 const finalTaskGroup = computedAsync(async () =>
   finalTask.value?.groupId
-    ? await backend.getTaskGroupById(finalTask.value.groupId)
+    ? await backend.getTaskGroupById({ id: finalTask.value.groupId })
     : null
 );
 

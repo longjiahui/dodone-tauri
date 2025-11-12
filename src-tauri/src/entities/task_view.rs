@@ -3,14 +3,69 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::utils::option3::Option3;
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct CreateModel {
+    pub r#type: TaskViewType,
+    pub name: String,
+
+    /// 可空字段
+    pub define_mode: Option<TaskViewDefineMode>,
+    pub description: Option<String>,
+    pub icon: Option<String>,
+    /// 可选排序，默认由后端处理
+    pub sort_order: Option<i32>,
+    pub guijson_data: Option<String>,
+    pub auto_script: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct UpdateModel {
+    pub name: Option<String>,
+    pub r#type: Option<TaskViewType>,
+    pub sort_order: Option<i32>,
+    pub define_mode: Option<TaskViewDefineMode>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub description: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub icon: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub guijson_data: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub auto_script: Option3<String>,
+}
+
+#[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum TaskViewType {
+    // 手动添加任务引用
+    #[sea_orm(string_value = "ALTERNATIVE")]
+    ALTERNATIVE,
+    // 自动查找任务列表
+    #[sea_orm(string_value = "AUTO")]
+    AUTO,
+}
+#[derive(
+    DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, Copy,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum TaskViewDefineMode {
+    // 手动添加任务引用
+    #[sea_orm(string_value = "GUI")]
+    GUI,
+    // 自动查找任务列表
+    #[sea_orm(string_value = "SCRIPT")]
+    SCRIPT,
+}
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
 #[sea_orm(table_name = "TaskView")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: String,
+    pub id: Uuid,
     #[sea_orm(column_type = "Text")]
-    pub r#type: String,
+    pub r#type: TaskViewType,
     #[sea_orm(column_type = "Text")]
     pub name: String,
     #[sea_orm(column_type = "Text", nullable)]
@@ -20,25 +75,15 @@ pub struct Model {
     #[sea_orm(column_name = "sortOrder")]
     pub sort_order: i32,
     #[sea_orm(column_name = "defineMode", column_type = "Text")]
-    pub define_mode: String,
-    #[sea_orm(column_name = "GUIJSONData", column_type = "Text", nullable)]
+    pub define_mode: TaskViewDefineMode,
+    #[sea_orm(column_name = "guijsonData", column_type = "Text", nullable)]
     pub guijson_data: Option<String>,
     #[sea_orm(column_name = "autoScript", column_type = "Text", nullable)]
     pub auto_script: Option<String>,
-    #[sea_orm(
-        column_name = "createdAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub created_at: String,
-    #[sea_orm(
-        column_name = "updatedAt",
-        ignore,
-        column_type = "custom(\"DATETIME\")",
-        select_as = "text"
-    )]
-    pub updated_at: String,
+    #[sea_orm(column_name = "createdAt")]
+    pub created_at: DateTimeUtc,
+    #[sea_orm(column_name = "updatedAt")]
+    pub updated_at: DateTimeUtc,
     #[sea_orm(has_many)]
     pub task_view_tasks: HasMany<super::task_view_task::Entity>,
 }

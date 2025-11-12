@@ -1,10 +1,10 @@
 use std::vec;
 
-use chrono::{DateTime, TimeZone, Utc};
+use chrono::Utc;
 use futures::{future::BoxFuture, FutureExt};
 use sea_orm::{
-    ActiveValue, ColumnTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait, QueryFilter,
-    TransactionTrait,
+    ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait,
+    QueryFilter, TransactionTrait,
 };
 use serde_json::Value;
 use uuid::Uuid;
@@ -15,11 +15,13 @@ use crate::{
         next_task,
         prelude::Task,
         task::{self, BatchEditTasksResult},
-        task_group, task_view_task,
+        task_view_task,
     },
     utils::{
         datetime::parse_datetime_string,
-        event::{broadcast_batch_upsert_tasks, broadcast_delete_task},
+        event::{
+            broadcast_batch_upsert_tasks, broadcast_delete_task, broadcast_delete_task_view_tasks,
+        },
         option3::Option3,
     },
 };
@@ -99,11 +101,16 @@ pub async fn create_task(
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
-fn update_task_by_active_model(
+async fn update_task_by_active_model(
+    connection: &impl ConnectionTrait,
     model: &mut task::ActiveModel,
     data: task::UpdateModel,
 ) -> Result<(), String> {
     println!("Updating task model with data: {:?}", data);
+
+    if let Some(sort_order) = data.sort_order {
+        model.sort_order = ActiveValue::Set(sort_order);
+    }
     if let Some(group_id) = data.group_id {
         model.group_id =
             ActiveValue::Set(Uuid::parse_str(&group_id).map_err(|err| err.to_string())?)
@@ -120,7 +127,42 @@ fn update_task_by_active_model(
             None
         });
     }
+    // if let Some(ref parent_id_str) = data.parent_id.as_option() {
+    //     if let Some(ref task_id_uuid) = model.id.clone().take() {
+    //         if parent_id_str == &task_id_uuid.to_string() {
+    //             // 不能將parentid設置成自身
+    //             // 报错返回
+    //             return Err("Parent ID cannot be the same as the task ID".to_string());
+    //         }
+    //     }
+    // }
     if data.parent_id != Option3::Undefined {
+        // 从要设置的任务id 往上搜，直到没有parentid为止，看看有没有和自身id相同的，如果有相同的则报错返回
+        let self_id = model.id.clone().take();
+        if let Some(sid) = self_id {
+            if let Some(ref parent_id_str) = data.parent_id.clone().as_option() {
+                let mut current_id = Some(parent_id_str.clone());
+                while let Some(cpid) = current_id {
+                    if cpid == sid.to_string() {
+                        return Err(
+                            "Parent ID cannot be the same as the task ID or its descendants"
+                                .to_string(),
+                        );
+                    }
+                    // 获取当前id的parentid
+                    // 这里不能使用model，因为model可能还没更新
+                    let task_model = task::Entity::find_by_id(
+                        uuid::Uuid::parse_str(&cpid).map_err(|e| e.to_string())?,
+                    )
+                    .one(connection)
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .ok_or_else(|| "Task not found during parent ID check".to_string())?;
+                    current_id = task_model.parent_id.map(|id| id.to_string());
+                }
+            }
+        }
+
         model.parent_id = if let Some(parent_id) = data.parent_id.as_option() {
             ActiveValue::Set(Some(
                 Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
@@ -204,25 +246,26 @@ pub async fn update_task_by_id(
     id: String,
     data: task::UpdateModel,
 ) -> Result<Value, String> {
+    let db_guard = db_manage.lock().await;
+    let db = db_guard.get_connection();
     let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let mut active_model = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db)
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Task not found".to_string())?
         .into_active_model();
 
-    update_task_by_active_model(&mut active_model, data)?;
-
+    update_task_by_active_model(db, &mut active_model, data).await?;
     let res = task::Entity::update(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db)
         .await
         .map_err(|e| e.to_string())?;
 
     // search for taskviewtasks
     let task_view_tasks = task_view_task::Entity::find()
         .filter(task_view_task::Column::TaskId.eq(res.id))
-        .all(db_manage.lock().await.get_connection())
+        .all(db)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -271,14 +314,29 @@ pub async fn delete_task_by_id(
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Task not found".to_string())?;
 
-    let task_for_broadcast = deleted_task.clone();
+    // 拼接关联的taskviewtasks
+    let deleted_task_view_tasks = task_view_task::Entity::find()
+        .filter(task_view_task::Column::TaskId.eq(deleted_task.id))
+        .all(db_manage.lock().await.get_connection())
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let mut deleted_task_json = serde_json::to_value(&deleted_task).unwrap();
+    if let serde_json::Value::Object(ref mut map) = deleted_task_json {
+        map.insert(
+            "task_view_tasks".to_string(),
+            serde_json::to_value(&deleted_task_view_tasks).unwrap(),
+        );
+    }
+
     let active_model = deleted_task.into_active_model();
 
     task::Entity::delete(active_model)
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_delete_task(&app_handler, task_for_broadcast);
+    let _ = broadcast_delete_task(&app_handler, deleted_task_json);
+    let _ = broadcast_delete_task_view_tasks(&app_handler, deleted_task_view_tasks);
     Ok(())
 }
 
@@ -289,7 +347,6 @@ fn batch_create_tasks<'a>(
 ) -> BoxFuture<'a, Result<Vec<task::Model>, String>> {
     async move {
         let mut all_results = Vec::new();
-
         for data in create {
             let task_id = uuid::Uuid::new_v4();
 
@@ -301,7 +358,15 @@ fn batch_create_tasks<'a>(
                 group_id: ActiveValue::Set(
                     Uuid::parse_str(&data.task.group_id).map_err(|err| err.to_string())?,
                 ),
-                parent_id: ActiveValue::Set(parent_id),
+                parent_id: match parent_id {
+                    Some(pid) => ActiveValue::Set(Some(pid)),
+                    None => ActiveValue::Set(match data.task.parent_id {
+                        Some(ref pids) => {
+                            Some(Uuid::parse_str(&pids).map_err(|err| err.to_string())?)
+                        }
+                        None => None,
+                    }),
+                },
                 created_at: ActiveValue::Set(Utc::now()),
                 updated_at: ActiveValue::Set(Utc::now()),
                 done_at: if let Some(done_at) = data.task.done_at {
@@ -414,7 +479,7 @@ pub async fn batch_edit_tasks(
                             .map_err(|err| err.to_string())?
                             .into_active_model();
 
-                        update_task_by_active_model(&mut active_model, item)?;
+                        update_task_by_active_model(txn, &mut active_model, item).await?;
 
                         update_futures.push(task::Entity::update(active_model).exec(txn));
                     }
