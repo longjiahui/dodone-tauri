@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::option3::Option3;
+use crate::utils::option3::{de_option3, Option3};
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct CreateModel {
