@@ -1,11 +1,5 @@
-use std::vec;
-
-use chrono::{DateTime, TimeZone, Utc};
-use futures::{future::BoxFuture, FutureExt};
-use sea_orm::{
-    ActiveValue, ColumnTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait, QueryFilter,
-    TransactionTrait,
-};
+use chrono::Utc;
+use sea_orm::{ActiveValue, EntityTrait, IntoActiveModel};
 use serde_json::Value;
 use uuid::Uuid;
 
@@ -101,7 +95,7 @@ pub async fn update_next_task_by_id(
 pub async fn delete_next_task_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
-) -> Result<(), String> {
+) -> Result<next_task::Model, String> {
     let pk = next_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let deleted_next_task = pk
         .one(db_manage.lock().await.get_connection())
@@ -116,5 +110,5 @@ pub async fn delete_next_task_by_id(
         .exec(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    Ok(())
+    Ok(next_task_for_broadcast)
 }

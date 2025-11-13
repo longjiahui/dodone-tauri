@@ -86,6 +86,5 @@ pub struct UpdateModel {
     #[serde(default, deserialize_with = "de_option3")]
     pub notification_id: Option3<String>,
 
-    pub use_notification: Option<bool>,
     pub notification: Option<notification::CreateModel>,
 }

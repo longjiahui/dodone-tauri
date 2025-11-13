@@ -137,8 +137,6 @@
   "removeFromCalendar": "カレンダーから削除",
   "removeFromScheduleConfirm": "このタスクをスケジュールから削除してもよろしいですか？",
   "cannotSetDayTimeRangeCauseOutOfRange": "時間範囲を超えているため、この時間帯を設定できません",
-  "cannotAdjustTaskOrderCausePositionNotExist": "ターゲット位置が存在しないため、タスクの順序を調整できません",
-  "cannotMoveTaskToDescendant": "タスクをその子孫タスクに移動することはできません",
   "onlyShowLeaves": "最下層タスクのみ表示",
   "showTreeStructure": "ツリー構造を表示",
   "hideFinishedTasks": "完了済みタスクを非表示",

@@ -1,13 +1,5 @@
-use std::{
-    fmt::{self, Formatter},
-    marker::PhantomData,
-};
-
 use sea_orm::{sea_query::Nullable, ActiveValue};
-use serde::{
-    de::{Error, Visitor},
-    Deserialize, Deserializer, Serialize, Serializer,
-};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub fn de_option3<'de, T, D>(de: D) -> Result<Option3<T>, D::Error>
 where

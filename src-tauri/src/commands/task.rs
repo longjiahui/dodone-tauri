@@ -101,11 +101,14 @@ pub async fn create_task(
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
-async fn update_task_by_active_model(
-    connection: &impl ConnectionTrait,
+async fn update_task_by_active_model<C>(
+    connection: &C,
     model: &mut task::ActiveModel,
     data: task::UpdateModel,
-) -> Result<(), String> {
+) -> Result<(), String>
+where
+    C: ConnectionTrait,
+{
     if let Some(sort_order) = data.sort_order {
         model.sort_order = ActiveValue::Set(sort_order);
     }

@@ -14,7 +14,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub content: String,
     #[sea_orm(column_name = "notifyAt")]
-    pub notify_at: String,
+    pub notify_at: DateTimeUtc,
     #[sea_orm(column_name = "createdAt")]
     pub created_at: DateTimeUtc,
     #[sea_orm(column_name = "updatedAt")]
@@ -29,5 +29,12 @@ impl ActiveModelBehavior for ActiveModel {}
 pub struct CreateModel {
     pub title: String,
     pub content: String,
-    pub notify_at: Option<i32>,
+    pub notify_at: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UpdateModel {
+    pub title: Option<String>,
+    pub content: Option<String>,
+    pub notify_at: Option<String>,
 }

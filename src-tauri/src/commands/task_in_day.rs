@@ -1,14 +1,19 @@
 use chrono::Utc;
 use sea_orm::{
     ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, JoinType, QueryFilter, QuerySelect,
-    RelationTrait,
+    RelationTrait, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
-use serde_json::{de, Value};
+use serde_json::Value;
 
 use crate::{
+    commands::notification::{
+        create_notification_service, delete_notification_by_id_service,
+        update_notification_by_id_service,
+    },
     database::DbState,
     entities::{
+        notification,
         prelude::TaskInDay,
         task::{self, TaskState},
         task_in_day,
@@ -41,7 +46,7 @@ pub struct SearchModel {
 pub async fn get_task_in_days(
     db_manage: tauri::State<'_, DbState>,
     search: SearchModel,
-) -> Result<Vec<Value>, String> {
+) -> Result<Vec<(task_in_day::Model, Vec<notification::Model>)>, String> {
     // 根据start_date end_date is_task_done take等条件进行查询
     let mut query = TaskInDay::find();
     if let Some(task_id) = search.task_id {
@@ -74,8 +79,10 @@ pub async fn get_task_in_days(
     if let Some(take) = search.take {
         query = query.limit(take as u64);
     }
+
+    // 查找的时候join notification by notifiction_id
     query
-        .into_json()
+        .find_with_related(notification::Entity)
         .all(db_manage.lock().await.get_connection())
         .await
         .map_err(|e| e.to_string())
@@ -123,51 +130,101 @@ pub async fn update_task_in_day_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
     data: task_in_day::UpdateModel,
-) -> Result<Value, String> {
-    let pk =
-        task_in_day::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
-    let mut active_model = pk
-        .one(db_manage.lock().await.get_connection())
+) -> Result<task_in_day::Model, String> {
+    db_manage
+        .lock()
         .await
-        .map_err(|e| e.to_string())?
-        .ok_or_else(|| "TaskInDay not found".to_string())?
-        .into_active_model();
+        .get_connection()
+        .transaction::<_, task_in_day::Model, String>(|txn| {
+            Box::pin(async move {
+                let pk = task_in_day::Entity::find_by_id(
+                    uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
+                );
+                let task_in_day = pk
+                    .one(txn)
+                    .await
+                    .map_err(|e| e.to_string())?
+                    .ok_or_else(|| "TaskInDay not found".to_string())?;
 
-    // Update fields from data
-    if let Some(color) = data.color {
-        active_model.color = ActiveValue::Set(color);
-    }
-    if let Some(r#type) = data.r#type {
-        active_model.r#type = ActiveValue::Set(r#type);
-    }
-    if let Some(start_time) = data.start_time {
-        active_model.start_time = ActiveValue::Set(start_time);
-    }
-    if let Some(end_time) = data.end_time {
-        active_model.end_time = ActiveValue::Set(end_time);
-    }
-    if let Some(date) = data.date {
-        active_model.date = ActiveValue::Set(date);
-    }
-    if data.notification_id != Option3::Undefined {
-        active_model.notification_id = match data.notification_id.as_option() {
-            Some(id_str) => ActiveValue::Set(Some(
-                uuid::Uuid::parse_str(&id_str).map_err(|e| e.to_string())?,
-            )),
-            None => ActiveValue::Set(None),
-        }
-    }
+                let mut task_in_day_active_model = task_in_day.clone().into_active_model();
 
-    active_model.updated_at = ActiveValue::Set(Utc::now());
+                // Update fields from data
+                if let Some(color) = data.color {
+                    task_in_day_active_model.color = ActiveValue::Set(color);
+                }
+                if let Some(r#type) = data.r#type {
+                    task_in_day_active_model.r#type = ActiveValue::Set(r#type);
+                }
+                if let Some(start_time) = data.start_time {
+                    task_in_day_active_model.start_time = ActiveValue::Set(start_time);
+                }
+                if let Some(end_time) = data.end_time {
+                    task_in_day_active_model.end_time = ActiveValue::Set(end_time);
+                }
+                if let Some(date) = data.date {
+                    task_in_day_active_model.date = ActiveValue::Set(date);
+                }
+                if let Some(notification) = data.notification {
+                    if let Some(notification_id) = task_in_day.notification_id {
+                        // 已经有notification_id, 更新即可
+                        update_notification_by_id_service(
+                            txn,
+                            notification_id.to_string().as_str(),
+                            notification::UpdateModel {
+                                content: Some(notification.content),
+                                notify_at: Some(notification.notify_at),
+                                title: Some(notification.title),
+                            },
+                        )
+                        .await?;
+                    } else {
+                        // 创建新的notification
+                        let new_notification =
+                            create_notification_service(txn, notification).await?;
+                        task_in_day_active_model.notification_id =
+                            ActiveValue::Set(Some(new_notification.id));
+                    }
+                }
+                if data.notification_id.is_null() {
+                    // 删除通知
+                    if let Some(notification_id) = task_in_day.notification_id {
+                        delete_notification_by_id_service(
+                            txn,
+                            notification_id.to_string().as_str(),
+                        )
+                        .await?;
+                    }
+                }
 
-    let res = task_in_day::Entity::update(active_model)
-        .exec(db_manage.lock().await.get_connection())
+                task_in_day_active_model.updated_at = ActiveValue::Set(Utc::now());
+
+                let res = task_in_day::Entity::update(task_in_day_active_model)
+                    .exec(txn)
+                    .await
+                    .map_err(|e| e.to_string())?;
+                let _ = broadcast_update_task_in_days(&app_handle, vec![res.clone()]);
+                // 拼接 notification 如果有
+                if let Some(notification_id) = res.notification_id {
+                    let notification = notification::Entity::find_by_id(notification_id)
+                        .one(txn)
+                        .await
+                        .map_err(|e| e.to_string())?
+                        .ok_or_else(|| "Notification not found".to_string())?;
+                    let mut res_value =
+                        serde_json::to_value(res.clone()).map_err(|e| e.to_string())?;
+                    if let Some(obj) = res_value.as_object_mut() {
+                        obj.insert(
+                            "notification".to_string(),
+                            serde_json::to_value(notification).map_err(|e| e.to_string())?,
+                        );
+                    }
+                    return Ok(serde_json::from_value(res_value).map_err(|e| e.to_string())?);
+                }
+                Ok(res)
+            })
+        })
         .await
-        .map_err(|e| e.to_string())?;
-
-    let _ = broadcast_update_task_in_days(&app_handle, vec![res.clone()]);
-
-    serde_json::to_value(res).map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]

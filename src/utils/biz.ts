@@ -5,6 +5,7 @@ import type {
   ReadOnlyTaskWithChildren,
   StringArrayToUnion,
   TaskAnchorWithTaskGroupId,
+  TaskInDay,
 } from "@/types";
 import { flatMapTree } from "./traverse";
 import { BatchCreateTask, GetAPIParams, protocols } from "@/protocol";
@@ -20,6 +21,7 @@ import {
   DefinedConditionKey,
   GetTaskFilterModelValueType,
 } from "@/bizComponents/filter/conditions";
+import { useNotificationStore } from "@/store/notification";
 
 export function calculateTotalLeaveTasksFactor(
   tasks: ReadOnlyTaskWithChildren[]
@@ -235,5 +237,16 @@ export function createTaskInDay(
       ...taskInDay,
       color: getHSLHash(taskInDay.taskId).toString(),
     },
+  });
+}
+
+export function updateTaskInDayById(
+  notificationStore: ReturnType<typeof useNotificationStore>,
+  ...rest: Parameters<typeof backend.updateTaskInDayById>
+) {
+  return backend.updateTaskInDayById(...rest).then((d) => {
+    if (d?.notificationId && d.notification) {
+      return notificationStore.rescheduleNotification(d.notification);
+    }
   });
 }

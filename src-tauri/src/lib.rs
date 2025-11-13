@@ -15,9 +15,13 @@ mod utils;
 
 mod commands;
 
+const DEFAULT_PRIMARY_WINDOW_LABEL: &str = "main";
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_opener::init())
         .setup(|app: &mut tauri::App| {
             let handle = app.handle().clone();
 
@@ -48,10 +52,18 @@ pub fn run() {
                     }
                 }
             });
-
+            let app_handle = app.handle();
+            if let Some(window) = app_handle.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+                let window_clone = window.clone();
+                window.on_window_event(move |e| {
+                    if let tauri::WindowEvent::CloseRequested { api, .. } = e {
+                        api.prevent_close();
+                        let _ = window_clone.hide();
+                    }
+                });
+            }
             Ok(())
         })
-        .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             // task group commands
             commands::task_group::get_task_groups,
@@ -90,6 +102,9 @@ pub fn run() {
             // image commands
             commands::image::upload_images,
             commands::image::open_image,
+            // notification commands
+            commands::notification::get_notifications,
+            commands::notification::delete_notification_by_id,
         ])
         .register_uri_scheme_protocol(IMAGE_PROTOCOL_NAME, move |app, request| {
             // Inside the register_uri_scheme_protocol handler:
@@ -117,6 +132,22 @@ pub fn run() {
                 }
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|_app, event| {
+            if let tauri::RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } = event
+            {
+                // Create or show a window as necessary
+                if !has_visible_windows {
+                    if let Some(window) = _app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        let _ = window.unminimize();
+                    }
+                }
+            }
+        });
 }

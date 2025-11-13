@@ -103,36 +103,59 @@ function handleDragOver(e: DragEvent) {
   }
 }
 
-function handleDragEnter(e: DragEvent) {
+async function handleDragEnter(e: DragEvent) {
   if (droppable(e)) {
     isDroppingActive.value = true;
   }
+  await dragEventEmitter.emit("dragenter", e);
 }
-function handleDragLeave(e: DragEvent) {
+function handleDragEventDragEnter(e: DragEvent) {
   if (droppable(e)) {
-    let relatedElement = e.relatedTarget as HTMLElement | null | undefined;
-    if (relatedElement) {
-      while (relatedElement !== slotRef.value && relatedElement) {
-        relatedElement = relatedElement?.parentElement;
+    let target = e.target as HTMLElement | null | undefined;
+    if (target) {
+      while (target !== slotRef.value && target) {
+        target = target?.parentElement;
       }
     }
-    if (relatedElement !== slotRef.value) {
+    if (target !== slotRef.value) {
       isDroppingActive.value = false;
     }
   }
 }
+// function handleDragEventDragLeave(e: DragEvent) {}
+dragEventEmitter.on("dragenter", handleDragEventDragEnter);
+onBeforeUnmount(() =>
+  dragEventEmitter.off("dragenter", handleDragEventDragEnter)
+);
+// dragEventEmitter.on("dragleave", handleDragEventDragLeave);
+
+// function handleDragLeave(e: DragEvent) {
+// if (droppable(e)) {
+//   // 这里的relatedTarget是enter的元素
+//   // safari 不支持这个属性
+//   let relatedElement = e.relatedTarget as HTMLElement | null | undefined;
+//   if (relatedElement) {
+//     while (relatedElement !== slotRef.value && relatedElement) {
+//       relatedElement = relatedElement?.parentElement;
+//     }
+//   }
+//   if (relatedElement !== slotRef.value) {
+//     isDroppingActive.value = false;
+//   }
+// }
+// }
 
 function listen(el: HTMLElement) {
   el.addEventListener("drop", handleDrop);
   el.addEventListener("dragover", handleDragOver);
   el.addEventListener("dragenter", handleDragEnter);
-  el.addEventListener("dragleave", handleDragLeave);
+  // el.addEventListener("dragleave", handleDragLeave);
 }
 function removeListen(el: HTMLElement) {
   el.removeEventListener("drop", handleDrop);
   el.removeEventListener("dragover", handleDragOver);
   el.removeEventListener("dragenter", handleDragEnter);
-  el.removeEventListener("dragleave", handleDragLeave);
+  // el.removeEventListener("dragleave", handleDragLeave);
 }
 
 watch(

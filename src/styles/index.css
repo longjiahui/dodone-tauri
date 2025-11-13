@@ -19,6 +19,7 @@
 		font-family: "SF Pro SC","SF Pro Text","SF Pro Icons","PingFang SC","Helvetica Neue","Helvetica","Arial",sans-serif!important;
 		/* font-family: "LXGW WenKai", -apple-system, "Microsoft YaHei", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; */
 		user-select: none;
+		-webkit-user-select: none;
 	}
 
 	*{

@@ -137,8 +137,6 @@
   "removeFromCalendar": "从日历中移除",
   "removeFromScheduleConfirm": "确定要从日程中移除该任务吗？",
   "cannotSetDayTimeRangeCauseOutOfRange": "无法设置该时间段，超出时间范围",
-  "cannotAdjustTaskOrderCausePositionNotExist": "无法调整任务顺序，目标位置不存在",
-  "cannotMoveTaskToDescendant": "无法将任务移动到其子孙任务中",
   "onlyShowLeaves": "只显示最底层任务",
   "showTreeStructure": "显示树形结构",
   "hideFinishedTasks": "隐藏已完成任务",

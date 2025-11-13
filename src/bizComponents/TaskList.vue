@@ -40,7 +40,7 @@
                 // return dialogs.MessageDialog({
                 //   content: $t('cannotAdjustTaskOrderCausePositionNotExist'),
                 // });
-                console.warn($t('cannotAdjustTaskOrderCausePositionNotExist'));
+                console.warn('无法调整任务顺序，目标位置不存在');
               }
             }
           }
@@ -122,9 +122,11 @@
                     return;
                   }
                   if (traverseSome(d.children.slice(), (d) => d.id === t.id)) {
-                    return dialogs.MessageDialog({
-                      content: $t('cannotMoveTaskToDescendant'),
-                    });
+                    // return dialogs.MessageDialog({
+                    //   content: $t('cannotMoveTaskToDescendant'),
+                    // });
+                    console.warn('无法将任务移动到其子孙任务中');
+                    return;
                   } else {
                     return taskStore.updateTaskParent(d.id, t.id, {
                       ...(d.groupId !== t.groupId

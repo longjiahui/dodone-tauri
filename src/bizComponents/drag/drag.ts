@@ -1,14 +1,17 @@
-import { Emitter } from "@/utils/emitter"
+import { Emitter } from "@/utils/emitter";
 export type DragDataType =
   | `move-tasks`
   | `move-tasks-${string}`
-  | `order-${string}`
+  | `order-${string}`;
 export interface DragData<T = any> {
-  type: DragDataType
-  datas: T[]
+  type: DragDataType;
+  datas: T[];
 }
 
 export const dragEventEmitter = new Emitter<{
-  dragstart: (e: DragEvent, channels: string[]) => any
-  dragend: (e: DragEvent) => any
-}>()
+  dragstart: (e: DragEvent, channels: string[]) => any;
+  dragend: (e: DragEvent) => any;
+  // safari不支持related target，所以...
+  dragenter: (e: DragEvent) => any;
+  // dragleave: (e: DragEvent) => any;
+}>();

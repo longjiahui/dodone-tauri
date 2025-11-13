@@ -305,14 +305,14 @@
                           )
                       ) || [],
                   }"
-                  #default="{ datas }"
+                  #default="{ datas: datasBetweenWindow }"
                 >
                   <div
-                    v-if="datas.length > 0"
+                    v-if="datasBetweenWindow.length > 0"
                     class="pointer-events-none relative size-full px-1"
                   >
                     <Scope
-                      v-for="(data, dataInd) in datas"
+                      v-for="(data, dataInd) in datasBetweenWindow"
                       :d="{
                         prevData:
                           datasInDate[m.date(d).format(dataDateFormat)]?.[
@@ -556,19 +556,20 @@
                                                 'second'
                                               )
                                               .toDate();
-                                            return backend
-                                              .updateTaskInDayById({
+                                            return updateTaskInDayById(
+                                              notificationStore,
+                                              {
                                                 id: data.id,
                                                 data: {
                                                   startTime:
                                                     newStart.toISOString(),
                                                   endTime: newEnd.toISOString(),
                                                 },
-                                              })
-                                              .then(() => {
-                                                data.start = newStart;
-                                                data.end = newEnd;
-                                              });
+                                              }
+                                            ).then(() => {
+                                              data.start = newStart;
+                                              data.end = newEnd;
+                                            });
                                           }
                                         }
                                       "
@@ -720,7 +721,11 @@ import {
 import { dialogs } from "../components/dialog";
 import { useTaskStore } from "@/store/task";
 import Scrollbar from "@/components/scrollbar/src/Scrollbar.vue";
-import { createTaskInDay, task2ChartData } from "@/utils/biz";
+import {
+  createTaskInDay,
+  task2ChartData,
+  updateTaskInDayById,
+} from "@/utils/biz";
 import {
   useWeekdayCH,
   taskScheduleHSColorS,
@@ -730,6 +735,7 @@ import {
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { calculateTheme } from "@/utils/color";
 import { useI18n } from "vue-i18n";
+import { useNotificationStore } from "@/store/notification";
 
 const props = withDefaults(
   defineProps<{
@@ -938,6 +944,7 @@ const datasInDate = computed(() => {
 
 const taskStore = useTaskStore();
 const taskGroupStore = useTaskGroupStore();
+const notificationStore = useNotificationStore();
 const hoveringId = ref<string>();
 const hoveringData = computed(() =>
   hoveringId.value
@@ -1098,7 +1105,7 @@ function handleDataMouseUp() {
         )
         .startOf("minute")
         .toDate();
-      backend.updateTaskInDayById({
+      updateTaskInDayById(notificationStore, {
         id: interactData.value.id,
         data: {
           startTime: interactData.value.start.toISOString(),
@@ -1108,16 +1115,15 @@ function handleDataMouseUp() {
       });
     } else if (interactType.value === "resizeStart") {
       interactData.value.start = interactNewStart.value.toDate();
-      backend.updateTaskInDayById({
+      updateTaskInDayById(notificationStore, {
         id: interactData.value.id,
         data: {
           startTime: interactData.value.start.toISOString(),
-          useNotification: false,
         },
       });
     } else if (interactType.value === "resizeEnd") {
       interactData.value.end = interactNewStart.value.toDate();
-      backend.updateTaskInDayById({
+      updateTaskInDayById(notificationStore, {
         id: interactData.value.id,
         data: {
           endTime: interactData.value.end.toISOString(),
@@ -1200,20 +1206,18 @@ function updateData(
   start: Date | undefined,
   end: Date | undefined
 ) {
-  return backend
-    .updateTaskInDayById({
-      id: chartData.data.id,
-      data: {
-        ...(start ? { startTime: start.toISOString() } : {}),
-        ...(end ? { endTime: end.toISOString() } : {}),
-      },
+  return updateTaskInDayById(notificationStore, {
+    id: chartData.data.id,
+    data: {
+      ...(start ? { startTime: start.toISOString() } : {}),
+      ...(end ? { endTime: end.toISOString() } : {}),
+    },
+  }).then(() =>
+    Object.assign(chartData, {
+      ...(start ? { start } : {}),
+      ...(end ? { end } : {}),
     })
-    .then(() =>
-      Object.assign(chartData, {
-        ...(start ? { start } : {}),
-        ...(end ? { end } : {}),
-      })
-    );
+  );
 }
 const { t } = useI18n();
 function quickSettingMinutes(data: ChartData, minutes: number) {

@@ -142,7 +142,9 @@ export type TaskViewGetType = TaskView & {
   tasks: TaskViewTask[];
 };
 
-export type TaskInDayGetType = TaskInDay;
+export type TaskInDayGetType = TaskInDay & {
+  notification?: Notification | null;
+};
 
 export type BatchEditTasksResult = {
   created: ProtocolReturnTask[];

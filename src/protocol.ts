@@ -213,7 +213,6 @@ export const protocols = {
       ];
       GetType: TaskInDayGetType;
       ExtraUpdateParams: {
-        useNotification?: boolean;
         notification?: EntityWithRequiredKey<
           Notification,
           NotificationRequiredKeys
@@ -226,20 +225,23 @@ export const protocols = {
     Notification,
     {
       required: NotificationRequiredKeys;
-      GetAllParams: [Date, Date?];
     }
   >()("Notification"),
 
-  createTaskInDayNotification: defineAPI(
-    "createTaskInDayNotification",
-    defineAPIFunction<
-      [
-        string,
-        Partial<Notification> & Pick<Notification, NotificationRequiredKeys>,
-      ],
-      Notification
-    >()
-  ),
+  // deleteTaskInDayNotificationByTaskInDayId: defineAPI(
+  //   "deleteTaskInDayNotificationByTaskInDayId",
+  //   defineAPIFunction<[{ id: string }], TaskInDayGetType>()
+  // ),
+  // createTaskInDayNotification: defineAPI(
+  //   "createTaskInDayNotification",
+  //   defineAPIFunction<
+  //     [
+  //       string,
+  //       Partial<Notification> & Pick<Notification, NotificationRequiredKeys>,
+  //     ],
+  //     Notification
+  //   >()
+  // ),
 
   // finishTask: defineAPI(
   //   "finishTask",

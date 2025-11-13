@@ -44,6 +44,7 @@ declare module 'vue' {
     ClickableIcon: typeof import('./bizComponents/ClickableIcon.vue')['default']
     ClockCircleOutlined: typeof import('@ant-design/icons-vue')['ClockCircleOutlined']
     ConfirmDialog: typeof import('./components/dialog/commonDialog/ConfirmDialog.vue')['default']
+    copy: typeof import('./components/GanttChart/GanttChart copy.vue')['default']
     DatePicker: typeof import('./components/DatePicker.vue')['default']
     DatePickerDialog: typeof import('./components/dialog/commonDialog/DatePickerDialog.vue')['default']
     DateRangeDesc: typeof import('./bizComponents/DateRangeDesc.vue')['default']

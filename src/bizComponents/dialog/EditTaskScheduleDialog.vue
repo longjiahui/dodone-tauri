@@ -90,7 +90,6 @@ function handleSave() {
         startTime: data.value.range[0].toDate().toISOString(),
         endTime: data.value.range[1].toDate().toISOString(),
         color: data.value.hue?.toString(),
-        useNotification: data.value.useNotification,
         notification: data.value.useNotification
           ? {
               title: task.value?.content || "",

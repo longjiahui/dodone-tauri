@@ -133,8 +133,6 @@
   "removeFromCalendar": "Remove from Calendar",
   "removeFromScheduleConfirm": "Are you sure you want to remove this task from the schedule?",
   "cannotSetDayTimeRangeCauseOutOfRange": "Cannot set this time period, out of time range",
-  "cannotAdjustTaskOrderCausePositionNotExist": "Cannot adjust task order, target position does not exist",
-  "cannotMoveTaskToDescendant": "Cannot move task to its descendant tasks",
   "onlyShowLeaves": "Show Only Leaf Tasks",
   "showTreeStructure": "Show Tree Structure",
   "hideFinishedTasks": "Hide Finished Tasks",
