@@ -24,6 +24,7 @@ export const useSystemStore = defineStore("systemStore", () => {
     isDarkMode.value = theme === "dark";
   });
   window.onThemeChanged((e) => {
+    console.debug("darkmode changed!", e);
     isDarkMode.value = e.payload === "dark";
   });
   watch(

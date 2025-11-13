@@ -65,6 +65,7 @@ pub fn set_const(app: &tauri::AppHandle, key: &str, value: &str) -> Result<Value
     };
     // apply color mode
     if key == "colorMode" {
+        println!("set color mode to {}", value);
         let theme = match value {
             "system" => None,
             "dark" => Some(Theme::Dark),
