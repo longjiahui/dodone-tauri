@@ -63,23 +63,21 @@ async function handleBatchUpsertTasks(d: BatchEditTasksResult) {
   }
 }
 
-(async () => {
-  const off_setDoingWindowParams = await backend.on_setDoingWindowParams(
-    handleSetDoingWindowParams
-  );
-  const off_updateTaskInDays = await backend.on_updateTaskInDays(refreshTasks);
-  const off_deleteTaskInDay = await backend.on_deleteTaskInDay(refreshTasks);
-  const off_batchUpsertTasks = await backend.on_batchUpsertTasks(
-    handleBatchUpsertTasks
-  );
+const off_setDoingWindowParams = backend.on_setDoingWindowParams(
+  handleSetDoingWindowParams
+);
+const off_updateTaskInDays = backend.on_updateTaskInDays(refreshTasks);
+const off_deleteTaskInDay = backend.on_deleteTaskInDay(refreshTasks);
+const off_batchUpsertTasks = backend.on_batchUpsertTasks(
+  handleBatchUpsertTasks
+);
 
-  onBeforeUnmount(() => {
-    off_setDoingWindowParams();
-    off_updateTaskInDays();
-    off_deleteTaskInDay();
-    off_batchUpsertTasks();
-  });
-})();
+onBeforeUnmount(() => {
+  off_setDoingWindowParams.then((d) => d());
+  off_updateTaskInDays.then((d) => d());
+  off_deleteTaskInDay.then((d) => d());
+  off_batchUpsertTasks.then((d) => d());
+});
 
 const tasks = ref<ReadOnlyTaskWithChildren[]>([]);
 const taskInDays = ref<ReadOnlyTaskInDayWithExtra[]>([]);

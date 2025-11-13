@@ -336,7 +336,6 @@ export const useTaskViewStore = defineStore("taskView", () => {
           if (item.taskView.type === "AUTO") {
             try {
               const scriptFunc = getTaskViewAutoScriptFunction(item.taskView);
-              console.debug(taskStore.flatTasks);
               item.tasks = taskStore.flatTasks.filter((t) => {
                 return scriptFunc(t);
               });

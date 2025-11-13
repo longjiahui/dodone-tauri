@@ -86,3 +86,12 @@ pub fn broadcast_update_task_in_days(
     broadcast(app_handle, "update_task_in_days", updated_task_in_days)?;
     Ok(())
 }
+
+// update const
+pub fn broadcast_update_const(
+    app_handle: &tauri::AppHandle,
+    updated_const: impl Serialize + Clone,
+) -> Result<(), String> {
+    broadcast(app_handle, "update_const", updated_const)?;
+    Ok(())
+}

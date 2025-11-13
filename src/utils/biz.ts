@@ -246,7 +246,8 @@ export function updateTaskInDayById(
 ) {
   return backend.updateTaskInDayById(...rest).then((d) => {
     if (d?.notificationId && d.notification) {
-      return notificationStore.rescheduleNotification(d.notification);
+      notificationStore.scheduleNotification(d.notification);
     }
+    return d;
   });
 }

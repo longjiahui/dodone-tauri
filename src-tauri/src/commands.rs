@@ -8,4 +8,5 @@ pub mod task_view_task;
 
 pub mod notification;
 
+pub mod constants;
 pub mod image;

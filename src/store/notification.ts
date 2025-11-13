@@ -8,6 +8,11 @@ import {
   sendNotification,
 } from "@tauri-apps/plugin-notification";
 
+interface NotifcationContext {
+  notification: Notification;
+  job?: Cron;
+}
+
 export const useNotificationStore = defineStore("notification", () => {
   async function notify(...rest: Parameters<typeof sendNotification>) {
     // 你有发送通知的权限吗？
@@ -25,104 +30,76 @@ export const useNotificationStore = defineStore("notification", () => {
     }
   }
 
-  const pendingNotifications = ref<Notification[]>([]);
+  const contexts = ref<NotifcationContext[]>([]);
+  // init pending jobs
   backend.getNotifications().then((ns) => {
-    console.error("pendding", ns);
-    console.warn("pending", ns);
     const pending = ns.filter((d) => new Date(d.notifyAt) > new Date());
     const passed = ns.filter((d) => new Date(d.notifyAt) <= new Date());
-    pendingNotifications.value = pending;
+    contexts.value = pending.map((d) => ({
+      notification: d,
+    }));
     // 删除已经过期的通知
     passed.forEach((n) => {
       backend.deleteNotificationById({
         id: n.id,
       });
     });
+    console.debug(`scheduling pending notification (${contexts.value.length})`);
+    contexts.value.forEach((c) => (c.job = notification2Job(c.notification)));
   });
 
-  console.debug(
-    `scheduling pending notification (${pendingNotifications.value.length})`
-  );
-  // init pending jobs
-  const jobs: Cron[] = pendingNotifications.value.map((n) =>
-    notification2Job(n)
-  );
-
   function scheduleNotification(n: Notification) {
-    if (
-      new Date(n.notifyAt) > new Date()
-      //  && !n.notifiedAt
-    ) {
-      pendingNotifications.value.push(n);
-      jobs.push(notification2Job(n));
+    const found = contexts.value.find((c) => c.notification.id === n.id);
+    if (found) {
+      if (found.job) {
+        found.job.stop();
+        found.job = undefined;
+      }
+      found.job = notification2Job(n);
+    } else {
+      contexts.value.push({
+        notification: n,
+        job: notification2Job(n),
+      });
     }
   }
-  function notification2Job(n: Notification): Cron {
-    const cron = new Cron(
-      n.notifyAt,
-      () => {
-        const ind = jobs.findIndex((j) => j.name === n.id);
-        if (ind > -1) {
-          jobs.splice(ind, 1);
+  function notification2Job(n: Notification): Cron | undefined {
+    console.debug("scheduling notification: ", n);
+    if (new Date(n.notifyAt) > new Date()) {
+      const cron = new Cron(
+        n.notifyAt,
+        () => {
+          console.debug("notifying!!: ", n);
+          const contextIndex = contexts.value.findIndex(
+            (c) => c.notification.id === n.id
+          );
+          if (contextIndex > -1) {
+            contexts.value.splice(contextIndex, 1);
+          }
+          backend.deleteNotificationById({
+            id: n.id,
+          });
+          // send notification
+          return notify({
+            title: n.title,
+            body: n.content,
+            // icon: '',
+            // icon: defaultIcon,
+          });
+        },
+        {
+          maxRuns: 1,
         }
-        const ind2 = pendingNotifications.value.findIndex(
-          (ln) => ln.id === n.id
-        );
-        if (ind2 > -1) {
-          pendingNotifications.value.splice(ind2, 1);
-        }
-        backend.deleteNotificationById({
-          id: n.id,
-        });
-        // send notification
-        return notify({
-          title: n.title,
-          body: n.content,
-          // icon: '',
-          // icon: defaultIcon,
-        });
-      },
-      {
-        maxRuns: 1,
-      }
-    );
-    cron.name = n.id;
-    cron.schedule();
-    return cron;
-  }
-
-  function rescheduleNotification(n: Notification) {
-    const ind = pendingNotifications.value.findIndex((pn) => pn.id === n.id);
-    if (ind > -1) {
-      const jobInd = jobs.findIndex((j) => j.name === n.id);
-      if (
-        new Date(n.notifyAt) <= new Date()
-        // || n.notifiedAt
-      ) {
-        pendingNotifications.value.splice(ind, 1);
-        if (jobInd > -1) {
-          jobs.splice(jobInd, 1);
-        }
-      } else if (jobInd > -1) {
-        const job = jobs[jobInd]!;
-        job.pause();
-        if (new Date(n.notifyAt) > new Date()) {
-          jobs[jobInd] = notification2Job(n);
-        }
-      }
+      );
+      cron.name = n.id;
+      return cron;
     } else {
-      if (
-        new Date(n.notifyAt) > new Date()
-        //  && !n.notifiedAt
-      ) {
-        return scheduleNotification(n);
-      }
+      return undefined;
     }
   }
 
   return {
-    notifications: readonly(pendingNotifications),
+    contexts: readonly(contexts),
     scheduleNotification,
-    rescheduleNotification,
   };
 });

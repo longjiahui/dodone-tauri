@@ -73,7 +73,7 @@ html {
     --color-success-light-4: hsl(99, 80%, 95%);
 }
 
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) { */
   html {
     --bg: #fff;
     --bg-a60: rgba(255, 255, 255,  0.6 );
@@ -97,9 +97,9 @@ html {
     --border-color-dark-6: #c3c3c3;
 
   }
-}
-@media (prefers-color-scheme: dark) {
-  html {
+/* }
+@media (prefers-color-scheme: dark) { */
+  html.dark {
     --bg: #000;
     --bg-a60: rgba(0, 0, 0, 0.6);
 
@@ -121,4 +121,4 @@ html {
     --border-color-dark-5: #666;
     --border-color-dark-6: #6f6f6f;
   }
-}
+/* } */

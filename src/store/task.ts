@@ -563,7 +563,6 @@ export const useTaskStore = defineStore("task", () => {
           {} as Record<string, (typeof pendingUpdates)[0]>
         )
       );
-      console.debug(mergedUpdates, pendingUpdates, "hello world");
       return this.batchEditTasks({
         update: mergedUpdates,
       }).then((d) => {

@@ -43,6 +43,7 @@ watch(
     immediate: true,
   }
 );
+
 watch(
   i18n.locale,
   (val) => {

@@ -46,7 +46,7 @@ pub struct SearchModel {
 pub async fn get_task_in_days(
     db_manage: tauri::State<'_, DbState>,
     search: SearchModel,
-) -> Result<Vec<(task_in_day::Model, Vec<notification::Model>)>, String> {
+) -> Result<Vec<Value>, String> {
     // 根据start_date end_date is_task_done take等条件进行查询
     let mut query = TaskInDay::find();
     if let Some(task_id) = search.task_id {
@@ -81,11 +81,47 @@ pub async fn get_task_in_days(
     }
 
     // 查找的时候join notification by notifiction_id
-    query
-        .find_with_related(notification::Entity)
+    let task_in_days = query
         .all(db_manage.lock().await.get_connection())
         .await
-        .map_err(|e| e.to_string())
+        .map_err(|e| e.to_string())?;
+    // 获取task_in_day_ids
+    let ids = task_in_days
+        .iter()
+        .map(|t| t.notification_id)
+        .filter_map(|id| id)
+        .collect::<Vec<uuid::Uuid>>();
+    let notifications = if ids.is_empty() {
+        vec![]
+    } else {
+        notification::Entity::find()
+            .filter(notification::Column::Id.is_in(ids))
+            .all(db_manage.lock().await.get_connection())
+            .await
+            .map_err(|e| e.to_string())?
+    };
+
+    // 将对应的notification塞到taskInDay.notification 中
+    let mut result = vec![];
+    for task_in_day in task_in_days {
+        let mut task_in_day_json = serde_json::to_value(&task_in_day).map_err(|e| e.to_string())?;
+        if let serde_json::Value::Object(ref mut map) = task_in_day_json {
+            if let Some(notification_id) = task_in_day.notification_id {
+                let related_notifications: Vec<notification::Model> = notifications
+                    .iter()
+                    .filter(|n| n.id == notification_id)
+                    .cloned()
+                    .collect();
+                map.insert(
+                    "notifications".to_string(),
+                    serde_json::to_value(related_notifications.clone())
+                        .map_err(|e| e.to_string())?,
+                );
+            }
+        }
+        result.push(task_in_day_json);
+    }
+    Ok(result)
 }
 
 #[tauri::command]
@@ -130,12 +166,12 @@ pub async fn update_task_in_day_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
     data: task_in_day::UpdateModel,
-) -> Result<task_in_day::Model, String> {
+) -> Result<Value, String> {
     db_manage
         .lock()
         .await
         .get_connection()
-        .transaction::<_, task_in_day::Model, String>(|txn| {
+        .transaction::<_, Value, String>(|txn| {
             Box::pin(async move {
                 let pk = task_in_day::Entity::find_by_id(
                     uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
@@ -218,9 +254,10 @@ pub async fn update_task_in_day_by_id(
                             serde_json::to_value(notification).map_err(|e| e.to_string())?,
                         );
                     }
-                    return Ok(serde_json::from_value(res_value).map_err(|e| e.to_string())?);
+                    Ok(serde_json::from_value(res_value).map_err(|e| e.to_string())?)
+                } else {
+                    Ok(serde_json::json!(res))
                 }
-                Ok(res)
             })
         })
         .await

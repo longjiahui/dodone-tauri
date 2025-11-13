@@ -346,11 +346,11 @@ export const protocols = {
   ),
   getConst: defineAPI(
     "getConst",
-    defineAPIFunction<[keyof ConstObject], any>()
+    defineAPIFunction<[{ key: keyof ConstObject }], any>()
   ),
   setConst: defineAPI(
     "setConst",
-    defineAPIFunction<[keyof ConstObject, any], void>()
+    defineAPIFunction<[{ key: keyof ConstObject; value: any }], void>()
   ),
   // broadcastConstUpdate: defineAPI(
   //   "broadcastConstUpdate",

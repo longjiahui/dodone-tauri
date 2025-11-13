@@ -846,14 +846,12 @@ function handleUpdateTaskInDays(taskInDays: TaskInDay[]) {
   });
 }
 
-(async () => {
-  const off_updateTaskInDays = await backend.on_updateTaskInDays(
-    handleUpdateTaskInDays
-  );
-  onBeforeUnmount(() => {
-    off_updateTaskInDays();
-  });
-})();
+const off_updateTaskInDays = backend.on_updateTaskInDays(
+  handleUpdateTaskInDays
+);
+onBeforeUnmount(() => {
+  off_updateTaskInDays.then((d) => d());
+});
 
 function filterData(d: ChartData) {
   return (

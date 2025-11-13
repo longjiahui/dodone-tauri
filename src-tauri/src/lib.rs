@@ -105,6 +105,9 @@ pub fn run() {
             // notification commands
             commands::notification::get_notifications,
             commands::notification::delete_notification_by_id,
+            //  const commands
+            commands::constants::get_const,
+            commands::constants::set_const,
         ])
         .register_uri_scheme_protocol(IMAGE_PROTOCOL_NAME, move |app, request| {
             // Inside the register_uri_scheme_protocol handler:
@@ -135,17 +138,22 @@ pub fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_app, event| {
-            if let tauri::RunEvent::Reopen {
-                has_visible_windows,
-                ..
-            } = event
+            // reopen 是为了实现点击 Dock 图标时显示主窗口的功能，只有macos编译
+            #[cfg(target_os = "macos")]
             {
-                // Create or show a window as necessary
-                if !has_visible_windows {
-                    if let Some(window) = _app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                        let _ = window.unminimize();
+                if let tauri::RunEvent::Reopen {
+                    has_visible_windows,
+                    ..
+                } = event
+                {
+                    // Create or show a window as necessary
+                    if !has_visible_windows {
+                        if let Some(window) = _app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL)
+                        {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                            let _ = window.unminimize();
+                        }
                     }
                 }
             }

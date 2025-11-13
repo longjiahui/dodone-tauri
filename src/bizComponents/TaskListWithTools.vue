@@ -289,19 +289,14 @@ watch(
 //     }
 //   })
 // })
-(async () => {
-  const off_updateTaskInDays =
-    await backend.on_updateTaskInDays(refreshShowedTasks);
-  const off_deleteTaskInDay =
-    await backend.on_deleteTaskInDay(refreshShowedTasks);
-  const off_createTaskInDay =
-    await backend.on_createTaskInDay(refreshShowedTasks);
-  onBeforeUnmount(() => {
-    off_updateTaskInDays();
-    off_deleteTaskInDay();
-    off_createTaskInDay();
-  });
-})();
+const off_updateTaskInDays = backend.on_updateTaskInDays(refreshShowedTasks);
+const off_deleteTaskInDay = backend.on_deleteTaskInDay(refreshShowedTasks);
+const off_createTaskInDay = backend.on_createTaskInDay(refreshShowedTasks);
+onBeforeUnmount(() => {
+  off_updateTaskInDays.then((d) => d());
+  off_deleteTaskInDay.then((d) => d());
+  off_createTaskInDay.then((d) => d());
+});
 
 const pendingFactor = computed(() =>
   calculatePendingLeaveTasksFactor(props.modelValue.slice())

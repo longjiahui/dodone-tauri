@@ -103,13 +103,13 @@ export default {
     } & {
       // setconst getconst type fix
       // 因为protocol 的defineAPI不能动态决定参数类型
-      getConst: <K extends keyof ConstObject>(
-        key: K
-      ) => Promise<ConstObject[K]>;
-      setConst: <K extends keyof ConstObject>(
-        key: K,
-        value: ConstObject[K]
-      ) => Promise<void>;
+      getConst: <K extends keyof ConstObject>(d: {
+        key: K;
+      }) => Promise<ConstObject[K]>;
+      setConst: <K extends keyof ConstObject>(d: {
+        key: K;
+        value: ConstObject[K];
+      }) => Promise<void>;
     }
   ),
 

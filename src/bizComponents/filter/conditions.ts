@@ -81,7 +81,6 @@ export function useDefinedConditions() {
         // nullable: false,
         validate: (t, groupId) => t.groupId === groupId,
         valueDesc: (val) => {
-          console.debug(val, taskGroupStore.taskGroupsDict[val]?.name);
           return taskGroupStore.taskGroupsDict[val]?.name;
         },
         getValue() {

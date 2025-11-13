@@ -55,6 +55,8 @@ import { backend } from "@/utils/backend";
 import { ReadOnlyTaskInDayWithExtra } from "@/types";
 import { openDialog } from "@/components/dialog/helper";
 import ConfirmDialog from "@/components/dialog/commonDialog/ConfirmDialog.vue";
+import { updateTaskInDayById } from "@/utils/biz";
+import { useNotificationStore } from "@/store/notification";
 
 const props = defineProps<{
   dialog: DialogType<
@@ -69,6 +71,7 @@ const props = defineProps<{
 }>();
 
 const taskStore = useTaskStore();
+const notificationStore = useNotificationStore();
 const task = computed(
   () => taskStore.tasksDict[props.taskSchedule.data.taskId]
 );
@@ -81,31 +84,28 @@ const data = ref({
   hue: props.taskSchedule.color,
   useNotification: !!props.taskSchedule.data.notificationId,
 });
-
 function handleSave() {
-  return backend
-    .updateTaskInDayById({
-      id: props.taskSchedule.id,
-      data: {
-        startTime: data.value.range[0].toDate().toISOString(),
-        endTime: data.value.range[1].toDate().toISOString(),
-        color: data.value.hue?.toString(),
-        notification: data.value.useNotification
-          ? {
-              title: task.value?.content || "",
-              content: task.value?.description || "",
-              notifyAt: data.value.range[0].toDate().toISOString(),
-            }
-          : null,
-      },
-    })
-    .then((d) => {
-      if (d) {
-        props.dialog.finish({
-          type: "update",
-          data: d,
-        });
-      }
-    });
+  return updateTaskInDayById(notificationStore, {
+    id: props.taskSchedule.id,
+    data: {
+      startTime: data.value.range[0].toDate().toISOString(),
+      endTime: data.value.range[1].toDate().toISOString(),
+      color: data.value.hue?.toString(),
+      notification: data.value.useNotification
+        ? {
+            title: task.value?.content || "",
+            content: task.value?.description || "",
+            notifyAt: data.value.range[0].toDate().toISOString(),
+          }
+        : null,
+    },
+  }).then((d) => {
+    if (d) {
+      props.dialog.finish({
+        type: "update",
+        data: d,
+      });
+    }
+  });
 }
 </script>
