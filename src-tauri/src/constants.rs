@@ -1,7 +1,7 @@
 use std::{fs::create_dir_all, path::PathBuf};
 
 use serde_json::Value;
-use tauri::{self, Manager, Theme};
+use tauri::{self, path::BaseDirectory, Manager, Theme};
 use tokio::fs::create_dir;
 
 use crate::utils::event::broadcast_update_const;
@@ -37,6 +37,14 @@ pub fn get_const_path(app: &tauri::AppHandle) -> PathBuf {
     let mut const_path = get_app_data_dir(app);
     const_path.push("const.json");
     const_path
+}
+
+pub fn get_public_resource(app: &tauri::AppHandle, path: &str) -> Result<PathBuf, String> {
+    // 只需要和config中的resources路径保持一致即可
+    let public_path = "../tauri-public";
+    app.path()
+        .resolve(format!("{public_path}/{}", path), BaseDirectory::Resource)
+        .map_err(|err| err.to_string())
 }
 
 pub const IMAGE_PROTOCOL_NAME: &str = "image";

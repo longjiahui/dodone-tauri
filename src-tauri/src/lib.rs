@@ -8,7 +8,9 @@ use tauri::{
 };
 
 use crate::{
-    constants::{get_app_data_dir, get_database_dir, get_image_dir, IMAGE_PROTOCOL_NAME},
+    constants::{
+        get_app_data_dir, get_database_dir, get_image_dir, get_public_resource, IMAGE_PROTOCOL_NAME,
+    },
     database::{init_database, make_db_state, DbState},
 };
 
@@ -191,6 +193,7 @@ pub fn run() {
             let path = uri.trim_start_matches(&format!("{}://", IMAGE_PROTOCOL_NAME)); // Extract the path from the URI
             let image_path =
                 get_image_dir(&app.app_handle()).join(path[..path.len() - 1].to_string());
+            println!("Serving image from path: {:?}", image_path);
             match std::fs::read(&image_path) {
                 Ok(data) => {
                     // Determine the MIME type based on the file extension
@@ -204,10 +207,43 @@ pub fn run() {
                 }
                 Err(e) => {
                     println!("Error reading file {}: {}", path, e);
-                    tauri::http::Response::builder()
-                        .status(404)
-                        .body(Vec::new())
-                        .unwrap()
+                    let image_404_path_result =
+                        get_public_resource(&app.app_handle(), "image/image-not-found.png");
+                    if let Ok(image_404_path) = image_404_path_result {
+                        println!("404 image path: {:?}", image_404_path);
+                        // tauri::http::Response::builder()
+                        //     .status(404)
+                        //     .body(Vec::new())
+                        //     .unwrap()
+                        match std::fs::read(&image_404_path) {
+                            Ok(data) => {
+                                // Determine the MIME type based on the file extension
+                                let mime = "image/*";
+                                tauri::http::Response::builder()
+                                    .header("Content-Length", data.len())
+                                    .header("Content-Type", mime)
+                                    .status(200)
+                                    .body(data)
+                                    .unwrap()
+                            }
+                            Err(e) => {
+                                println!("Error reading file {}: {}", path, e);
+                                tauri::http::Response::builder()
+                                    .status(404)
+                                    .body(Vec::new())
+                                    .unwrap()
+                            }
+                        }
+                    } else {
+                        println!(
+                            "Failed to get 404 image resource: {:?}",
+                            image_404_path_result
+                        );
+                        tauri::http::Response::builder()
+                            .status(404)
+                            .body(Vec::new())
+                            .unwrap()
+                    }
                 }
             }
         })
