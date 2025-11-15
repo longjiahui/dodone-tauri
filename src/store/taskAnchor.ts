@@ -96,7 +96,7 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
     },
     changeOrders(anchors: TaskAnchorWithTaskGroupId[]) {
       const params = anchors.map((a, i) => ({ id: a.id, sortOrder: i }));
-      return backend.changeTaskAnchorOrders(params).then(() => {
+      return backend.changeTaskAnchorOrders({ datas: params }).then(() => {
         params.forEach((p) => {
           if (taskAnchorsDict.value[p.id]) {
             Object.assign(taskAnchorsDict.value[p.id]!, p);

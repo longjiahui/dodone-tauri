@@ -69,21 +69,21 @@ pub fn run() {
             println!("Image directory: {:?}", image_dir);
 
             // debug模式下将main窗口移动到某个display
-            #[cfg(debug_assertions)]
-            {
-                // In debug mode, try to move the main window to a secondary display (common setups
-                // place a second monitor at an x offset like 2560). This is best-effort and errors
-                // are ignored so it won't crash the app if the API isn't available or the position
-                // is invalid.
+            // #[cfg(debug_assertions)]
+            // {
+            //     // In debug mode, try to move the main window to a secondary display (common setups
+            //     // place a second monitor at an x offset like 2560). This is best-effort and errors
+            //     // are ignored so it won't crash the app if the API isn't available or the position
+            //     // is invalid.
 
-                if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
-                    if let Some(monitor) = app.available_monitors().unwrap().get(1) {
-                        let _ = window.set_position(tauri::Position::Physical(
-                            monitor.work_area().position.clone(),
-                        ));
-                    }
-                }
-            }
+            //     if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+            //         if let Some(monitor) = app.available_monitors().unwrap().get(1) {
+            //             let _ = window.set_position(tauri::Position::Physical(
+            //                 monitor.work_area().position.clone(),
+            //             ));
+            //         }
+            //     }
+            // }
 
             // Initialize database in async context
             tauri::async_runtime::spawn(async move {
@@ -121,6 +121,7 @@ pub fn run() {
             commands::task_group::create_task_group,
             commands::task_group::update_task_group_by_id,
             commands::task_group::delete_task_group_by_id,
+            commands::task_group::change_task_group_orders,
             // task commands
             commands::task::get_tasks,
             commands::task::get_task_by_id,
@@ -143,10 +144,12 @@ pub fn run() {
             commands::task_view::create_task_view,
             commands::task_view::update_task_view_by_id,
             commands::task_view::delete_task_view_by_id,
+            commands::task_view::change_task_view_orders,
             // task anchor commands
             commands::task_anchor::get_task_anchors,
             commands::task_anchor::create_task_anchor,
             commands::task_anchor::delete_task_anchor_by_id,
+            commands::task_anchor::change_task_anchor_orders,
             // task view task commands
             commands::task_view_task::get_task_view_tasks,
             commands::task_view_task::create_task_view_task,

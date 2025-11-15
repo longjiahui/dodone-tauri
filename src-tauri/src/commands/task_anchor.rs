@@ -1,10 +1,10 @@
 use chrono::Utc;
-use sea_orm::{ActiveValue, EntityTrait, IntoActiveModel};
+use sea_orm::{ActiveValue, EntityTrait, IntoActiveModel, TransactionTrait};
 use serde_json::Value;
 
 use crate::{
     database::{get_db_manage, DbState},
-    entities::{prelude::TaskAnchor, task_anchor},
+    entities::{prelude::TaskAnchor, task_anchor, OrderModel},
 };
 
 #[tauri::command]
@@ -58,5 +58,39 @@ pub async fn delete_task_anchor_by_id(
         .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn change_task_anchor_orders(
+    db_manage: tauri::State<'_, DbState>,
+    datas: Vec<OrderModel>,
+) -> Result<(), String> {
+    let db_guard = get_db_manage(db_manage).await?;
+    // use transaction
+    let txn = db_guard
+        .get_connection()
+        .begin()
+        .await
+        .map_err(|e| e.to_string())?;
+    for (index, data) in datas.into_iter().enumerate() {
+        let pk = task_anchor::Entity::find_by_id(
+            uuid::Uuid::parse_str(data.id.as_str()).map_err(|err| err.to_string())?,
+        );
+
+        let mut active_model = pk
+            .one(&txn)
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| "TaskGroup not found".to_string())?
+            .into_active_model();
+        active_model.sort_order = ActiveValue::Set(index as i32);
+        active_model.updated_at = ActiveValue::Set(Utc::now());
+        task_anchor::Entity::update(active_model)
+            .exec(&txn)
+            .await
+            .map_err(|e| e.to_string())?;
+    }
+    txn.commit().await.map_err(|e| e.to_string())?;
     Ok(())
 }

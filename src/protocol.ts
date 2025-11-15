@@ -278,15 +278,15 @@ export const protocols = {
 
   changeTaskViewOrders: defineAPI(
     "changeTaskViewOrders",
-    defineAPIFunction<[{ id: string; sortOrder: number }[]], void>()
+    defineAPIFunction<[{ datas: { id: string; sortOrder: number }[] }], void>()
   ),
   changeTaskGroupOrders: defineAPI(
     "changeTaskGroupOrders",
-    defineAPIFunction<[{ id: string; sortOrder: number }[]], void>()
+    defineAPIFunction<[{ datas: { id: string; sortOrder: number }[] }], void>()
   ),
   changeTaskAnchorOrders: defineAPI(
     "changeTaskAnchorOrders",
-    defineAPIFunction<[{ id: string; sortOrder: number }[]], void>()
+    defineAPIFunction<[{ datas: { id: string; sortOrder: number }[] }], void>()
   ),
 
   // non api kind of api

@@ -114,7 +114,7 @@ export const useTaskGroupStore = defineStore("taskGroup", () => {
     },
     changeOrders(groups: ReadOnlyTaskGroupWithExtra[]) {
       const params = groups.map((g, i) => ({ id: g.id, sortOrder: i }));
-      return backend.changeTaskGroupOrders(params).then(() => {
+      return backend.changeTaskGroupOrders({ datas: params }).then(() => {
         params.forEach((p) => {
           if (taskGroupsDict.value[p.id]) {
             Object.assign(taskGroupsDict.value[p.id]!, p);

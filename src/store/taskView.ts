@@ -426,7 +426,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
     },
     changeOrders(views: ReadOnlyTaskViewWithExtra[]) {
       const params = views.map((v, i) => ({ id: v.id, sortOrder: i }));
-      return backend.changeTaskViewOrders(params).then(() => {
+      return backend.changeTaskViewOrders({ datas: params }).then(() => {
         params.forEach((p) => Object.assign(viewsDict.value[p.id] || {}, p));
       });
     },
