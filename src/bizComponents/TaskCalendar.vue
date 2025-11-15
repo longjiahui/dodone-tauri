@@ -257,7 +257,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import { themeHSColorL, themeHSColorS } from "@/const";
+import {
+  motionDelay,
+  motionTranslateX,
+  themeHSColorL,
+  themeHSColorS,
+} from "@/const";
 import { useTaskStore } from "@/store/task";
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { ReadOnlyTaskWithChildren, StringArrayToUnion } from "@/types";

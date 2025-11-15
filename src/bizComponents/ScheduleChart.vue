@@ -414,6 +414,15 @@
                           @mousedown="handleDataMouseDown(data, top)"
                         >
                           <div
+                            v-motion
+                            :initial="{ opacity: 0, scale: 0.6 }"
+                            :enter="{
+                              opacity: 1,
+                              scale: 1,
+                              transition: {
+                                bounce: 1,
+                              }
+                            }"
                             @mouseenter="hoveringId = data.id"
                             @mouseleave="
                               hoveringId =
@@ -743,6 +752,7 @@ import {
   taskScheduleHSColorS,
   taskScheduleHSColorL,
   taskScheduleHSColorA,
+  motionDelay,
 } from "@/const";
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { calculateTheme } from "@/utils/color";

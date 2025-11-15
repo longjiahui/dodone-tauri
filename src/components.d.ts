@@ -85,6 +85,7 @@ declare module 'vue' {
     JSEditor: typeof import('./components/JSEditor.vue')['default']
     LeftOutlined: typeof import('@ant-design/icons-vue')['LeftOutlined']
     Loading: typeof import('./components/Loading.vue')['default']
+    LoadingOutlined: typeof import('@ant-design/icons-vue')['LoadingOutlined']
     Loop: typeof import('./components/Loop.vue')['default']
     MarkdownEditor: typeof import('./components/MarkdownEditor.vue')['default']
     MarkdownEditorDialog: typeof import('./components/dialog/commonDialog/MarkdownEditorDialog.vue')['default']

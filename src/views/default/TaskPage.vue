@@ -1,5 +1,15 @@
 <template>
-  <div v-loading="isLoading" class="h size-full items-stretch">
+  <div
+    v-if="isLoaded"
+    class="h size-full items-stretch"
+    v-motion
+    :initial="{
+      opacity: 0,
+    }"
+    :enter="{
+      opacity: 1,
+    }"
+  >
     <div class="bg-light-2 v justify-between p-2">
       <div class="v gap-2">
         <!-- <ClickableIcon :icon="FolderOutlined"></ClickableIcon>
@@ -246,7 +256,11 @@
                   "
                   @order="taskViewStore.changeOrders($event)"
                   :datas="taskViews.slice()"
-                  #default="{ data: v, setDragRef: setOrderContainerDragRef }"
+                  #default="{
+                    data: v,
+                    setDragRef: setOrderContainerDragRef,
+                    index,
+                  }"
                 >
                   <Scope
                     :d="{
@@ -287,6 +301,18 @@
                           'drop-area',
                           isDroppingActive ? 'dropping-active' : '',
                         ]"
+                        v-motion
+                        :initial="{
+                          opacity: 0,
+                          x: motionTranslateX,
+                        }"
+                        :enter="{
+                          opacity: 1,
+                          x: 0,
+                          transition: {
+                            delay: motionDelay(index),
+                          },
+                        }"
                       >
                         <SelectableTag
                           :title="v.name"
@@ -412,7 +438,11 @@
                     v-if="taskGroups.length > 0 && isShowGroups"
                     class="stretch order-container-gap-2"
                     :datas="taskGroups.slice()"
-                    #default="{ data: g, setDragRef: setOrderContainerDragRef }"
+                    #default="{
+                      data: g,
+                      setDragRef: setOrderContainerDragRef,
+                      index,
+                    }"
                     :drag-datas="
                       (d) => [
                         {
@@ -456,6 +486,18 @@
                               'drop-area',
                               isDroppingActive ? 'dropping-active' : '',
                             ]"
+                            v-motion
+                            :initial="{
+                              opacity: 0,
+                              x: motionTranslateX,
+                            }"
+                            :enter="{
+                              opacity: 1,
+                              x: 0,
+                              transition: {
+                                delay: motionDelay(index),
+                              },
+                            }"
                           >
                             <SelectableTag
                               :progress="
@@ -563,6 +605,7 @@
                         #default="{
                           data: anchor,
                           setDragRef: setOrderContainerDragRef,
+                          index,
                         }"
                       >
                         <Scope
@@ -598,6 +641,18 @@
                                 'drop-area',
                                 isDroppingActive ? 'dropping-active' : '',
                               ]"
+                              v-motion
+                              :initial="{
+                                opacity: 0,
+                                x: motionTranslateX,
+                              }"
+                              :enter="{
+                                opacity: 1,
+                                x: 0,
+                                transition: {
+                                  delay: motionDelay(index),
+                                },
+                              }"
                             >
                               <SelectableTag
                                 @click="
@@ -674,7 +729,11 @@
           >
             <template #1>
               <div class="v size-full gap-3 overflow-auto py-3">
-                <template v-if="currentType !== 'taskView'">
+                <div
+                  class="size-full stretch v gap-3"
+                  v-if="currentType !== 'taskView'"
+                  :key="currentId + currentType"
+                >
                   <template
                     v-if="currentType === 'taskAnchor' && finalTaskAnchor"
                   >
@@ -721,27 +780,39 @@
                       :placeholder="$t('taskContentInputPlaceholder')"
                     ></Input>
                   </div>
-                  <TaskListTemplate
-                    :key="finalGroupId"
+                  <div
+                    class="size-full stretch"
+                    :key="finalGroupId + currentType"
                     v-if="currentType === 'taskGroup'"
-                    hide-group-name
-                    :tasks="currentTreeTasks"
-                  ></TaskListTemplate>
-                  <TaskListTemplate
+                  >
+                    <TaskListTemplate
+                      hide-group-name
+                      :tasks="currentTreeTasks"
+                    ></TaskListTemplate>
+                  </div>
+                  <div
+                    class="size-full stretch"
                     v-else-if="currentType === 'taskAnchor' && taskAnchorTask"
                     :key="finalTaskAnchorId"
-                    :tasks="taskAnchorTask!.children.slice()"
-                  ></TaskListTemplate>
-                </template>
-                <template v-else-if="finalTaskView">
-                  <!-- taskview -->
+                  >
+                    <TaskListTemplate
+                      :tasks="taskAnchorTask!.children.slice()"
+                    ></TaskListTemplate>
+                  </div>
+                </div>
+                <!-- taskview -->
+                <div
+                  class="stretch v size-full"
+                  v-else-if="finalTaskView"
+                  :key="finalTaskView.id"
+                >
                   <TaskListTemplate
                     :tasks="(taskViewTasksMap[currentId]?.tasks || []).slice()"
                     :currentView="finalTaskView"
                     disable-order
                   >
                   </TaskListTemplate>
-                </template>
+                </div>
               </div>
             </template>
             <template #2>
@@ -781,6 +852,9 @@
         </div>
       </div>
     </div>
+  </div>
+  <div v-else class="size-full v justify-center items-center text-[40px]">
+    <LoadingOutlined></LoadingOutlined>
   </div>
 </template>
 <script setup lang="ts">
@@ -825,6 +899,8 @@ import {
   defaultSortOrder,
   defaultTaskGroupIcon,
   defaultTaskViewIcon,
+  motionDelay,
+  motionTranslateX,
   sidebarPaddingX,
   taskViewPresets,
 } from "@/const";

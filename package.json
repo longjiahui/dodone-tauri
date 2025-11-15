@@ -37,6 +37,7 @@
     "@types/throttle-debounce": "^5.0.2",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vueuse/core": "^14.0.0",
+    "@vueuse/motion": "^3.0.3",
     "ant-design-vue": "^4.2.6",
     "codemirror": "^6.0.2",
     "dayjs": "^1.11.19",

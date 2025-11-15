@@ -153,6 +153,18 @@
                 bizDropSetRef(el);
               }
             "
+            v-motion
+            :initial="{
+              opacity: 0,
+              x: motionTranslateX,
+            }"
+            :enter="{
+              opacity: 1,
+              x: 0,
+              transition: {
+                delay: motionDelay(index),
+              },
+            }"
           >
             <Task
               :hide-group-name="taskHideGroupName"
@@ -197,6 +209,7 @@ import { mapTree, traverseSome } from "@/utils/traverse";
 import { CaretRightOutlined } from "@ant-design/icons-vue";
 import { DragData } from "./drag/drag";
 import { type TaskSort } from "./sort";
+import { motionDelay, motionTranslateX } from "@/const";
 
 const props = withDefaults(
   defineProps<{

@@ -120,3 +120,6 @@ export const taskViewPresets = {
 }`,
   } satisfies TaskViewCreatePreset,
 };
+
+export const motionDelay = (delay: number) => delay * 80;
+export const motionTranslateX = 20;
