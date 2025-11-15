@@ -11,7 +11,7 @@ import { backend } from "@/utils/backend";
 import { dayjs, makeDayjsByDateTime } from "@/utils/time";
 import { calculateTheme } from "@/utils/color";
 import { themeHSColorL, themeHSColorS } from "@/const";
-import { ProtocolReturnTask } from "@/protocol";
+import { BackwardOutlined, ForwardOutlined } from "@ant-design/icons-vue";
 
 const params = useUrlSearchParams<{
   type: DoingWindowType;
@@ -96,15 +96,15 @@ async function refreshTasks() {
     taskInDays.value = [
       ...(await backend.getTaskInDays({
         search: {
-          startDate: today.startOf("date").toDate(),
-          endDate: today.endOf("date").toDate(),
+          startDate: today.startOf("date").toDate().toISOString(),
+          endDate: today.endOf("date").toDate().toISOString(),
           isTaskDone: false,
         },
       })),
       // 查找未来的一个任务
       ...(await backend.getTaskInDays({
         search: {
-          startDate: today.add(1, "day").startOf("date").toDate(),
+          startDate: today.add(1, "day").startOf("date").toDate().toISOString(),
           isTaskDone: false,
           take: 1,
         },
@@ -117,6 +117,7 @@ async function refreshTasks() {
     )
       .filter((t) => !!t)
       .map((t) => task2TaskWithChildren(t!));
+    console.debug(taskInDays.value, "hello world");
   } else if (val === "specific-task" && params.taskId) {
     tasks.value = [await backend.getTaskById({ id: params.taskId })]
       .filter((d) => !!d)
@@ -189,7 +190,7 @@ onMounted(() => {
           setTimeout(() => {
             return backend.resizeDoingWindow({
               width: taskContentRefSize.width.value + 64,
-              height: taskContentRefSize.height.value + 32,
+              height: taskContentRefSize.height.value + 48,
             });
           }, 200);
         });
@@ -230,7 +231,7 @@ const isShowNextTaskTimeInfo = computed(
 <template>
   <AntdProvider>
     <div
-      class="window-drag v bg-bg/80 text-default relative size-full items-stretch justify-center gap-1.5 overflow-hidden rounded-lg"
+      class="v bg-bg/80 text-default relative size-full items-stretch justify-center gap-1.5 overflow-hidden rounded-lg"
       :style="
         finalTaskGroup?.color
           ? calculateTheme(finalTaskGroup.color, {
@@ -263,11 +264,27 @@ const isShowNextTaskTimeInfo = computed(
           auto
         </div>
         <div v-else></div> -->
-        <div
-          class="window-no-drag bg-light-2 h hover:bg-light-3 cursor-pointer items-center rounded-lg p-1 text-sm duration-300"
-          @click="backend.popupDoingWindowMoreMenu()"
-        >
-          <MoreOutlined></MoreOutlined>
+        <div class="h items-stretch gap-2 stretch">
+          <div
+            class="fixed top-0 left-0 size-full"
+            data-tauri-drag-region
+          ></div>
+          <div class="stretch"></div>
+          <!-- @click="backend.popupDoingWindowMoreMenu()" -->
+          <!-- <div
+            class="relative z-10 bg-light-2 h hover:bg-light-3 cursor-pointer items-center rounded-lg p-1 text-sm duration-300"
+          >
+            <Tooltip :content="$t('switchToAutoMode')">
+              <ForwardOutlined></ForwardOutlined>
+            </Tooltip>
+          </div> -->
+          <ClickableIcon
+            v-if="params.type !== 'auto-task-in-day'"
+            @click="params.type = 'auto-task-in-day'"
+            class="relative z-10"
+            :icon="ForwardOutlined"
+            :label="$t('switchToAutoMode')"
+          ></ClickableIcon>
         </div>
       </div>
       <div class="stretch v z-10 items-start justify-center px-4 pb-2">

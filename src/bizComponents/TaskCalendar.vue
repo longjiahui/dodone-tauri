@@ -436,15 +436,16 @@ const isModifyingId = computed(
 function handleStartModifyEndDate(e: MouseEvent, task: Task) {
   _isModifyingDate = true;
   isModifyingEndDateTask.value = task;
-  originalDate = (task.endAt && new Date(task.endAt!)) || task.endAt;
+  originalDate = task.endAt ? new Date(task.endAt) : undefined;
   e.preventDefault();
 }
 function handleStartModifyStartDate(e: MouseEvent, task: Task) {
   _isModifyingDate = true;
   isModifyingStartDateTask.value = task;
-  originalDate = (task.startAt && new Date(task.startAt!)) || task.startAt;
+  originalDate = task.startAt ? new Date(task.startAt) : undefined;
   isOriginalEndDateNull = !task.endAt;
-  task.endAt = isOriginalEndDateNull ? originalDate : task.endAt;
+  task.endAt =
+    (isOriginalEndDateNull ? originalDate?.toISOString() : task.endAt) ?? null;
   e.preventDefault();
 }
 function handleModifyingDate(toD: Dayjs) {
@@ -457,7 +458,7 @@ function handleModifyingDate(toD: Dayjs) {
         (startAtDate && toD.isSame(startAtDate)) ||
         toD.isAfter(startAtDate)
       ) {
-        isModifyingEndDateTask.value.endAt = toD.toDate();
+        isModifyingEndDateTask.value.endAt = toD.toDate().toISOString();
       }
     }
     if (isModifyingStartDateTask.value) {
@@ -465,7 +466,7 @@ function handleModifyingDate(toD: Dayjs) {
         ? dayjs(isModifyingStartDateTask.value.endAt).startOf("day")
         : null;
       if (endAtDate && (toD.isSame(endAtDate) || toD.isBefore(endAtDate))) {
-        isModifyingStartDateTask.value.startAt = toD.toDate();
+        isModifyingStartDateTask.value.startAt = toD.toDate().toISOString();
       }
     }
   }
@@ -475,7 +476,9 @@ async function handleEndModifyDate() {
   if (
     _isModifyingDate &&
     isModifyingEndDateTask.value &&
-    isModifyingEndDateTask.value.endAt?.getDate() !== originalDate?.getDate()
+    (isModifyingEndDateTask.value.endAt
+      ? new Date(isModifyingEndDateTask.value.endAt).getDate()
+      : undefined) !== originalDate?.getDate()
   ) {
     _isModifyingDate = false;
     await taskStore
@@ -484,13 +487,15 @@ async function handleEndModifyDate() {
       })
       .catch((err) => {
         console.error(err);
-        isModifyingEndDateTask.value!.endAt = originalDate ?? null;
+        isModifyingEndDateTask.value!.endAt =
+          originalDate?.toISOString() ?? null;
       });
   }
   if (
     isModifyingStartDateTask.value &&
-    isModifyingStartDateTask.value.startAt?.getDate() !==
-      originalDate?.getDate()
+    (isModifyingStartDateTask.value.startAt
+      ? new Date(isModifyingStartDateTask.value.startAt).getDate()
+      : undefined) !== originalDate?.getDate()
   ) {
     _isModifyingDate = false;
     await taskStore
@@ -504,7 +509,8 @@ async function handleEndModifyDate() {
       })
       .catch((err) => {
         console.error(err);
-        isModifyingStartDateTask.value!.startAt = originalDate ?? null;
+        isModifyingStartDateTask.value!.startAt =
+          originalDate?.toISOString() ?? null;
         if (isOriginalEndDateNull) {
           isModifyingStartDateTask.value!.endAt = null;
         }
@@ -527,8 +533,8 @@ function handleDrop(data: DragData<any>, d: Dayjs) {
         ? d.toDate()
         : dayjs(t.endAt).add(offset, "day").toDate();
       await taskStore.updateTaskById(t.id, {
-        startAt,
-        endAt,
+        startAt: startAt.toISOString(),
+        endAt: endAt.toISOString(),
       });
     })
   );

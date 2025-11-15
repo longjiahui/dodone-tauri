@@ -176,5 +176,8 @@
   "openPrimaryWindow": "メインウィンドウを開く",
   "quit": "アプリケーションを終了",
   "switchToAutoMode": "自動スケジュールに切り替え",
-  "closeDoingWindow": "実行中ウィンドウを閉じる"
+  "closeDoingWindow": "実行中ウィンドウを閉じる",
+  "uploadImage": "画像をアップロード",
+  "scrollOption": "スクロールオプション",
+  "isReverseScrollCross": "垂直スクロールを水平に反転"
 }

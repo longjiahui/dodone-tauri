@@ -4,7 +4,7 @@ use chrono::Utc;
 use futures::{future::BoxFuture, FutureExt};
 use sea_orm::{
     ActiveValue, ColumnTrait, ConnectionTrait, DbErr, EntityTrait, IntoActiveModel, LoaderTrait,
-    QueryFilter, TransactionTrait,
+    ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde_json::Value;
 use uuid::Uuid;
@@ -62,6 +62,51 @@ pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value
         })
         .collect();
     Ok(result)
+}
+
+#[tauri::command]
+pub async fn get_task_by_id(
+    db_manage: tauri::State<'_, DbState>,
+    id: String,
+) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
+
+    let db = db_guard.get_connection();
+    let task_id = Uuid::parse_str(&id).map_err(|e| e.to_string())?;
+
+    let task = Task::find_by_id(task_id)
+        .one(db)
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Task not found".to_string())?;
+
+    // Load related data
+    let next_task = task
+        .find_related(next_task::Entity)
+        .one(db)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let task_view_tasks = task
+        .find_related(task_view_task::Entity)
+        .all(db)
+        .await
+        .map_err(|e| e.to_string())?;
+
+    // Combine data
+    let mut task_json = serde_json::to_value(&task).unwrap();
+    if let serde_json::Value::Object(ref mut map) = task_json {
+        map.insert(
+            "taskViewTasks".to_string(),
+            serde_json::to_value(&task_view_tasks).unwrap(),
+        );
+        map.insert(
+            "nextTask".to_string(),
+            serde_json::to_value(&next_task).unwrap(),
+        );
+    }
+
+    Ok(task_json)
 }
 
 #[tauri::command]
@@ -457,6 +502,46 @@ fn batch_create_tasks<'a>(
         Ok(all_results)
     }
     .boxed()
+}
+
+pub async fn fill_task_with_default(
+    txn: &impl ConnectionTrait,
+    tasks: Vec<task::Model>,
+) -> Result<Value, String> {
+    let ids = tasks.iter().map(|t| t.id).collect::<Vec<Uuid>>();
+    let taks_view_tasks = task_view_task::Entity::find()
+        .filter(task_view_task::Column::TaskId.is_in(ids.clone()))
+        .all(txn)
+        .await
+        .map_err(|e| e.to_string())?;
+    let next_tasks = next_task::Entity::find()
+        .filter(next_task::Column::TaskId.is_in(ids))
+        .all(txn)
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut results: Vec<Value> = vec![];
+    for task in tasks {
+        let related_view_tasks = taks_view_tasks
+            .iter()
+            .filter(|tvt| tvt.task_id == task.id)
+            .cloned()
+            .collect::<Vec<task_view_task::Model>>();
+        let related_next_task = next_tasks.iter().find(|nt| nt.task_id == task.id).cloned();
+        // 拼接
+        let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
+        if let serde_json::Value::Object(ref mut map) = task_json {
+            map.insert(
+                "task_view_tasks".to_string(),
+                serde_json::to_value(&related_view_tasks).map_err(|e| e.to_string())?,
+            );
+            map.insert(
+                "next_task".to_string(),
+                serde_json::to_value(&related_next_task).map_err(|e| e.to_string())?,
+            );
+        }
+        results.push(task_json)
+    }
+    Ok(serde_json::json!(results))
 }
 
 #[tauri::command]

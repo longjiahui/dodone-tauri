@@ -17,6 +17,14 @@
         "width": 800,
         "height": 600,
         "dragDropEnabled": false
+      }, {
+        "label": "doing",
+        "transparent": true,
+        "visible": false,
+        "alwaysOnTop": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "url": "src/src-doing/index.html"
       }
     ],
     "security": {

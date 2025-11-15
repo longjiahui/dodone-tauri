@@ -13,6 +13,7 @@ import {
   TaskWithChildren,
   task2TaskLocal,
   taskLocal2TaskWithChildren,
+  DateType,
 } from "@/types";
 import { flatMapTree, traverse, traverseSome } from "@/utils/traverse";
 import { groupBy } from "@/utils/groupBy";
@@ -133,7 +134,8 @@ export const useTaskStore = defineStore("task", () => {
 
   backend.on_batchUpsertTasks(async (d) => {
     const { created, updated } = d || {};
-    if (created.length || updated.length) {
+    console.debug(created, updated, d);
+    if (created?.length || updated?.length) {
       return _upsertTasks2Tree(created || [], updated || []);
     }
   });
@@ -575,8 +577,8 @@ export const useTaskStore = defineStore("task", () => {
         });
       });
     },
-    restADay(d: Date) {
-      return backend.restADay(d);
+    restADay(d: DateType) {
+      return backend.restADay({ date: d });
     },
   };
 });

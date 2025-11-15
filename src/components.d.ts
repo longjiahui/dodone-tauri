@@ -93,6 +93,7 @@ declare module 'vue' {
     MessageDialog: typeof import('./components/dialog/commonDialog/MessageDialog.vue')['default']
     MonthPicker: typeof import('./components/MonthPicker.vue')['default']
     MoreOutlined: typeof import('@ant-design/icons-vue')['MoreOutlined']
+    MoveOutlined: typeof import('@ant-design/icons-vue')['MoveOutlined']
     ObjectUpdater: typeof import('./components/ObjectUpdater.vue')['default']
     OptionalDateRangePickerDialog: typeof import('./components/dialog/commonDialog/OptionalDateRangePickerDialog.vue')['default']
     OrderContainer: typeof import('./bizComponents/OrderContainer.vue')['default']

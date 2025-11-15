@@ -154,7 +154,7 @@
       <ToolItem
         :tooltip="$t('setDoingWindow')"
         :icon="PlayCircleOutlined"
-        @click="backend.openDoingWindow(realTask.id)"
+        @click="backend.openDoingWindow({ search: { taskId: realTask.id } })"
       ></ToolItem>
       <!-- :menus="[
           {

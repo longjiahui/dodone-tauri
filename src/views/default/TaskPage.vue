@@ -60,7 +60,9 @@
                         }),
                       })
                       .finishPromise();
-                    return taskStore.restADay(d.toDate());
+                    return taskStore.restADay(
+                      dayjs(d.toDate()).startOf('day').toISOString()
+                    );
                   }
                 });
             }

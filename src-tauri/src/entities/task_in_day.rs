@@ -68,7 +68,7 @@ pub struct CreateModel {
     pub r#type: TaskInDayType,
     pub start_time: DateTimeUtc,
     pub end_time: DateTimeUtc,
-    pub date: DateTimeUtc,
+    pub date: String,
     pub task_id: String,
 
     pub notification_id: Option<String>,
@@ -80,7 +80,7 @@ pub struct UpdateModel {
     pub r#type: Option<TaskInDayType>,
     pub start_time: Option<DateTimeUtc>,
     pub end_time: Option<DateTimeUtc>,
-    pub date: Option<DateTimeUtc>,
+    pub date: Option<String>,
     pub task_id: Option<String>,
 
     #[serde(default, deserialize_with = "de_option3")]

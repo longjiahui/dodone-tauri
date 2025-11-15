@@ -11,6 +11,7 @@ import {
   ProtocolReturnTask,
   TaskViewGetType,
   TaskInDayGetType,
+  DateType,
 } from "@/types";
 export type { ProtocolReturnTask } from "@/types";
 import { DoingWindowType, Database, ConstObject } from "@/types";
@@ -203,8 +204,8 @@ export const protocols = {
       GetAllParams: [
         {
           search: {
-            startDate?: Date;
-            endDate?: Date;
+            startDate?: DateType;
+            endDate?: DateType;
             isTaskDone?: boolean;
             take?: number;
             taskId?: string;
@@ -267,7 +268,7 @@ export const protocols = {
   restADay: defineAPI(
     "restADay",
     defineAPIFunction<
-      [Date],
+      [{ date: DateType }],
       {
         tasks: ProtocolReturnTask[];
         taskInDays: TaskInDay[];
@@ -311,12 +312,12 @@ export const protocols = {
   // params [taskId?]
   openDoingWindow: defineAPI(
     "openDoingWindow",
-    defineAPIFunction<[string?], void>()
+    defineAPIFunction<[{ search: { taskId?: string } }?], void>()
   ),
-  popupDoingWindowMoreMenu: defineAPI(
-    "popupDoingWindowMoreMenu",
-    defineAPIFunction<[], void>()
-  ),
+  // popupDoingWindowMoreMenu: defineAPI(
+  //   "popupDoingWindowMoreMenu",
+  //   defineAPIFunction<[], void>()
+  // ),
   closeDoingWindow: defineAPI(
     "closeDoingWindow",
     defineAPIFunction<[], void>()

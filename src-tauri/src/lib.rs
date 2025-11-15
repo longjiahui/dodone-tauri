@@ -42,7 +42,6 @@ pub fn run() {
                 .menu(&menu)
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
-                        println!("quit menu item was clicked");
                         app.exit(0);
                     }
                     "open_primary_window" => {
@@ -79,8 +78,9 @@ pub fn run() {
 
                 if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
                     if let Some(monitor) = app.available_monitors().unwrap().get(1) {
-                        let _ = window
-                            .set_position(tauri::Position::Physical(monitor.position().clone()));
+                        let _ = window.set_position(tauri::Position::Physical(
+                            monitor.work_area().position.clone(),
+                        ));
                     }
                 }
             }
@@ -123,6 +123,7 @@ pub fn run() {
             commands::task_group::delete_task_group_by_id,
             // task commands
             commands::task::get_tasks,
+            commands::task::get_task_by_id,
             commands::task::create_task,
             commands::task::update_task_by_id,
             commands::task::delete_task_by_id,
@@ -173,6 +174,13 @@ pub fn run() {
             // window commands
             commands::window::get_window_size,
             commands::window::set_window_size,
+            // doing window commands
+            commands::doing_window::open_doing_window,
+            commands::doing_window::resize_doing_window,
+            commands::doing_window::close_doing_window,
+            // commands::doing_window::popup_doing_window_more_menu,
+            // biz util commands
+            commands::biz_util::rest_a_day,
         ])
         .register_uri_scheme_protocol(IMAGE_PROTOCOL_NAME, move |app, request| {
             // Inside the register_uri_scheme_protocol handler:

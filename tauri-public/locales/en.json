@@ -172,5 +172,8 @@
   "openPrimaryWindow": "Open Primary Window",
   "quit": "Quit Application",
   "switchToAutoMode": "Switch to Auto Schedule",
-  "closeDoingWindow": "Close Doing Window"
+  "closeDoingWindow": "Close Doing Window",
+  "uploadImage": "Upload Image",
+  "scrollOption": "Scroll Option",
+  "isReverseScrollCross": "Reverse Vertical Scroll to Horizontal"
 }

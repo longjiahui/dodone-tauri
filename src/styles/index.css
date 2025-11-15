@@ -74,13 +74,14 @@
 	@apply backdrop-blur-xs bg-[rgba(255,255,255,.25)];
 }
 
-.window-drag{
+/* electron drag */
+/* .window-drag{
 	-webkit-user-select: none;
 	-webkit-app-region: drag;
 }
 .window-no-drag{
 	-webkit-app-region: no-drag;
-}
+} */
 
 /* 如果使用gap、space-y（flex gap/ margin），那会导致中间有一小段距离是检测不到事件的，是ordercontainer的设计问题 */
 .order-container-gap-2{

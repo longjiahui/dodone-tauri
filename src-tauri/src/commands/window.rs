@@ -8,7 +8,6 @@ pub fn get_window_size(window: tauri::Window) -> Result<(f64, f64), String> {
 
 #[tauri::command]
 pub fn set_window_size(window: tauri::Window, width: f64, height: f64) -> Result<(), String> {
-    println!("set_window_size: {}, {}", width, height);
     window
         .set_size(tauri::PhysicalSize {
             width: width as u32,

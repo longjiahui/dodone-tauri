@@ -176,5 +176,8 @@
   "openPrimaryWindow": "打开主窗口",
   "quit": "退出应用",
   "switchToAutoMode": "切换为自动日程",
-  "closeDoingWindow": "关闭正在做窗口"
+  "closeDoingWindow": "关闭正在做窗口",
+  "uploadImage": "上传图片",
+  "scrollOption": "滚动选项",
+  "isReverseScrollCross": "反转垂直滚动至水平"
 }

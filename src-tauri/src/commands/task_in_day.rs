@@ -1,7 +1,7 @@
 use chrono::Utc;
 use sea_orm::{
-    ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, JoinType, QueryFilter, QuerySelect,
-    RelationTrait, TransactionTrait,
+    ActiveValue, ColumnTrait, EntityTrait, ExprTrait, IntoActiveModel, JoinType, QueryFilter,
+    QuerySelect, RelationTrait, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -19,6 +19,7 @@ use crate::{
         task_in_day,
     },
     utils::{
+        datetime::parse_datetime_string,
         event::{
             broadcast_create_task_in_day, broadcast_delete_task_in_day,
             broadcast_update_task_in_days,
@@ -57,25 +58,20 @@ pub async fn get_task_in_days(
         );
     }
     if let Some(start_date) = search.start_date {
-        let start_datetime = chrono::DateTime::parse_from_rfc3339(&start_date)
-            .map_err(|e| e.to_string())?
-            .with_timezone(&Utc);
+        let start_datetime = parse_datetime_string(&start_date)?;
         query = query.filter(task_in_day::Column::Date.gte(start_datetime));
     }
     if let Some(end_date) = search.end_date {
-        let end_datetime = chrono::DateTime::parse_from_rfc3339(&end_date)
-            .map_err(|e| e.to_string())?
-            .with_timezone(&Utc);
+        let end_datetime = parse_datetime_string(&end_date)?;
         query = query.filter(task_in_day::Column::Date.lte(end_datetime));
     }
     if let Some(is_task_done) = search.is_task_done {
-        query = query
-            .join(JoinType::LeftJoin, task_in_day::Relation::Task.def())
-            .filter(task::Column::State.eq(if is_task_done {
-                TaskState::DONE
-            } else {
-                TaskState::UNDONE
-            }));
+        query = query.join(JoinType::LeftJoin, task_in_day::Relation::Task.def());
+        query = if is_task_done {
+            query.filter(task::Column::State.eq(TaskState::DONE))
+        } else {
+            query.filter(task::Column::State.ne(TaskState::DONE))
+        }
     }
     if let Some(take) = search.take {
         query = query.limit(take as u64);
@@ -137,7 +133,7 @@ pub async fn create_task_in_day(
         color: ActiveValue::Set(data.color),
         task_id: ActiveValue::Set(uuid::Uuid::parse_str(&data.task_id).map_err(|e| e.to_string())?),
         r#type: ActiveValue::Set(data.r#type),
-        date: ActiveValue::Set(data.date),
+        date: ActiveValue::Set(parse_datetime_string(data.date.as_str())?),
         start_time: ActiveValue::Set(data.start_time),
         end_time: ActiveValue::Set(data.end_time),
         notification_id: if let Some(notification_id) = data.notification_id {
@@ -199,7 +195,8 @@ pub async fn update_task_in_day_by_id(
                     task_in_day_active_model.end_time = ActiveValue::Set(end_time);
                 }
                 if let Some(date) = data.date {
-                    task_in_day_active_model.date = ActiveValue::Set(date);
+                    task_in_day_active_model.date =
+                        ActiveValue::Set(parse_datetime_string(date.as_str())?);
                 }
                 if let Some(notification) = data.notification {
                     if let Some(notification_id) = task_in_day.notification_id {

@@ -14,6 +14,7 @@ import { EditorView, basicSetup } from "codemirror";
 import { markdown } from "@codemirror/lang-markdown";
 import { fileTypeFromBuffer } from "file-type";
 import { backend } from "@/utils/backend";
+import { selectImageFiles } from "@/utils/file";
 
 const container = ref<HTMLDivElement>();
 const modelValue = defineModel<string>("modelValue", { default: "" });
@@ -118,6 +119,13 @@ async function handleDropFile(files: File[], _filelist: FileList) {
     .map((d) => d[0]);
   return insertImages(imageFiles);
 }
+
+defineExpose({
+  uploadImage: async () => {
+    const images = await selectImageFiles();
+    return insertImages(images);
+  },
+});
 </script>
 
 <style lang="css"></style>

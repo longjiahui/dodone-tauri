@@ -43,9 +43,21 @@
               <div>{{ minDayTime }}:00 - {{ maxDayTime }}:00</div>
             </div>
             <div class="h items-center gap-2">
-              <div class="!w-auto shrink-0">{{ $t("useCustomColor") }}</div>
-              <Switch v-model="isUsingGroupColor"></Switch>
-              <div>{{ $t("useGroupColor") }}</div>
+              <div class="font-semibold">{{ $t("scrollOption") }}</div>
+              <Switch
+                class="w-[120px]"
+                :range="[100, 1000]"
+                v-model="isReverseScrollCross"
+                :texts="[$t('default'), $t('isReverseScrollCross')]"
+              ></Switch>
+            </div>
+            <div class="h items-center gap-2">
+              <div class="font-semibold">颜色设置</div>
+              <Switch
+                class="stretch"
+                v-model="isUsingGroupColor"
+                :texts="[$t('useCustomColor'), $t('useGroupColor')]"
+              ></Switch>
             </div>
             <!-- <div class="h items-center gap-2">
               <div class="font-semibold">拖拽单位(分钟)</div>
@@ -194,8 +206,8 @@
           ></div> -->
         </div>
       </div>
-      <!-- horizontal-scroll -->
       <Scrollbar
+        :horizontal-scroll="isReverseScrollCross"
         @scroll="handleScroll"
         ref="scrollContainerRef"
         :class="['stretch size-full', bgColor2]"
@@ -780,6 +792,10 @@ const isUsingGroupColor = useLocalStorage(
 );
 // const interactUnit = useLocalStorage<number>("scheduleChart-interactUnit", 1)
 const dateUnitWidth = useLocalStorage("scheduleChart-dateUnitWidth", 240);
+const isReverseScrollCross = useLocalStorage(
+  "scheduleChart-isReverseScrollCross",
+  false
+);
 const dayTimeBarWidth = ref(64);
 
 const minDayTime = useLocalStorage<number>(

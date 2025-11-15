@@ -8,7 +8,7 @@
 //   TaskTargetRecord,
 //   TaskInDay,
 //   Notification,
-type DateType = string;
+export type DateType = string;
 
 export type TaskAnchor = {
   sortOrder: number;
