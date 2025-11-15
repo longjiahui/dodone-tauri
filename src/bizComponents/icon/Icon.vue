@@ -18,5 +18,5 @@ const props = defineProps<{
   icon: string | null;
 }>();
 
-const finalIcon = props.icon as any;
+const finalIcon = computed(() => props.icon as any);
 </script>

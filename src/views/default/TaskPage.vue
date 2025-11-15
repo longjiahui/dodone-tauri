@@ -150,7 +150,7 @@
           > -->
             <!-- <template #1="{ setMinRef }"> -->
             <!-- :ref="setMinRef" -->
-            <Scrollbar view-class="v gap-3 pb-3">
+            <Scrollbar wrap-class="overflow-x-hidden" view-class="v gap-3 pb-3">
               <div :class="['v gap-2', sidebarPaddingX]">
                 <div class="h items-center justify-between gap-2">
                   <CaretRightOutlined
@@ -432,6 +432,7 @@
                 </div>
                 <Scrollbar
                   class="stretch"
+                  wrap-class="overflow-x-hidden"
                   :view-class="[sidebarPaddingX, 'py-1']"
                 >
                   <OrderContainer

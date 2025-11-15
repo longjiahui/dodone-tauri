@@ -70,6 +70,7 @@
     </div>
   </Define>
   <Tree
+    class="overflow-x-hidden"
     :loop-datas="props.modelValue"
     v-if="props.modelValue.length > 0"
     custom-expand-element

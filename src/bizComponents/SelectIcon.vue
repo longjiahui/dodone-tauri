@@ -3,7 +3,7 @@
     <div
       class="h border-light-4 bg-bg size-[32px] cursor-pointer items-center justify-center rounded border"
     >
-      <Icon v-if="finalIcon" :icon="finalIcon"></Icon>
+      <Icon v-if="icon" :icon="icon"></Icon>
       <!-- <div
         v-else
         class="bg-light-2 border-light-4 size-[16px] rounded border"
@@ -60,10 +60,9 @@ const finalEmojis = computed(() => {
   const start = (page.value - 1) * pageSize;
   return emojis.value.slice(start, start + pageSize);
 });
-const icon = defineModel<string | null>("model-value", { default: null });
+const icon = defineModel<string | null>("modelValue", { default: null });
 
 const searchText = ref("");
-const finalIcon = computed<any>(() => icon.value);
 const finalAntdIcons = computed(
   () =>
     Object.keys(Icons).filter(

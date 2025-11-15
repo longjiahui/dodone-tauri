@@ -142,7 +142,6 @@
     <Scrollbar
       v-if="finalShowedTasks?.length"
       class="stretch v"
-      wrap-class="stretch"
       :view-class="[`px-${paddingXLevel}`]"
     >
       <TaskList
