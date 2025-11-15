@@ -1,5 +1,5 @@
 <template>
-  <Tooltip :content="tooltip ?? ''">
+  <Tooltip :content="tooltip ?? ''" :visible-disable-controller>
     <DefaultDropdownMenu :menus>
       <Button :danger type="text" @click="$emit('click', $event)">
         <component :is="icon"></component>
@@ -8,22 +8,23 @@
   </Tooltip>
 </template>
 <script setup lang="ts">
-import { Menu } from "@/components/dropdown/DefaultDropdownMenu.vue"
-import type { Component } from "vue"
+import { Menu } from "@/components/dropdown/DefaultDropdownMenu.vue";
+import type { Component } from "vue";
 
 withDefaults(
   defineProps<{
-    tooltip?: string
-    icon: Component
-    menus?: Menu[]
-    danger?: boolean
+    tooltip?: string;
+    icon: Component;
+    menus?: Menu[];
+    danger?: boolean;
+    visibleDisableController?: boolean;
   }>(),
   {
     menus: () => [],
-  },
-)
+  }
+);
 
 defineEmits<{
-  (e: "click", event: MouseEvent): void
-}>()
+  (e: "click", event: MouseEvent): void;
+}>();
 </script>

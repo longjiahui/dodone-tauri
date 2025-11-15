@@ -1,5 +1,5 @@
 <template>
-  <Dropdown :trigger :placement>
+  <Dropdown v-model:open="visible" :trigger :placement>
     <slot></slot>
     <template #body="d">
       <div
@@ -11,10 +11,12 @@
   </Dropdown>
 </template>
 <script setup lang="ts">
-import { DropdownPlacement, Trigger } from "@/types"
+import { DropdownPlacement, Trigger } from "@/types";
 
 defineProps<{
-  placement?: DropdownPlacement
-  trigger?: Trigger
-}>()
+  placement?: DropdownPlacement;
+  trigger?: Trigger;
+}>();
+
+const visible = defineModel<boolean>("visible", { default: false });
 </script>

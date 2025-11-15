@@ -2,6 +2,21 @@
   <AInput
     :status="error ? 'error' : ''"
     v-model:value="value as any"
+    @compositionstart="isComposition = true"
+    @compositionend="
+      getWindow().setTimeout(() => {
+        isComposition = false;
+      })
+    "
+    @keydown.enter="
+      () => {
+        if (isComposition) {
+          isComposition = false;
+        } else {
+          $emit('enter');
+        }
+      }
+    "
     :placeholder
     :type
     :disabled
@@ -19,14 +34,16 @@
   </AInput>
 </template>
 <script setup lang="ts">
-const value = defineModel<string | number | null>("modelValue")
+import { getWindow } from "@/utils/window";
+
+const value = defineModel<string | number | null>("modelValue");
 
 defineProps<{
-  placeholder?: string
-  prefix?: Component
-  suffix?: Component
-  disabled?: boolean
-  error?: boolean
+  placeholder?: string;
+  prefix?: Component;
+  suffix?: Component;
+  disabled?: boolean;
+  error?: boolean;
   type?:
     | "number"
     | "reset"
@@ -49,6 +66,12 @@ defineProps<{
     | "datetime-local"
     | "file"
     | "password"
-    | "tel"
-}>()
+    | "tel";
+}>();
+
+defineEmits<{
+  (e: "enter"): void;
+}>();
+
+const isComposition = ref(false);
 </script>

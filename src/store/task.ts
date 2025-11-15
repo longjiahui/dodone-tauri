@@ -134,7 +134,6 @@ export const useTaskStore = defineStore("task", () => {
 
   backend.on_batchUpsertTasks(async (d) => {
     const { created, updated } = d || {};
-    console.debug(created, updated, d);
     if (created?.length || updated?.length) {
       return _upsertTasks2Tree(created || [], updated || []);
     }

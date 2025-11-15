@@ -1,5 +1,7 @@
 <template>
   <ATooltip
+    :open="visible && !visibleDisableController"
+    @update:open="(val) => (visible = val)"
     :placement
     overlay-class-name="pointer-events-none"
     :title="content ?? ''"
@@ -13,12 +15,21 @@
   </ATooltip>
 </template>
 <script setup lang="ts">
-import { TooltipPlacement } from "@/types"
+import { TooltipPlacement } from "@/types";
 
-defineProps<{
-  content?: string
-  placement?: TooltipPlacement
-}>()
+const props = defineProps<{
+  content?: string;
+  placement?: TooltipPlacement;
+  visibleDisableController?: boolean;
+}>();
 
-// const visibleController = ref(false)
+const visible = ref(false);
+watch(
+  () => props.visibleDisableController,
+  (val) => {
+    if (!val) {
+      visible.value = false;
+    }
+  }
+);
 </script>

@@ -244,7 +244,7 @@
                 <!-- class="gap-2" -->
                 <OrderContainer
                   v-if="taskViews.length > 0 && isShowTaskViews"
-                  class="order-container-gap-2"
+                  class="order-container-gap-2 overflow-x-hidden"
                   :drop-channel="() => 'order-taskview'"
                   :drag-datas="
                     (d) => [
@@ -432,12 +432,11 @@
                 </div>
                 <Scrollbar
                   class="stretch"
-                  wrap-class="overflow-x-hidden"
                   :view-class="[sidebarPaddingX, 'py-1']"
                 >
                   <OrderContainer
                     v-if="taskGroups.length > 0 && isShowGroups"
-                    class="stretch order-container-gap-2"
+                    class="stretch order-container-gap-2 overflow-x-hidden"
                     :datas="taskGroups.slice()"
                     #default="{
                       data: g,
@@ -587,7 +586,7 @@
                         </BizDrop>
                       </Scope>
                       <OrderContainer
-                        class="order-container-gap-2 pl-10"
+                        class="order-container-gap-2 pl-10 overflow-x-hidden"
                         :datas="taskAnchorsGroupByTaskGroupId[g.id]!.slice()"
                         :drag-datas="
                           (d) => [
@@ -738,9 +737,12 @@
                   <template
                     v-if="currentType === 'taskAnchor' && finalTaskAnchor"
                   >
-                    <div class="px-3">
+                    <div
+                      v-if="taskAnchorTask"
+                      :key="taskAnchorTask.id"
+                      class="px-3"
+                    >
                       <Task
-                        v-if="taskAnchorTask"
                         :model-value="taskAnchorTask"
                         dropdown-placement="bottomLeft"
                       ></Task>
@@ -762,7 +764,7 @@
                         }
                       "
                       v-model="inputTaskContent"
-                      @keyup.enter="
+                      @enter="
                         () => {
                           createTask({
                             content: inputTaskContent,
@@ -794,7 +796,7 @@
                   <div
                     class="size-full stretch"
                     v-else-if="currentType === 'taskAnchor' && taskAnchorTask"
-                    :key="finalTaskAnchorId"
+                    :key="currentType"
                   >
                     <TaskListTemplate
                       :tasks="taskAnchorTask!.children.slice()"
@@ -845,7 +847,7 @@
           <Input
             v-model="inputTaskGroupName"
             :placeholder="$t('inputTaskGroupNamePlaceholder')"
-            @keyup.enter="handleCreateTaskGroup"
+            @enter="handleCreateTaskGroup"
           ></Input>
           <Button type="primary" @click="handleCreateTaskGroup">{{
             $t("create")

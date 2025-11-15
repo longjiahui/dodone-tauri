@@ -421,7 +421,9 @@
                               scale: 1,
                               transition: {
                                 bounce: 1,
-                              }
+                                damping: 10,
+                                delay: Math.random() * 180,
+                              },
                             }"
                             @mouseenter="hoveringId = data.id"
                             @mouseleave="

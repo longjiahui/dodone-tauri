@@ -2,7 +2,10 @@
   <Tools v-if="realTask">
     <slot name="start"></slot>
     <div class="h items-center gap-2">
-      <Tooltip :content="$t('editContent')">
+      <Tooltip
+        :content="$t('editContent')"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <Button
           type="text"
           @click="
@@ -21,7 +24,10 @@
           <EditOutlined></EditOutlined>
         </Button>
       </Tooltip>
-      <Tooltip :content="$t('editSubTask')">
+      <Tooltip
+        :content="$t('editSubTask')"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <Button
           type="text"
           @click="dialogs.EditSubTaskDialog({ taskId: realTask.id })"
@@ -29,7 +35,10 @@
           <UnorderedListOutlined></UnorderedListOutlined>
         </Button>
       </Tooltip>
-      <Tooltip :content="$t('editDescription')">
+      <Tooltip
+        :content="$t('editDescription')"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <Button type="text" @click="handleEditDescription(task)">
           <BookOutlined></BookOutlined>
         </Button>
@@ -84,7 +93,11 @@
       </DefaultDropdownMenu>
       <!-- </Tooltip> -->
 
-      <Tooltip :title="$t('factor')" v-if="canEditFactor">
+      <Tooltip
+        :title="$t('factor')"
+        v-if="canEditFactor"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <DefaultDropdownMenu
           :menus="
             [defaultTaskFactor, 2, 3, 4, 5].map((d) => ({
@@ -101,7 +114,10 @@
           </Button>
         </DefaultDropdownMenu>
       </Tooltip>
-      <Tooltip :title="$t('priority')">
+      <Tooltip
+        :title="$t('priority')"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <DefaultDropdownMenu
           :menus="[
             {
@@ -127,12 +143,18 @@
           </Button>
         </DefaultDropdownMenu>
       </Tooltip>
-      <Tooltip :title="$t('targetValue')">
+      <Tooltip
+        :title="$t('targetValue')"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <Button type="text" @click="handleEditTaskTarget(task)">
           <AimOutlined></AimOutlined>
         </Button>
       </Tooltip>
-      <Tooltip :content="$t('moveTo')">
+      <Tooltip
+        :content="$t('moveTo')"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+      >
         <Button
           type="text"
           @click="
@@ -155,6 +177,7 @@
         :tooltip="$t('setDoingWindow')"
         :icon="PlayCircleOutlined"
         @click="backend.openDoingWindow({ search: { taskId: realTask.id } })"
+        :visible-disable-controller="tooltipVisibleDisabledController"
       ></ToolItem>
       <!-- :menus="[
           {
@@ -178,6 +201,7 @@
           ? $t('removeAnchor')
           : $t('createAnchor')
       "
+      :visible-disable-controller="tooltipVisibleDisabledController"
     >
       <Button
         type="text"
@@ -189,7 +213,10 @@
         <StarFilled v-else></StarFilled>
       </Button>
     </Tooltip>
-    <Tooltip :content="$t('taskView')">
+    <Tooltip
+      :content="$t('taskView')"
+      :visible-disable-controller="tooltipVisibleDisabledController"
+    >
       <Button
         type="text"
         @click="
@@ -244,7 +271,10 @@
               </template>
             </DefaultDropdown> -->
     </Tooltip>
-    <Tooltip :content="isFinished ? $t('cancelFinish') : $t('finish')">
+    <Tooltip
+      :content="isFinished ? $t('cancelFinish') : $t('finish')"
+      :visible-disable-controller="tooltipVisibleDisabledController"
+    >
       <!-- <Button
           type="text"
           class="text-success"
@@ -263,13 +293,20 @@
       ></Checkbox>
     </Tooltip>
 
-    <Tooltip :content="$t('setNextTask')">
+    <Tooltip
+      :content="$t('setNextTask')"
+      :visible-disable-controller="tooltipVisibleDisabledController"
+    >
       <Button type="text" @click="handleEditNextTask(task)">
         <ReloadOutlined></ReloadOutlined>
       </Button>
     </Tooltip>
     <slot name="before-delete" v-bind="{ task }"></slot>
-    <Tooltip :content="$t('delete')" v-if="!hideDelete">
+    <Tooltip
+      :content="$t('delete')"
+      v-if="!hideDelete"
+      :visible-disable-controller="tooltipVisibleDisabledController"
+    >
       <PopConfirm
         @confirm="
           async () => {
@@ -326,6 +363,7 @@ import dayjs from "dayjs";
 const props = defineProps<{
   task: ReadOnlyTaskWithChildren;
   hideDelete?: boolean;
+  tooltipVisibleDisabledController?: boolean;
 }>();
 const taskStore = useTaskStore();
 const taskAnchorStore = useTaskAnchorStore();
