@@ -11,16 +11,16 @@
   </Dialog>
 </template>
 <script setup lang="ts">
-import { DialogType } from "@/components/dialog/dialog"
-import type { Icon } from "@/types"
-import * as Icons from "@ant-design/icons-vue"
+import { DialogType } from "@/components/dialog/dialog";
+import type { Icon } from "@/types";
+import * as Icons from "@ant-design/icons-vue";
 
 defineProps<{
-  dialog: DialogType<any, Icon>
-  icon?: string | null
-}>()
+  dialog: DialogType<any, Icon>;
+  icon?: string | null;
+}>();
 
 const icons = Object.keys(Icons).filter((key) =>
-  key.endsWith("Outlined"),
-) as Icon[]
+  key.endsWith("Outlined")
+) as Icon[];
 </script>

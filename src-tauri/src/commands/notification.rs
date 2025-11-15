@@ -6,7 +6,7 @@ use sea_orm::{
 use serde_json::Value;
 
 use crate::{
-    database::DbState,
+    database::{get_db_manage, DbState},
     entities::{notification, prelude::Notification, task_in_day},
     utils::datetime::parse_datetime_string,
 };
@@ -14,9 +14,10 @@ use crate::{
 // notification 扔到前端处理了。。
 #[tauri::command]
 pub async fn get_notifications(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value>, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     Notification::find()
         .into_json()
-        .all(db_manage.lock().await.get_connection())
+        .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())
 }
@@ -66,10 +67,9 @@ pub async fn delete_notification_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     // 创建事务
-    Ok(db_manage
-        .lock()
-        .await
+    Ok(db_guard
         .get_connection()
         .transaction::<_, serde_json::Value, String>(|txn| {
             Box::pin(async move {
@@ -156,7 +156,7 @@ pub async fn update_notification_by_id_service(
 //         ..Default::default()
 //     };
 //     let res = notification::Entity::insert(active_model)
-//         .exec_with_returning(db_manage.lock().await.get_connection())
+//         .exec_with_returning(db_guard.get_connection())
 //         .await
 //         .map_err(|e| e.to_string())?;
 //     let _ = broadcast_create_notification(&app_handle, res.clone());
@@ -172,7 +172,7 @@ pub async fn update_notification_by_id_service(
 //     let pk =
 //         notification::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
 //     let mut active_model = pk
-//         .one(db_manage.lock().await.get_connection())
+//         .one(db_guard.get_connection())
 //         .await
 //         .map_err(|e| e.to_string())?
 //         .ok_or_else(|| "Notification not found".to_string())?
@@ -210,7 +210,7 @@ pub async fn update_notification_by_id_service(
 //     active_model.updated_at = ActiveValue::Set(Utc::now());
 
 //     let res = notification::Entity::update(active_model)
-//         .exec(db_manage.lock().await.get_connection())
+//         .exec(db_guard.get_connection())
 //         .await
 //         .map_err(|e| e.to_string())?;
 //     serde_json::to_value(res).map_err(|e| e.to_string())
@@ -225,7 +225,7 @@ pub async fn update_notification_by_id_service(
 //     let pk =
 //         notification::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
 //     let deleted_notification = pk
-//         .one(db_manage.lock().await.get_connection())
+//         .one(db_guard.get_connection())
 //         .await
 //         .map_err(|e| e.to_string())?
 //         .ok_or_else(|| "Notification not found".to_string())?;
@@ -234,7 +234,7 @@ pub async fn update_notification_by_id_service(
 //     let active_model = deleted_notification.into_active_model();
 
 //     notification::Entity::delete(active_model)
-//         .exec(db_manage.lock().await.get_connection())
+//         .exec(db_guard.get_connection())
 //         .await
 //         .map_err(|e| e.to_string())?;
 //     let _ = broadcast_delete_notification(&app_handle, notification_for_broadcast);

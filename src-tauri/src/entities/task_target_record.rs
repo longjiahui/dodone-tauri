@@ -11,7 +11,7 @@ pub struct Model {
     pub id: Uuid,
     pub value: Decimal,
 
-    #[sea_orm(column_name = "startAt")]
+    #[sea_orm(column_name = "recordAt")]
     pub record_at: DateTimeUtc,
     #[sea_orm(column_name = "taskId", column_type = "Text")]
     pub task_id: Uuid,
@@ -34,12 +34,11 @@ impl ActiveModelBehavior for ActiveModel {}
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateModel {
     pub value: Decimal,
-    pub record_at: DateTimeUtc,
     pub task_id: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateModel {
     pub value: Option<Decimal>,
-    pub record_at: Option<DateTimeUtc>,
+    pub record_at: Option<String>,
 }

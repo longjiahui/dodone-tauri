@@ -4,14 +4,14 @@ use serde_json::Value;
 use uuid::Uuid;
 
 use crate::{
-    database::DbState,
+    database::{get_db_manage, DbState},
     entities::next_task,
     utils::{datetime::parse_datetime_string, option3::Option3},
 };
 
 #[tauri::command]
 pub async fn get_next_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Value, String> {
-    let db_guard = db_manage.lock().await;
+    let db_guard = get_db_manage(db_manage).await?;
     let db = db_guard.get_connection();
     let next_tasks = next_task::Entity::find()
         .all(db)
@@ -25,6 +25,7 @@ pub async fn create_next_task(
     db_manage: tauri::State<'_, DbState>,
     data: next_task::CreateModel,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let active_model: next_task::ActiveModel = next_task::ActiveModel {
         id: ActiveValue::Set(uuid::Uuid::new_v4()),
         mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
@@ -37,7 +38,7 @@ pub async fn create_next_task(
         ..Default::default()
     };
     let res = next_task::Entity::insert(active_model)
-        .exec_with_returning(db_manage.lock().await.get_connection())
+        .exec_with_returning(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     Ok(serde_json::json!(res))
@@ -73,9 +74,10 @@ pub async fn update_next_task_by_id(
     id: String,
     data: next_task::UpdateModel,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let pk = next_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let mut active_model = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Next_task not found".to_string())?
@@ -84,7 +86,7 @@ pub async fn update_next_task_by_id(
     update_next_task_by_active_model(&mut active_model, data)?;
 
     let res = next_task::Entity::update(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
 
@@ -96,9 +98,10 @@ pub async fn delete_next_task_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<next_task::Model, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let pk = next_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let deleted_next_task = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Next_task not found".to_string())?;
@@ -107,7 +110,7 @@ pub async fn delete_next_task_by_id(
     let active_model = deleted_next_task.into_active_model();
 
     next_task::Entity::delete(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     Ok(next_task_for_broadcast)

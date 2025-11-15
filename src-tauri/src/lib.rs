@@ -1,11 +1,15 @@
 use std::sync::Arc;
 
 use futures::lock::Mutex;
-use tauri::Manager;
+use tauri::{
+    menu::{Menu, MenuItem},
+    tray::TrayIconBuilder,
+    Manager,
+};
 
 use crate::{
     constants::{get_app_data_dir, get_database_dir, get_image_dir, IMAGE_PROTOCOL_NAME},
-    database::{init_database, DbState},
+    database::{init_database, make_db_state, DbState},
 };
 
 mod constants;
@@ -23,6 +27,38 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app: &mut tauri::App| {
+            let open_primary_window_i = MenuItem::with_id(
+                app,
+                "open_primary_window",
+                "Open Primary Window",
+                true,
+                None::<&str>,
+            )?;
+            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&open_primary_window_i, &quit_i])?;
+            let tray = TrayIconBuilder::new()
+                .tooltip(app.package_info().name.clone())
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        println!("quit menu item was clicked");
+                        app.exit(0);
+                    }
+                    "open_primary_window" => {
+                        if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                            let _ = window.unminimize();
+                        }
+                    }
+                    _ => {
+                        println!("menu item {:?} not handled", event.id);
+                    }
+                })
+                .show_menu_on_left_click(true)
+                .build(app)?;
+
             let handle = app.handle().clone();
 
             // log all directorires
@@ -32,6 +68,22 @@ pub fn run() {
             println!("App data directory: {:?}", app_data_dir);
             println!("Database directory: {:?}", database_dir);
             println!("Image directory: {:?}", image_dir);
+
+            // debug模式下将main窗口移动到某个display
+            #[cfg(debug_assertions)]
+            {
+                // In debug mode, try to move the main window to a secondary display (common setups
+                // place a second monitor at an x offset like 2560). This is best-effort and errors
+                // are ignored so it won't crash the app if the API isn't available or the position
+                // is invalid.
+
+                if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+                    if let Some(monitor) = app.available_monitors().unwrap().get(1) {
+                        let _ = window
+                            .set_position(tauri::Position::Physical(monitor.position().clone()));
+                    }
+                }
+            }
 
             // Initialize database in async context
             tauri::async_runtime::spawn(async move {
@@ -44,8 +96,7 @@ pub fn run() {
                         //     println!("Database migrations completed successfully");
                         // }
 
-                        let db_state: DbState = Arc::new(Mutex::new(db_manage));
-                        handle.manage(db_state);
+                        handle.manage(make_db_state(Some(db_manage)));
                     }
                     Err(e) => {
                         eprintln!("Failed to initialize database: {}", e);
@@ -81,6 +132,11 @@ pub fn run() {
             commands::next_task::create_next_task,
             commands::next_task::update_next_task_by_id,
             commands::next_task::delete_next_task_by_id,
+            // task target record commands
+            commands::task_target_record::get_task_target_records,
+            commands::task_target_record::create_task_target_record,
+            commands::task_target_record::update_task_target_record_by_id,
+            commands::task_target_record::delete_task_target_record_by_id,
             // task view commands
             commands::task_view::get_task_views,
             commands::task_view::create_task_view,
@@ -108,6 +164,15 @@ pub fn run() {
             //  const commands
             commands::constants::get_const,
             commands::constants::set_const,
+            // database commands
+            commands::database::get_current_db_name,
+            commands::database::get_databases,
+            commands::database::create_database,
+            commands::database::delete_database,
+            commands::database::switch_database,
+            // window commands
+            commands::window::get_window_size,
+            commands::window::set_window_size,
         ])
         .register_uri_scheme_protocol(IMAGE_PROTOCOL_NAME, move |app, request| {
             // Inside the register_uri_scheme_protocol handler:

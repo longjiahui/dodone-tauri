@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use crate::{
-    database::DbState,
+    database::{get_db_manage, DbState},
     entities::{prelude::TaskViewTask, task_view_task},
     utils::event::{broadcast_create_task_view_task, broadcast_delete_task_view_tasks},
 };
@@ -19,13 +19,14 @@ pub async fn get_task_view_tasks(
     db_manage: tauri::State<'_, DbState>,
     search: SearchModel,
 ) -> Result<Vec<Value>, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     TaskViewTask::find()
         .filter(
             task_view_task::Column::TaskViewId
                 .eq(uuid::Uuid::parse_str(&search.task_view_id).map_err(|e| e.to_string())?),
         )
         .into_json()
-        .all(db_manage.lock().await.get_connection())
+        .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())
 }
@@ -36,6 +37,7 @@ pub async fn create_task_view_task(
     db_manage: tauri::State<'_, DbState>,
     data: task_view_task::CreateModel,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_view_task::ActiveModel = task_view_task::ActiveModel {
         sort_order: ActiveValue::Set(0),
         id: ActiveValue::Set(uuid::Uuid::new_v4()),
@@ -48,7 +50,7 @@ pub async fn create_task_view_task(
         ..Default::default()
     };
     let res = task_view_task::Entity::insert(active_model)
-        .exec_with_returning(db_manage.lock().await.get_connection())
+        .exec_with_returning(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     let _ = broadcast_create_task_view_task(&app_handle, res.clone());
@@ -61,10 +63,11 @@ pub async fn delete_task_view_task_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let pk =
         task_view_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let deleted_task_view_task = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "TaskViewTask not found".to_string())?;
@@ -73,7 +76,7 @@ pub async fn delete_task_view_task_by_id(
     let active_model = deleted_task_view_task.into_active_model();
 
     task_view_task::Entity::delete(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
 

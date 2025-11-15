@@ -16,9 +16,9 @@ export const defaultTaskFactor = 1;
 export const defaultTaskPriority = 25;
 export const highTaskPriority = 50;
 export const defaultTaskTargetType: TaskTargetType = "DEFAULT";
-export const defaultTaskGroupIcon = "📂";
+export const defaultTaskGroupIcon = "FolderOutlined";
 export const defaultTaskViewIcon = (type: TaskViewType) =>
-  type === "AUTO" ? "🤖" : "🏷️";
+  type === "AUTO" ? "RobotOutlined" : "TagOutlined";
 // export const defaultTaskGroupIcon = "FolderOutlined" satisfies Icon
 // export const defaultTaskViewIcon = (type: TaskViewType) =>
 //   (type === "AUTO" ? "RobotOutlined" : "TagOutlined") satisfies Icon

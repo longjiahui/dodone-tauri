@@ -18,6 +18,14 @@ pub fn get_database_dir(app: &tauri::AppHandle) -> std::path::PathBuf {
     path
 }
 
+pub const DEFAULT_DATABASE_FILE_NAME: &str = "default.dodone";
+
+pub fn get_database_path(app: &tauri::AppHandle, file: &str) -> std::path::PathBuf {
+    let mut path = get_database_dir(app);
+    path.push(file);
+    path
+}
+
 pub fn get_image_dir(app: &tauri::AppHandle) -> std::path::PathBuf {
     let mut path = get_app_data_dir(app);
     path.push("image");
@@ -53,6 +61,14 @@ pub fn get_const(app: &tauri::AppHandle, key: &str) -> Option<String> {
     } else {
         None
     }
+}
+
+pub fn get_const_current_db_name(app: &tauri::AppHandle) -> Option<String> {
+    get_const(app, "currentDBName")
+}
+
+pub fn set_const_current_db_name(app: &tauri::AppHandle, name: &str) -> Result<Value, String> {
+    set_const(app, "currentDBName", name)
 }
 
 pub fn set_const(app: &tauri::AppHandle, key: &str, value: &str) -> Result<Value, String> {

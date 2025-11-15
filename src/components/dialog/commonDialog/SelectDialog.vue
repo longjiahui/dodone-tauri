@@ -14,20 +14,20 @@
 </template>
 
 <script setup lang="ts">
-import { DialogType } from "@/components/dialog/dialog"
+import { DialogType } from "@/components/dialog/dialog";
 type Option = {
-  name?: string
-  id?: any
-}
+  name?: string;
+  id?: string | number | symbol;
+};
 withDefaults(
   defineProps<{
-    dialog: DialogType<any, Option>
-    title?: string
-    width?: string
-    options?: Option[]
+    dialog: DialogType<any, Option>;
+    title?: string;
+    width?: string;
+    options?: Option[];
   }>(),
   {
     width: "320px",
-  },
-)
+  }
+);
 </script>

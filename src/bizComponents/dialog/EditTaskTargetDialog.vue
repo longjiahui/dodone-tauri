@@ -76,7 +76,7 @@
                   }).finishPromise((d) => {
                     if (d) {
                       return backend
-                        .updateTaskTargetRecordById(r.id, d)
+                        .updateTaskTargetRecordById({ id: r.id, data: d })
                         .then(() => refreshRecords());
                     }
                   })
@@ -92,7 +92,7 @@
                         content: $t('deleteTargetRecordConfirm'),
                       }).finishPromise(() => {
                         return backend
-                          .deleteTaskTargetRecordById(r.id)
+                          .deleteTaskTargetRecordById({ id: r.id })
                           .then(() => {
                             return refreshRecords();
                           });
@@ -166,7 +166,7 @@ const props = defineProps<{
 const taskStore = useTaskStore();
 const task = computed(() => taskStore.tasksDict[props.taskId]);
 const { state: records, execute: refreshRecords } = useAsyncState(
-  () => backend.getTaskTargetRecords(props.taskId),
+  () => backend.getTaskTargetRecords({ search: { taskId: props.taskId } }),
   [],
   { immediate: true }
 );
@@ -179,11 +179,11 @@ const finalRecords = computed(() => {
     const arr: { value: number; recordAt: Date }[] = [];
     [...records.value].reverse().forEach((r, index) => {
       if (index === 0) {
-        arr.push({ value: r.value, recordAt: r.recordAt });
+        arr.push({ value: r.value, recordAt: new Date(r.recordAt) });
       } else {
         arr.push({
           value: arr[index - 1].value + r.value,
-          recordAt: r.recordAt,
+          recordAt: new Date(r.recordAt),
         });
       }
     });
@@ -201,8 +201,7 @@ function handleCreateTaskTargetRecord() {
   if (value.value && !isNaN(+value.value)) {
     return backend
       .createTaskTargetRecord({
-        taskId: props.taskId,
-        value: +value.value,
+        data: { taskId: props.taskId, value: +value.value },
       })
       .then(() => {
         value.value = "";

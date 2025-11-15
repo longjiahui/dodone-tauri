@@ -28,7 +28,7 @@
                   :options="
                     fonts.map((f) => ({
                       id: f.name,
-                      name: f.name,
+                      databasenamef.name,
                     }))
                   "
                   v-model="systemStore.font"
@@ -104,7 +104,7 @@
             <div class="v gap-1">
               <Scope
                 v-for="d in dbs"
-                :d="{ isCurrent: currentDatabaseName === d.name }"
+                :d="{ isCurrent: `${currentDatabaseName}` === d }"
                 #default="{ isCurrent }"
               >
                 <div
@@ -116,7 +116,7 @@
                   ]"
                 >
                   <div>
-                    {{ d.name }}
+                    {{ d }}
                   </div>
                   <div>
                     <CheckOutlined v-if="isCurrent"></CheckOutlined>
@@ -127,14 +127,14 @@
                         dialogs
                           .InputDialog({
                             content: $t('deleteDatabaseConfirm'),
-                            suffix: () => '.db',
+                            suffix: () => fileSuffix,
                           })
                           .finishPromise((val) => {
                             if (val) {
-                              const dbName = `${val}.db`;
-                              if (dbName === d.name) {
+                              const dbName = `${val}${fileSuffix}`;
+                              if (dbName === d) {
                                 return backend
-                                  .deleteDatabase(dbName)
+                                  .deleteDatabase({ name: dbName })
                                   .then(() => {
                                     if (currentDatabaseName === dbName) {
                                       getWindow().location.reload();
@@ -164,17 +164,17 @@
                     dialogs
                       .InputDialog({
                         content: $t('typeDatabaseName'),
-                        suffix: () => '.db',
+                        suffix: () => fileSuffix,
                       })
                       .finishPromise((d) => {
-                        if (d && dbs.map((d) => d.name).includes(d)) {
+                        if (d && dbs.includes(d)) {
                           dialogs.MessageDialog({
                             content: $t('databaseNameCannotBeRepeated'),
                           });
                           return;
                         } else if (d) {
                           return backend
-                            .createDatabase(`${d}.db`)
+                            .createDatabase({ name: `${d}${fileSuffix}` })
                             .then(() => refreshDBs());
                         }
                       })
@@ -188,13 +188,17 @@
                   dialogs
                     .SelectDialog({
                       title: $t('selectDatabase'),
-                      options: dbs.map((d) => ({ id: d.name, name: d.name })),
+                      options: dbs.map((d) => ({ id: d, name: d })),
                     })
                     .finishPromise((d) => {
                       if (d) {
-                        return backend.switchDatabase(d.id).then(() => {
-                          return getWindow().location.reload();
-                        });
+                        return backend
+                          .switchDatabase({
+                            name: d.id as string,
+                          })
+                          .then(() => {
+                            return getWindow().location.reload();
+                          });
                       }
                     })
                 "
@@ -220,6 +224,8 @@ import { getTabs } from "@/utils/tab";
 import { getWindow } from "@/utils/window";
 import { useI18n } from "vue-i18n";
 
+const fileSuffix = ".dodone";
+
 defineProps<{
   dialog: AnyDialogType;
 }>();
@@ -233,7 +239,7 @@ const isLoaded = ref(false);
 const isLoading = computed(() => !isLoaded.value);
 const currentDatabaseName = ref<string>();
 backend
-  .getCurrentDBName()
+  .getCurrentDbName()
   .finally(() => {
     isLoaded.value = true;
   })

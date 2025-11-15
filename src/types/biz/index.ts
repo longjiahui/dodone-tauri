@@ -146,11 +146,12 @@ export type FieldType =
 
 export type ReadOnlyTaskInDayWithExtra = DeepReadonly<TaskInDay>;
 
-export type Database = {
-  // primary
-  name: string;
-  path: string;
-};
+// export type Database = {
+//   // primary
+//   name: string;
+//   path: string;
+// };
+export type Database = string; // database name
 
 export type ColorMode = "light" | "dark" | "system";
 export type ConstObject = Partial<{

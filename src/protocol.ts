@@ -193,7 +193,7 @@ export const protocols = {
     {
       required: "taskId" | "value";
       // taskId
-      GetAllParams: [string];
+      GetAllParams: [{ search: { taskId: string } }];
     }
   >()("TaskTargetRecord"),
   ...crud<
@@ -296,7 +296,7 @@ export const protocols = {
         {
           width: number;
           height: number;
-          animate?: boolean;
+          // animate?: boolean;
         },
       ],
       void
@@ -304,7 +304,7 @@ export const protocols = {
   ),
   getWindowSize: defineAPI(
     "getWindowSize",
-    defineAPIFunction<[], { width: number; height: number }>()
+    defineAPIFunction<[], [number, number]>()
   ),
 
   // doing window
@@ -363,25 +363,25 @@ export const protocols = {
   // ),
 
   // databasefile path
-  getCurrentDBName: defineAPI(
-    "getCurrentDBName",
+  getCurrentDbName: defineAPI(
+    "getCurrentDbName",
     defineAPIFunction<[], string>()
   ),
   getDatabases: defineAPI("getDatabases", defineAPIFunction<[], Database[]>()),
   switchDatabase: defineAPI(
     "switchDatabase",
     // name
-    defineAPIFunction<[string], void>()
+    defineAPIFunction<[{ name: string }], void>()
   ),
   createDatabase: defineAPI(
     "createDatabase",
     // name
-    defineAPIFunction<[string], void>()
+    defineAPIFunction<[{ name: string }], void>()
   ),
   deleteDatabase: defineAPI(
     "deleteDatabase",
     // name
-    defineAPIFunction<[string], void>()
+    defineAPIFunction<[{ name: string }], void>()
   ),
 
   // broadcastUpdateTaskInDay: defineAPI(

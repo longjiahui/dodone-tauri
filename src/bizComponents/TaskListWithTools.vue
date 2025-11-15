@@ -174,7 +174,12 @@ import {
   sortTasks,
   useTaskListToolsOptions,
 } from "@/utils/biz";
-import { flatMapTree, mapTree, searchTreeAsync } from "@/utils/traverse";
+import {
+  flatMapTree,
+  mapTree,
+  searchTreeAsync,
+  traverse,
+} from "@/utils/traverse";
 import {
   ApartmentOutlined,
   CheckCircleOutlined,
@@ -266,10 +271,11 @@ const refreshShowedTasks = queueAsyncCall(async function () {
 
 const finalShowedTasks = computed(() => {
   const tasks = showedTasks.value.slice();
-  tasks.sort((a, b) =>
-    sortTasks(a, b, finalDisableOrder.value ? taskSort.value : undefined)
-  );
-  return tasks;
+  return mapTree(tasks, (t) => ({ ...t }), { sort: sortTasks });
+  // tasks.sort((a, b) =>
+  //   sortTasks(a, b, finalDisableOrder.value ? taskSort.value : undefined)
+  // );
+  // return tasks;
 });
 
 watch(

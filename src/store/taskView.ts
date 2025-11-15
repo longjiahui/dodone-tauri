@@ -391,6 +391,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
       return backend.createTaskView({ data }).then((tv) => {
         if (tv) {
           taskViews.value.push(taskView2TaskViewWithExtra(tv));
+          loadTasks(tv.id);
         }
       });
     },

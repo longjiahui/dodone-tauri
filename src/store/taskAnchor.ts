@@ -22,7 +22,7 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
     )
   );
   const taskAnchorsDict = computed(() => {
-    const dict: Record<string, TaskAnchorWithTaskGroupId> = {};
+    const dict: Partial<Record<string, TaskAnchorWithTaskGroupId>> = {};
     taskAnchors.value.forEach((tv) => {
       dict[tv.id] = tv;
     });
@@ -43,6 +43,12 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
     taskAnchors.value = taskAnchors.value.filter(
       (tv) => tv.taskGroupId !== g.id
     );
+  });
+  taskEvent.on("updateTask", (t) => {
+    const found = taskAnchorsDictByTaskId.value[t.id];
+    if (found) {
+      found.taskGroupId = t.groupId;
+    }
   });
   taskEvent.on("deleteTasks", (ts) => {
     const ids = ts.map((t) => t.id);
@@ -92,7 +98,9 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
       const params = anchors.map((a, i) => ({ id: a.id, sortOrder: i }));
       return backend.changeTaskAnchorOrders(params).then(() => {
         params.forEach((p) => {
-          Object.assign(taskAnchorsDict.value[p.id], p);
+          if (taskAnchorsDict.value[p.id]) {
+            Object.assign(taskAnchorsDict.value[p.id]!, p);
+          }
         });
       });
     },

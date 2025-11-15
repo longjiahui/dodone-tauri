@@ -10,12 +10,12 @@ use serde_json::Value;
 use uuid::Uuid;
 
 use crate::{
-    database::DbState,
+    database::{get_db_manage, DbState},
     entities::{
         next_task,
         prelude::Task,
         task::{self, BatchEditTasksResult},
-        task_view_task,
+        task_target_record, task_view_task,
     },
     utils::{
         datetime::parse_datetime_string,
@@ -28,7 +28,7 @@ use crate::{
 
 #[tauri::command]
 pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value>, String> {
-    let db_guard = db_manage.lock().await;
+    let db_guard = get_db_manage(db_manage).await?;
     let db = db_guard.get_connection();
     let tasks = Task::find().all(db).await.map_err(|e| e.to_string())?;
     // 加载关联数据
@@ -70,6 +70,7 @@ pub async fn create_task(
     db_manage: tauri::State<'_, DbState>,
     data: task::CreateModel,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let active_model: task::ActiveModel = task::ActiveModel {
         sort_order: ActiveValue::Set(0),
         id: ActiveValue::Set(uuid::Uuid::new_v4()),
@@ -88,7 +89,7 @@ pub async fn create_task(
         ..Default::default()
     };
     let res = task::Entity::insert(active_model)
-        .exec_with_returning(db_manage.lock().await.get_connection())
+        .exec_with_returning(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     let _ = broadcast_batch_upsert_tasks(
@@ -103,6 +104,7 @@ pub async fn create_task(
 
 async fn update_task_by_active_model<C>(
     connection: &C,
+    id: Uuid,
     model: &mut task::ActiveModel,
     data: task::UpdateModel,
 ) -> Result<(), String>
@@ -224,6 +226,14 @@ where
         } else {
             None
         });
+        if data.target == Option3::Null {
+            // 删除所有目标records
+            let _ = task_target_record::Entity::delete_many()
+                .filter(task_target_record::Column::TaskId.eq(id))
+                .exec(connection)
+                .await
+                .map_err(|e| e.to_string())?;
+        }
     }
     if data.target_type != Option3::Undefined {
         model.target_type = ActiveValue::Set(if let Some(tt) = data.target_type.as_option() {
@@ -243,7 +253,7 @@ pub async fn update_task_by_id(
     id: String,
     data: task::UpdateModel,
 ) -> Result<Value, String> {
-    let db_guard = db_manage.lock().await;
+    let db_guard = get_db_manage(db_manage).await?;
     let db = db_guard.get_connection();
     let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let mut active_model = pk
@@ -253,7 +263,13 @@ pub async fn update_task_by_id(
         .ok_or_else(|| "Task not found".to_string())?
         .into_active_model();
 
-    update_task_by_active_model(db, &mut active_model, data).await?;
+    update_task_by_active_model(
+        db,
+        uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
+        &mut active_model,
+        data,
+    )
+    .await?;
     let res = task::Entity::update(active_model)
         .exec(db)
         .await
@@ -304,9 +320,10 @@ pub async fn delete_task_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let deleted_task = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Task not found".to_string())?;
@@ -314,7 +331,7 @@ pub async fn delete_task_by_id(
     // 拼接关联的taskviewtasks
     let deleted_task_view_tasks = task_view_task::Entity::find()
         .filter(task_view_task::Column::TaskId.eq(deleted_task.id))
-        .all(db_manage.lock().await.get_connection())
+        .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
 
@@ -329,7 +346,7 @@ pub async fn delete_task_by_id(
     let active_model = deleted_task.into_active_model();
 
     task::Entity::delete(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     let _ = broadcast_delete_task(&app_handle, deleted_task_json);
@@ -449,9 +466,8 @@ pub async fn batch_edit_tasks(
     create: Vec<task::BatchCreateTaskModel>,
     update: Vec<task::UpdateModel>,
 ) -> Result<Value, String> {
-    let mut ret = db_manage
-        .lock()
-        .await
+    let db_guard = get_db_manage(db_manage).await?;
+    let mut ret = db_guard
         .get_connection()
         .transaction::<_, BatchEditTasksResult, String>(|txn| {
             Box::pin(async move {
@@ -474,7 +490,7 @@ pub async fn batch_edit_tasks(
                             .map_err(|err| err.to_string())?
                             .into_active_model();
 
-                        update_task_by_active_model(txn, &mut active_model, item).await?;
+                        update_task_by_active_model(txn, task_id, &mut active_model, item).await?;
 
                         update_futures.push(task::Entity::update(active_model).exec(txn));
                     }
@@ -499,13 +515,13 @@ pub async fn batch_edit_tasks(
     // 根据task_ids 搜索taskViewTasks
     let task_view_tasks = task_view_task::Entity::find()
         .filter(task_view_task::Column::TaskId.is_in(task_ids.clone()))
-        .all(db_manage.lock().await.get_connection())
+        .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     // 根据task_ids 搜索nextTasks
     let _next_tasks = next_task::Entity::find()
         .filter(next_task::Column::TaskId.is_in(task_ids))
-        .all(db_manage.lock().await.get_connection())
+        .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     // 将taskViewTasks 拼接到ret 里,收集结果

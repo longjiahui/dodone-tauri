@@ -198,7 +198,7 @@
           })
         "
       >
-        <EyeOutlined />
+        <TagOutlined />
       </Button>
       <!-- <DefaultDropdown>
               <template #body>
@@ -318,6 +318,7 @@ import {
   AimOutlined,
   PieChartOutlined,
   PlayCircleOutlined,
+  TagOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons-vue";
 import dayjs from "dayjs";

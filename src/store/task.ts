@@ -350,6 +350,7 @@ export const useTaskStore = defineStore("task", () => {
     updateTaskById(id: string, data: Partial<Task>) {
       return backend.updateTaskById({ id, data });
     },
+    updateLocalTask,
     async updateTaskParent(
       id: string,
       parentId: string | null,

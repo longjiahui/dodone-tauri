@@ -880,18 +880,16 @@ watch(
   [isShowCalendarView, isShowScheduleView],
   async ([a, b]) => {
     const value = a || b;
-    const size = await backend.getWindowSize();
-    if (!!value && size.width < 900) {
+    const [width, height] = (await backend.getWindowSize()) || [];
+    if (!!value && width < 900 * devicePixelRatio) {
       await backend.setWindowSize({
-        width: 1280,
-        height: size.height,
-        animate: true,
+        width: 1280 * devicePixelRatio,
+        height,
       });
-    } else if (!value && size.width >= 900) {
+    } else if (!value && width >= 900 * devicePixelRatio) {
       await backend.setWindowSize({
-        width: 720,
-        height: size.height,
-        animate: true,
+        width: 720 * devicePixelRatio,
+        height,
       });
     }
   },

@@ -3,7 +3,7 @@ use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilte
 use serde_json::Value;
 
 use crate::{
-    database::DbState,
+    database::{get_db_manage, DbState},
     entities::{
         prelude::TaskView,
         task_view::{self, TaskViewType},
@@ -14,9 +14,10 @@ use crate::{
 
 #[tauri::command]
 pub async fn get_task_views(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value>, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     TaskView::find()
         .into_json()
-        .all(db_manage.lock().await.get_connection())
+        .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())
 }
@@ -26,6 +27,7 @@ pub async fn create_task_view(
     db_manage: tauri::State<'_, DbState>,
     data: task_view::CreateModel,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_view::ActiveModel = task_view::ActiveModel {
         sort_order: ActiveValue::Set(0),
         id: ActiveValue::Set(uuid::Uuid::new_v4()),
@@ -45,7 +47,7 @@ pub async fn create_task_view(
         ..Default::default()
     };
     let res = task_view::Entity::insert(active_model)
-        .exec_with_returning(db_manage.lock().await.get_connection())
+        .exec_with_returning(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     serde_json::to_value(res).map_err(|e| e.to_string())
@@ -57,9 +59,10 @@ pub async fn update_task_view_by_id(
     id: String,
     data: task_view::UpdateModel,
 ) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let pk = task_view::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let mut active_model = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "TaskView not found".to_string())?
@@ -100,7 +103,7 @@ pub async fn update_task_view_by_id(
     active_model.updated_at = ActiveValue::Set(Utc::now());
 
     let res = task_view::Entity::update(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
     serde_json::to_value(res).map_err(|e| e.to_string())
@@ -112,9 +115,10 @@ pub async fn delete_task_view_by_id(
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
+    let db_guard = get_db_manage(db_manage).await?;
     let pk = task_view::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
     let deleted_task_view = pk
-        .one(db_manage.lock().await.get_connection())
+        .one(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "TaskView not found".to_string())?;
@@ -123,14 +127,14 @@ pub async fn delete_task_view_by_id(
     let active_model = deleted_task_view.into_active_model();
 
     task_view::Entity::delete(active_model)
-        .exec(db_manage.lock().await.get_connection())
+        .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
 
     if deleted_task_view_for_broadcast.r#type == TaskViewType::ALTERNATIVE {
         let deleted_task_view_tasks = task_view_task::Entity::find()
             .filter(TaskViewTaskColumn::TaskViewId.eq(deleted_task_view_for_broadcast.id))
-            .all(db_manage.lock().await.get_connection())
+            .all(db_guard.get_connection())
             .await
             .map_err(|e| e.to_string())?;
         let _ = broadcast_delete_task_view_tasks(&app_handle, deleted_task_view_tasks);

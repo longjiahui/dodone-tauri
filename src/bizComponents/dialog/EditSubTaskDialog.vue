@@ -1,5 +1,5 @@
 <template>
-  <Dialog :dialog :title="$t('editSubTask')">
+  <Drawer :dialog :title="$t('editSubTask')" placement="left">
     <template #autoPadding>
       <Task :model-value="localTask" :background="2"></Task>
       <Input
@@ -24,7 +24,7 @@
       </div> -->
     </template>
     <!-- <template #footer> </template> -->
-  </Dialog>
+  </Drawer>
 </template>
 
 <script setup lang="ts">
