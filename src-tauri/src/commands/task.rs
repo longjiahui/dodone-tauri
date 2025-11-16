@@ -14,7 +14,7 @@ use crate::{
     entities::{
         next_task,
         prelude::Task,
-        task::{self, BatchEditTasksResult},
+        task::{self, BatchEditTasksResult, TaskState},
         task_target_record, task_view_task,
     },
     utils::{
@@ -120,6 +120,7 @@ pub async fn create_task(
         sort_order: ActiveValue::Set(0),
         id: ActiveValue::Set(uuid::Uuid::new_v4()),
         content: ActiveValue::Set(data.content),
+        state: ActiveValue::Set(TaskState::UNDONE),
         description: ActiveValue::Set(data.description),
         group_id: ActiveValue::Set(Uuid::parse_str(&data.group_id).map_err(|err| err.to_string())?),
         parent_id: if let Some(parent_id) = data.parent_id {
@@ -219,12 +220,8 @@ where
             ActiveValue::Set(None)
         };
     }
-    if data.state != Option3::Undefined {
-        model.state = ActiveValue::Set(if let Some(st) = data.state.as_option() {
-            Some(st.clone())
-        } else {
-            None
-        });
+    if let Some(state) = data.state {
+        model.state = ActiveValue::Set(state);
     }
     if let Some(priority) = data.priority {
         model.priority = ActiveValue::Set(priority);
@@ -443,7 +440,10 @@ fn batch_create_tasks<'a>(
                 } else {
                     ActiveValue::NotSet
                 },
-                state: ActiveValue::Set(data.task.state),
+                state: ActiveValue::Set(match data.task.state {
+                    Some(s) => s,
+                    None => TaskState::UNDONE,
+                }),
                 priority: if let Some(priority) = data.task.priority {
                     ActiveValue::Set(priority)
                 } else {

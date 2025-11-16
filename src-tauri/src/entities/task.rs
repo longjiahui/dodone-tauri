@@ -41,8 +41,8 @@ pub struct Model {
     pub start_at: Option<DateTimeUtc>,
     #[sea_orm(column_name = "endAt")]
     pub end_at: Option<DateTimeUtc>,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub state: Option<TaskState>,
+    #[sea_orm(column_type = "Text")]
+    pub state: TaskState,
     #[sea_orm(default_value = 25)]
     pub priority: i32,
     #[sea_orm(default_value = 1)]
@@ -148,12 +148,11 @@ pub struct UpdateModel {
     pub create_index: Option<i32>,
     pub priority: Option<i32>,
     pub factor: Option<i32>,
+    pub state: Option<TaskState>,
     #[serde(default, deserialize_with = "de_option3")]
     pub description: Option3<String>,
     #[serde(default, deserialize_with = "de_option3")]
     pub parent_id: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub state: Option3<TaskState>,
     #[serde(default, deserialize_with = "de_option3")]
     pub target: Option3<Decimal>,
     #[serde(default, deserialize_with = "de_option3")]

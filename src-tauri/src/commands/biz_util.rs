@@ -42,11 +42,7 @@ pub async fn rest_a_day(
                     .filter(
                         Condition::all()
                             .add(task::Column::StartAt.gte(date_value))
-                            .add(
-                                Condition::any()
-                                    .add(task::Column::State.is_null())
-                                    .add(task::Column::State.eq(TaskState::UNDONE)),
-                            ),
+                            .add(Condition::any().add(task::Column::State.eq(TaskState::UNDONE))),
                     )
                     .all(txn)
                     .map_err(|err| err.to_string())
@@ -57,11 +53,7 @@ pub async fn rest_a_day(
                         Condition::all()
                             .add(task::Column::StartAt.lte(date_value))
                             .add(task::Column::EndAt.gte(date_value))
-                            .add(
-                                Condition::any()
-                                    .add(task::Column::State.is_null())
-                                    .add(task::Column::State.eq(TaskState::UNDONE)),
-                            ),
+                            .add(Condition::any().add(task::Column::State.eq(TaskState::UNDONE))),
                     )
                     .all(txn)
                     .map_err(|e| e.to_string())
@@ -99,11 +91,7 @@ pub async fn rest_a_day(
                     .filter(
                         Condition::all()
                             .add(task_in_day::Column::Date.gte(date_value))
-                            .add(
-                                Condition::any()
-                                    .add(task::Column::State.is_null())
-                                    .add(task::Column::State.eq(TaskState::UNDONE)),
-                            ),
+                            .add(Condition::any().add(task::Column::State.eq(TaskState::UNDONE))),
                     )
                     .all(txn)
                     .map_err(|e| e.to_string())

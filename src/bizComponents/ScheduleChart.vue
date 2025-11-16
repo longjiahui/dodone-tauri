@@ -862,6 +862,19 @@ function scrollToToday() {
 
 onMounted(() => {
   scrollToToday();
+
+  const { stop } = useResizeObserver(
+    () => scrollContainerRef.value?.wrapRef,
+    (e) => {
+      e.forEach((d) => {
+        handleScroll(d.target as HTMLElement);
+      });
+    }
+  );
+
+  onBeforeUnmount(() => {
+    stop();
+  });
 });
 
 function handleUpdateTaskInDays(taskInDays: TaskInDay[]) {

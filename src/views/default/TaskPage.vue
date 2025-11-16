@@ -11,7 +11,7 @@
     }"
   >
     <div class="bg-light-2 v justify-between p-2">
-      <div class="v gap-2">
+      <div class="v gap-2" v-if="taskGroups.length">
         <!-- <ClickableIcon :icon="FolderOutlined"></ClickableIcon>
         <ClickableIcon :icon="RobotOutlined"></ClickableIcon> -->
         <ClickableIcon
@@ -47,6 +47,13 @@
               click: () => backend.closeDoingWindow(),
             },
           ]" -->
+      </div>
+      <div class="v gap-2" v-else>
+        <ClickableIcon
+          @click="dialogs.ArchivedTaskGroupsDialog()"
+          :tooltip="$t('archivedTaskGroup')"
+          :icon="FolderOutlined"
+        ></ClickableIcon>
       </div>
       <div class="v gap-2">
         <ClickableIcon
