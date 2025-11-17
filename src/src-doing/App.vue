@@ -117,7 +117,13 @@ const progressTotal = computed(() => {
 });
 const progressCurrent = computed(() => {
   if (params.type === "auto-task-in-day") {
-    return now.value.diff(currentTaskInDay.value?.startTime, "minute");
+    return now.value.diff(
+      makeDayjsByDateTime(
+        new Date(currentTaskInDay.value?.date!),
+        new Date(currentTaskInDay.value?.startTime!)
+      ),
+      "minute"
+    );
   } else {
     return null;
   }
@@ -178,7 +184,6 @@ async function refreshTasks() {
     taskInDays.value = [
       ...(await backend.getTaskInDays({
         search: {
-          startDate: now.value.toDate().toISOString(),
           endDate: now.value.endOf("day").toDate().toISOString(),
           isTaskDone: false,
         },
