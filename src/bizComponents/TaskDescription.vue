@@ -9,8 +9,8 @@
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  modelValue: string | undefined | null
-  noImage?: boolean
-}>()
+const props = defineProps<{
+  modelValue: string | undefined | null;
+  noImage?: boolean;
+}>();
 </script>

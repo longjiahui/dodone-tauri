@@ -4,7 +4,25 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { defineStore } from "pinia";
 //
 // 关于颜色，现在prefers-color-schema暂时是用不了的，所以需要使用tauri本身的theme接口来做
-
+export const imageProtocolNamePromise = backend.getImageProtocolName();
+export const imageProtocolName = computedAsync(
+  () => imageProtocolNamePromise,
+  ""
+);
+export function useDefaultModifiedMarkdownContent(
+  content: MaybeRef<string | undefined>
+) {
+  return asyncComputed(async () => {
+    if (navigator.platform.startsWith("Win")) {
+      return unref(content)?.replace(
+        new RegExp(`(${imageProtocolName.value}://)`, "gs"),
+        `//${imageProtocolName.value}.localhost/`
+      );
+    } else {
+      return unref(content);
+    }
+  }, "");
+}
 export const useSystemStore = defineStore("systemStore", () => {
   // const中的配置、system/light/dark
   const colorMode = computedAsync(
@@ -64,6 +82,8 @@ export const useSystemStore = defineStore("systemStore", () => {
     colorMode,
     isDarkMode,
     locale,
+    imageProtocolName,
+    imageProtocolNamePromise,
 
     setColorMode(mode: typeof colorMode.value) {
       return backend.setConst({ key: "colorMode", value: mode });

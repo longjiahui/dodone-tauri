@@ -87,6 +87,7 @@ declare module 'vue' {
     Loading: typeof import('./components/Loading.vue')['default']
     LoadingOutlined: typeof import('@ant-design/icons-vue')['LoadingOutlined']
     Loop: typeof import('./components/Loop.vue')['default']
+    MarkdownContentReplacer: typeof import('./bizComponents/MarkdownContentReplacer.vue')['default']
     MarkdownEditor: typeof import('./components/MarkdownEditor.vue')['default']
     MarkdownEditorDialog: typeof import('./components/dialog/commonDialog/MarkdownEditorDialog.vue')['default']
     MarkdownPreviewer: typeof import('./components/MarkdownPreviewer.vue')['default']

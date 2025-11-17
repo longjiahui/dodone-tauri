@@ -353,6 +353,10 @@ export const protocols = {
     "setConst",
     defineAPIFunction<[{ key: keyof ConstObject; value: any }], void>()
   ),
+  getImageProtocolName: defineAPI(
+    "getImageProtocolName",
+    defineAPIFunction<[], string>()
+  ),
   // broadcastConstUpdate: defineAPI(
   //   "broadcastConstUpdate",
   //   defineAPIFunction<[ConstObject], void>(),

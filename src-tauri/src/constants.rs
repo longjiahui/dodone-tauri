@@ -49,7 +49,14 @@ pub fn get_public_resource(app: &tauri::AppHandle, path: &str) -> Result<PathBuf
 
 pub const IMAGE_PROTOCOL_NAME: &str = "image";
 pub fn get_image_protocol_path(name: &str) -> String {
+    // #[cfg(target_os = "windows")]
+    // {
+    //     format!("//{}.localhost/{}", IMAGE_PROTOCOL_NAME, name)
+    // }
+    // #[cfg(target_os = "macos")]
+    // {
     format!("{}://{}", IMAGE_PROTOCOL_NAME, name)
+    // }
 }
 
 pub fn get_const(app: &tauri::AppHandle, key: &str) -> Option<String> {

@@ -1,5 +1,6 @@
 <template>
   <div
+    v-if="imageProtocolName"
     class="markdown-body !bg-transparent"
     v-html="markdownContent"
     @click.capture="handleClickCapture"
@@ -8,7 +9,12 @@
 <script setup lang="ts">
 import Markdown from "markdown-it";
 import { backend } from "@/utils/backend";
-import { useSystemStore } from "@/store/system";
+import {
+  imageProtocolName,
+  useDefaultModifiedMarkdownContent,
+  useSystemStore,
+} from "@/store/system";
+import { getImageFileNameFromURL } from "@/utils/platform";
 
 const props = defineProps<{
   noImage?: boolean;
@@ -20,21 +26,22 @@ const modelValue = defineModel<string>("modelValue", {
 });
 
 const systemStore = useSystemStore();
+const finalModelValue = useDefaultModifiedMarkdownContent(modelValue);
 const markdownContent = computed(() => {
-  let content = modelValue.value || "";
+  let content = finalModelValue.value || "";
   if (props.noImage) {
     content = content.replace(/!\[.*?\]\(.*?\)/g, "");
   }
   return md.render(content);
 });
 
-function handleClickCapture(event: MouseEvent) {
+async function handleClickCapture(event: MouseEvent) {
   const target = event.target;
   if (target instanceof HTMLImageElement) {
     // 图片事件捕获、打开图片本身
     event.preventDefault();
     event.stopPropagation();
-    backend.openImage({ url: target.src });
+    backend.openImage({ url: await getImageFileNameFromURL(target.src) });
   }
 }
 

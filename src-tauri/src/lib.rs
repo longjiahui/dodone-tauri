@@ -8,7 +8,8 @@ use tauri::{
 
 use crate::{
     constants::{
-        get_app_data_dir, get_database_dir, get_image_dir, get_public_resource, IMAGE_PROTOCOL_NAME,
+        get_app_data_dir, get_database_dir, get_image_dir, get_image_protocol_path,
+        get_public_resource, IMAGE_PROTOCOL_NAME,
     },
     database::{init_database, make_db_state, DbState},
 };
@@ -170,6 +171,7 @@ pub fn run() {
             //  const commands
             commands::constants::get_const,
             commands::constants::set_const,
+            commands::constants::get_image_protocol_name,
             // database commands
             commands::database::get_current_db_name,
             commands::database::get_databases,
@@ -190,10 +192,21 @@ pub fn run() {
         .register_uri_scheme_protocol(IMAGE_PROTOCOL_NAME, move |app, request| {
             // Inside the register_uri_scheme_protocol handler:
             let uri = request.uri().to_string();
-            let path = uri.trim_start_matches(&format!("{}://", IMAGE_PROTOCOL_NAME)); // Extract the path from the URI
-            let image_path =
-                get_image_dir(&app.app_handle()).join(path[..path.len() - 1].to_string());
-            println!("Serving image from path: {:?}", image_path);
+            let path: &str;
+            #[cfg(target_os = "windows")]
+            {
+                path = uri.trim_start_matches(&format!("{}://localhost/", IMAGE_PROTOCOL_NAME));
+            }
+            #[cfg(target_os = "macos")]
+            {
+                // Extract the path from the URI
+                path = uri.trim_start_matches(&format!("{}://", IMAGE_PROTOCOL_NAME));
+            }
+            let image_path = get_image_dir(&app.app_handle()).join(path);
+            println!(
+                "Serving image from path: {:?} (path: {:?})",
+                image_path, path
+            );
             match std::fs::read(&image_path) {
                 Ok(data) => {
                     // Determine the MIME type based on the file extension
@@ -206,7 +219,7 @@ pub fn run() {
                         .unwrap()
                 }
                 Err(e) => {
-                    println!("Error reading file {}: {}", path, e);
+                    println!("Error reading file {}: {}", image_path.display(), e);
                     let image_404_path_result =
                         get_public_resource(&app.app_handle(), "image/image-not-found.png");
                     if let Ok(image_404_path) = image_404_path_result {
