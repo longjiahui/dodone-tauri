@@ -148,12 +148,12 @@
                             @mouseleave="currentHover = undefined"
                             :class="[
                               'relative h-[32px] overflow-hidden px-4 text-sm leading-[32px] duration-300',
-                              task?.state === 'UNDONE' ? '' : '!opacity-40',
+                              task?.state === 'UNDONE' ? '' : 'opacity-30!',
                               isModifying && isModifyingId !== task?.id
                                 ? 'opacity-30'
                                 : '',
                               currentHover && currentHover !== task?.id
-                                ? 'opacity-85'
+                                ? 'opacity-75'
                                 : '',
                               // 圆角
                               // date === startDate || date === 1
@@ -177,14 +177,14 @@
                                     cursor: 'pointer',
                                   }
                                 : {}),
-                              ...(task?.id &&
-                              (currentHover === task?.id ||
-                                task.id === isModifyingId)
-                                ? {
-                                    background: 'var(--bg-a60)',
-                                    // color: 'white',
-                                  }
-                                : {}),
+                              // ...(task?.id &&
+                              // (currentHover === task?.id ||
+                              //   task.id === isModifyingId)
+                              //   ? {
+                              //       background: 'var(--bg-a60)',
+                              //       // color: 'white',
+                              //     }
+                              //   : {}),
                             }"
                           >
                             <!-- 调整长短pplaceholder -->
@@ -556,13 +556,5 @@ function handleDrop(data: DragData<any>, d: Dayjs) {
 </script>
 
 <style lang="css" scoped>
-@reference "../styles/index.css";
-
-._item {
-  @apply bg-light-4 rounded p-2;
-}
-
-._button {
-  @apply bg-light-3 flex cursor-pointer items-center justify-center rounded px-2 duration-300 hover:opacity-75;
-}
+/* @reference "../styles/index.css"; */
 </style>
