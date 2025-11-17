@@ -1,7 +1,7 @@
 use chrono::Utc;
 use sea_orm::{
     ActiveValue, ColumnTrait, EntityTrait, ExprTrait, IntoActiveModel, JoinType, QueryFilter,
-    QuerySelect, RelationTrait, TransactionTrait,
+    QueryOrder, QuerySelect, RelationTrait, TransactionTrait,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -75,7 +75,10 @@ pub async fn get_task_in_days(
     }
 
     // 查找的时候join notification by notifiction_id
+    // orderby startTime asc
     let task_in_days = query
+        .order_by_asc(task_in_day::Column::Date)
+        .order_by_asc(task_in_day::Column::StartTime)
         .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;

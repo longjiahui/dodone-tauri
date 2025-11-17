@@ -19,6 +19,20 @@ pub async fn get_task_groups(db_manage: tauri::State<'_, DbState>) -> Result<Vec
 }
 
 #[tauri::command]
+pub async fn get_task_group_by_id(
+    db_manage: tauri::State<'_, DbState>,
+    id: String,
+) -> Result<Value, String> {
+    let db_guard = get_db_manage(db_manage).await?;
+    TaskGroup::find_by_id(id)
+        .into_json()
+        .one(db_guard.get_connection())
+        .await
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "TaskGroup not found".to_string())
+}
+
+#[tauri::command]
 pub async fn create_task_group(
     app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,

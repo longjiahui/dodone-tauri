@@ -92,19 +92,19 @@ const taskInDaysDict = computed(() => {
 async function refreshTasks() {
   const val = params.type;
   if (val === "auto-task-in-day") {
-    const today = dayjs();
+    const today = dayjs().startOf("day");
     taskInDays.value = [
       ...(await backend.getTaskInDays({
         search: {
-          startDate: today.startOf("date").toDate().toISOString(),
-          endDate: today.endOf("date").toDate().toISOString(),
+          startDate: now.value.toDate().toISOString(),
+          endDate: now.value.endOf("day").toDate().toISOString(),
           isTaskDone: false,
         },
       })),
       // 查找未来的一个任务
       ...(await backend.getTaskInDays({
         search: {
-          startDate: today.add(1, "day").startOf("date").toDate().toISOString(),
+          startDate: today.add(1, "day").toISOString(),
           isTaskDone: false,
           take: 1,
         },
@@ -117,7 +117,6 @@ async function refreshTasks() {
     )
       .filter((t) => !!t)
       .map((t) => task2TaskWithChildren(t!));
-    console.debug(taskInDays.value, "hello world");
   } else if (val === "specific-task" && params.taskId) {
     tasks.value = [await backend.getTaskById({ id: params.taskId })]
       .filter((d) => !!d)
@@ -136,9 +135,12 @@ const now = ref(dayjs());
 const inst = setInterval(() => (now.value = dayjs()), 1000);
 const currentTaskInDay = computed(() => {
   if (params.type === "auto-task-in-day") {
-    return taskInDays.value.find((d) =>
-      now.value.isBetween(d.startTime, d.endTime)
-    );
+    return taskInDays.value.find((d) => {
+      return now.value.isBetween(
+        makeDayjsByDateTime(new Date(d.date), new Date(d.startTime)),
+        makeDayjsByDateTime(new Date(d.date), new Date(d.endTime))
+      );
+    });
   } else {
     return null;
   }
@@ -231,7 +233,7 @@ const isShowNextTaskTimeInfo = computed(
 <template>
   <AntdProvider>
     <div
-      class="v bg-bg/80 text-default relative size-full items-stretch justify-center gap-1.5 overflow-hidden rounded-lg"
+      class="v bg-bg/80 text-default relative size-full items-stretch justify-center gap-1.5 overflow-hidden"
       :style="
         finalTaskGroup?.color
           ? calculateTheme(finalTaskGroup.color, {

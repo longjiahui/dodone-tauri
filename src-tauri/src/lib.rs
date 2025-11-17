@@ -121,6 +121,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             // task group commands
             commands::task_group::get_task_groups,
+            commands::task_group::get_task_group_by_id,
             commands::task_group::create_task_group,
             commands::task_group::update_task_group_by_id,
             commands::task_group::delete_task_group_by_id,

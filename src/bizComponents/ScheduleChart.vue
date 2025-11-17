@@ -413,8 +413,7 @@
                           }"
                           @mousedown="handleDataMouseDown(data, top)"
                         >
-                          <div
-                            v-motion
+                          <!-- v-motion
                             :initial="{ opacity: 0, scale: 0.6 }"
                             :enter="{
                               opacity: 1,
@@ -424,7 +423,8 @@
                                 damping: 10,
                                 delay: Math.random() * 180,
                               },
-                            }"
+                            }" -->
+                          <div
                             @mouseenter="hoveringId = data.id"
                             @mouseleave="
                               hoveringId =
