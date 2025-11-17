@@ -8,13 +8,13 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "TaskViewTask")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: Uuid,
+    pub id: String,
     #[sea_orm(column_name = "sortOrder", indexed)]
     pub sort_order: i32,
     #[sea_orm(column_name = "taskViewId", column_type = "Text", indexed)]
-    pub task_view_id: Uuid,
+    pub task_view_id: String,
     #[sea_orm(column_name = "taskId", column_type = "Text", indexed)]
-    pub task_id: Uuid,
+    pub task_id: String,
     #[sea_orm(column_name = "createdAt")]
     pub created_at: DateTimeUtc,
     #[sea_orm(column_name = "updatedAt")]

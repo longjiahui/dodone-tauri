@@ -1,7 +1,6 @@
 use chrono::Utc;
 use sea_orm::{ActiveValue, EntityTrait, IntoActiveModel};
 use serde_json::Value;
-use uuid::Uuid;
 
 use crate::{
     database::{get_db_manage, DbState},
@@ -27,11 +26,11 @@ pub async fn create_next_task(
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: next_task::ActiveModel = next_task::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
         a: ActiveValue::Set(data.a),
         b: ActiveValue::Set(data.b),
-        task_id: ActiveValue::Set(Uuid::parse_str(&data.task_id).map_err(|err| err.to_string())?),
+        task_id: ActiveValue::Set(data.task_id),
 
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
@@ -75,7 +74,7 @@ pub async fn update_next_task_by_id(
     data: next_task::UpdateModel,
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = next_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = next_task::Entity::find_by_id(id);
     let mut active_model = pk
         .one(db_guard.get_connection())
         .await
@@ -99,7 +98,7 @@ pub async fn delete_next_task_by_id(
     id: String,
 ) -> Result<next_task::Model, String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = next_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = next_task::Entity::find_by_id(id);
     let deleted_next_task = pk
         .one(db_guard.get_connection())
         .await

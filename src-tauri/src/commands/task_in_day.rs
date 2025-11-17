@@ -52,10 +52,7 @@ pub async fn get_task_in_days(
     // 根据start_date end_date is_task_done take等条件进行查询
     let mut query = TaskInDay::find();
     if let Some(task_id) = search.task_id {
-        query = query.filter(
-            task_in_day::Column::TaskId
-                .eq(uuid::Uuid::parse_str(&task_id).map_err(|e| e.to_string())?),
-        );
+        query = query.filter(task_in_day::Column::TaskId.eq(task_id));
     }
     if let Some(start_date) = search.start_date {
         let start_datetime = parse_datetime_string(&start_date)?;
@@ -85,9 +82,9 @@ pub async fn get_task_in_days(
     // 获取task_in_day_ids
     let ids = task_in_days
         .iter()
-        .map(|t| t.notification_id)
+        .map(|t| t.notification_id.clone())
         .filter_map(|id| id)
-        .collect::<Vec<uuid::Uuid>>();
+        .collect::<Vec<String>>();
     let notifications = if ids.is_empty() {
         vec![]
     } else {
@@ -129,22 +126,14 @@ pub async fn create_task_in_day(
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_in_day::ActiveModel = task_in_day::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         color: ActiveValue::Set(data.color),
-        task_id: ActiveValue::Set(uuid::Uuid::parse_str(&data.task_id).map_err(|e| e.to_string())?),
+        task_id: ActiveValue::Set(data.task_id),
         r#type: ActiveValue::Set(data.r#type),
         date: ActiveValue::Set(parse_datetime_string(data.date.as_str())?),
         start_time: ActiveValue::Set(data.start_time),
         end_time: ActiveValue::Set(data.end_time),
-        notification_id: if let Some(notification_id) = data.notification_id {
-            ActiveValue::Set(
-                uuid::Uuid::parse_str(&notification_id)
-                    .map(Some)
-                    .map_err(|e| e.to_string())?,
-            )
-        } else {
-            ActiveValue::Set(None)
-        },
+        notification_id: ActiveValue::Set(data.notification_id),
 
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
@@ -170,9 +159,7 @@ pub async fn update_task_in_day_by_id(
         .get_connection()
         .transaction::<_, Value, String>(|txn| {
             Box::pin(async move {
-                let pk = task_in_day::Entity::find_by_id(
-                    uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
-                );
+                let pk = task_in_day::Entity::find_by_id(id);
                 let task_in_day = pk
                     .one(txn)
                     .await
@@ -199,11 +186,11 @@ pub async fn update_task_in_day_by_id(
                         ActiveValue::Set(parse_datetime_string(date.as_str())?);
                 }
                 if let Some(notification) = data.notification {
-                    if let Some(notification_id) = task_in_day.notification_id {
+                    if let Some(notification_id) = task_in_day.notification_id.clone() {
                         // 已经有notification_id, 更新即可
                         update_notification_by_id_service(
                             txn,
-                            notification_id.to_string().as_str(),
+                            notification_id.as_str(),
                             notification::UpdateModel {
                                 content: Some(notification.content),
                                 notify_at: Some(notification.notify_at),
@@ -222,11 +209,7 @@ pub async fn update_task_in_day_by_id(
                 if data.notification_id.is_null() {
                     // 删除通知
                     if let Some(notification_id) = task_in_day.notification_id {
-                        delete_notification_by_id_service(
-                            txn,
-                            notification_id.to_string().as_str(),
-                        )
-                        .await?;
+                        delete_notification_by_id_service(txn, notification_id.as_str()).await?;
                     }
                 }
 
@@ -238,7 +221,7 @@ pub async fn update_task_in_day_by_id(
                     .map_err(|e| e.to_string())?;
                 let _ = broadcast_update_task_in_days(&app_handle, vec![res.clone()]);
                 // 拼接 notification 如果有
-                if let Some(notification_id) = res.notification_id {
+                if let Some(notification_id) = res.notification_id.clone() {
                     let notification = notification::Entity::find_by_id(notification_id)
                         .one(txn)
                         .await
@@ -269,8 +252,7 @@ pub async fn delete_task_in_day_by_id(
     id: String,
 ) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk =
-        task_in_day::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task_in_day::Entity::find_by_id(id);
     let deleted_task_in_day = pk
         .one(db_guard.get_connection())
         .await

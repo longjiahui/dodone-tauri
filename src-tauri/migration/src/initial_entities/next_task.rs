@@ -17,7 +17,7 @@ pub enum NextTaskMode {
 #[sea_orm(table_name = "NextTask")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: Uuid,
+    pub id: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub mode: NextTaskMode,
     pub a: i32,
@@ -25,7 +25,7 @@ pub struct Model {
     #[sea_orm(column_name = "endDate")]
     pub end_date: Option<DateTimeUtc>,
     #[sea_orm(column_name = "taskId", column_type = "Text", unique, indexed)]
-    pub task_id: Uuid,
+    pub task_id: String,
     #[sea_orm(column_name = "createdAt")]
     pub created_at: DateTimeUtc,
     #[sea_orm(column_name = "updatedAt")]

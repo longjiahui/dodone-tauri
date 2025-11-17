@@ -21,10 +21,7 @@ pub async fn get_task_view_tasks(
 ) -> Result<Vec<Value>, String> {
     let db_guard = get_db_manage(db_manage).await?;
     TaskViewTask::find()
-        .filter(
-            task_view_task::Column::TaskViewId
-                .eq(uuid::Uuid::parse_str(&search.task_view_id).map_err(|e| e.to_string())?),
-        )
+        .filter(task_view_task::Column::TaskViewId.eq(search.task_view_id))
         .into_json()
         .all(db_guard.get_connection())
         .await
@@ -40,11 +37,9 @@ pub async fn create_task_view_task(
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_view_task::ActiveModel = task_view_task::ActiveModel {
         sort_order: ActiveValue::Set(0),
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
-        task_id: ActiveValue::Set(uuid::Uuid::parse_str(&data.task_id).map_err(|e| e.to_string())?),
-        task_view_id: ActiveValue::Set(
-            uuid::Uuid::parse_str(&data.task_view_id).map_err(|e| e.to_string())?,
-        ),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+        task_id: ActiveValue::Set(data.task_id),
+        task_view_id: ActiveValue::Set(data.task_view_id),
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
         ..Default::default()
@@ -64,8 +59,7 @@ pub async fn delete_task_view_task_by_id(
     id: String,
 ) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk =
-        task_view_task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task_view_task::Entity::find_by_id(id);
     let deleted_task_view_task = pk
         .one(db_guard.get_connection())
         .await

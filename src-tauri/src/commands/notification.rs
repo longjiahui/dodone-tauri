@@ -26,8 +26,7 @@ pub async fn delete_notification_by_id_service(
     txn: &impl ConnectionTrait,
     id: &str,
 ) -> Result<notification::Model, String> {
-    let pk =
-        notification::Entity::find_by_id(uuid::Uuid::parse_str(id).map_err(|e| e.to_string())?);
+    let pk = notification::Entity::find_by_id(id);
     let deleted_notification = pk
         .one(txn)
         .await
@@ -87,7 +86,7 @@ pub async fn create_notification_service(
     data: notification::CreateModel,
 ) -> Result<notification::Model, String> {
     let active_model: notification::ActiveModel = notification::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         title: ActiveValue::Set(data.title),
         content: ActiveValue::Set(data.content),
         notify_at: ActiveValue::Set(parse_datetime_string(&data.notify_at)?),
@@ -107,8 +106,7 @@ pub async fn update_notification_by_id_service(
     id: &str,
     data: notification::UpdateModel,
 ) -> Result<notification::Model, String> {
-    let pk =
-        notification::Entity::find_by_id(uuid::Uuid::parse_str(id).map_err(|e| e.to_string())?);
+    let pk = notification::Entity::find_by_id(id);
     let mut active_model = pk
         .one(txn)
         .await
@@ -144,7 +142,7 @@ pub async fn update_notification_by_id_service(
 // ) -> Result<Value, String> {
 //     let active_model: notification::ActiveModel = notification::ActiveModel {
 //         sort_order: ActiveValue::Set(0),
-//         id: ActiveValue::Set(uuid::Uuid::new_v4()),
+//         id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
 //         color: ActiveValue::Set(data.color),
 //         icon: ActiveValue::Set(data.icon),
 //         name: ActiveValue::Set(data.name),
@@ -170,7 +168,7 @@ pub async fn update_notification_by_id_service(
 //     data: notification::UpdateModel,
 // ) -> Result<Value, String> {
 //     let pk =
-//         notification::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+//         notification::Entity::find_by_id(id);
 //     let mut active_model = pk
 //         .one(db_guard.get_connection())
 //         .await
@@ -223,7 +221,7 @@ pub async fn update_notification_by_id_service(
 //     id: String,
 // ) -> Result<(), String> {
 //     let pk =
-//         notification::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+//         notification::Entity::find_by_id(id);
 //     let deleted_notification = pk
 //         .one(db_guard.get_connection())
 //         .await

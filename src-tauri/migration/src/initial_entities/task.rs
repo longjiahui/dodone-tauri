@@ -19,13 +19,13 @@ pub struct Model {
     #[sea_orm(column_name = "sortOrder", default_value = 0, indexed)]
     pub sort_order: i32,
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: Uuid,
+    pub id: String,
     #[sea_orm(column_type = "Text")]
     pub content: String,
     #[sea_orm(column_type = "Text", nullable)]
     pub description: Option<String>,
     #[sea_orm(column_name = "groupId", column_type = "Text", indexed)]
-    pub group_id: Uuid,
+    pub group_id: String,
     #[sea_orm(column_name = "createdAt")]
     pub created_at: DateTimeUtc,
     #[sea_orm(column_name = "updatedAt")]
@@ -43,7 +43,7 @@ pub struct Model {
     #[sea_orm(default_value = 1)]
     pub factor: i32,
     #[sea_orm(column_name = "parentId", column_type = "Text", nullable, indexed)]
-    pub parent_id: Option<Uuid>,
+    pub parent_id: Option<String>,
     #[sea_orm(column_name = "createIndex", default_value = 0)]
     pub create_index: i32,
     #[sea_orm(
@@ -52,7 +52,7 @@ pub struct Model {
         nullable,
         indexed
     )]
-    pub created_by_task_id: Option<Uuid>,
+    pub created_by_task_id: Option<String>,
     pub target: Option<Decimal>,
     #[sea_orm(column_name = "targetType", column_type = "Text", nullable)]
     pub target_type: Option<String>,

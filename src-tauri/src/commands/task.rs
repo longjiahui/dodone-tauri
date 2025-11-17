@@ -72,7 +72,7 @@ pub async fn get_task_by_id(
     let db_guard = get_db_manage(db_manage).await?;
 
     let db = db_guard.get_connection();
-    let task_id = Uuid::parse_str(&id).map_err(|e| e.to_string())?;
+    let task_id = id;
 
     let task = Task::find_by_id(task_id)
         .one(db)
@@ -118,15 +118,13 @@ pub async fn create_task(
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: task::ActiveModel = task::ActiveModel {
         sort_order: ActiveValue::Set(0),
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         content: ActiveValue::Set(data.content),
         state: ActiveValue::Set(TaskState::UNDONE),
         description: ActiveValue::Set(data.description),
-        group_id: ActiveValue::Set(Uuid::parse_str(&data.group_id).map_err(|err| err.to_string())?),
+        group_id: ActiveValue::Set(data.group_id),
         parent_id: if let Some(parent_id) = data.parent_id {
-            ActiveValue::Set(Some(
-                Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
-            ))
+            ActiveValue::Set(Some(parent_id))
         } else {
             ActiveValue::NotSet
         },
@@ -150,7 +148,7 @@ pub async fn create_task(
 
 async fn update_task_by_active_model<C>(
     connection: &C,
-    id: Uuid,
+    id: &str,
     model: &mut task::ActiveModel,
     data: task::UpdateModel,
 ) -> Result<(), String>
@@ -161,8 +159,7 @@ where
         model.sort_order = ActiveValue::Set(sort_order);
     }
     if let Some(group_id) = data.group_id {
-        model.group_id =
-            ActiveValue::Set(Uuid::parse_str(&group_id).map_err(|err| err.to_string())?)
+        model.group_id = ActiveValue::Set(group_id)
     } else {
         model.group_id = ActiveValue::NotSet
     };
@@ -200,22 +197,18 @@ where
                     }
                     // 获取当前id的parentid
                     // 这里不能使用model，因为model可能还没更新
-                    let task_model = task::Entity::find_by_id(
-                        uuid::Uuid::parse_str(&cpid).map_err(|e| e.to_string())?,
-                    )
-                    .one(connection)
-                    .await
-                    .map_err(|e| e.to_string())?
-                    .ok_or_else(|| "Task not found during parent ID check".to_string())?;
+                    let task_model = task::Entity::find_by_id(cpid)
+                        .one(connection)
+                        .await
+                        .map_err(|e| e.to_string())?
+                        .ok_or_else(|| "Task not found during parent ID check".to_string())?;
                     current_id = task_model.parent_id.map(|id| id.to_string());
                 }
             }
         }
 
         model.parent_id = if let Some(parent_id) = data.parent_id.as_option() {
-            ActiveValue::Set(Some(
-                Uuid::parse_str(&parent_id).map_err(|err| err.to_string())?,
-            ))
+            ActiveValue::Set(Some(parent_id))
         } else {
             ActiveValue::Set(None)
         };
@@ -252,9 +245,7 @@ where
     }
     if data.created_by_task_id != Option3::Undefined {
         model.created_by_task_id = if let Some(cbtid) = data.created_by_task_id.as_option() {
-            ActiveValue::Set(Some(
-                Uuid::parse_str(&cbtid).map_err(|err| err.to_string())?,
-            ))
+            ActiveValue::Set(Some(cbtid))
         } else {
             ActiveValue::Set(None)
         };
@@ -297,7 +288,7 @@ pub async fn update_task_by_id(
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
     let db = db_guard.get_connection();
-    let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task::Entity::find_by_id(id.clone());
     let mut active_model = pk
         .one(db)
         .await
@@ -305,13 +296,7 @@ pub async fn update_task_by_id(
         .ok_or_else(|| "Task not found".to_string())?
         .into_active_model();
 
-    update_task_by_active_model(
-        db,
-        uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
-        &mut active_model,
-        data,
-    )
-    .await?;
+    update_task_by_active_model(db, id.as_str(), &mut active_model, data).await?;
     let res = task::Entity::update(active_model)
         .exec(db)
         .await
@@ -319,7 +304,7 @@ pub async fn update_task_by_id(
 
     // search for taskviewtasks
     let task_view_tasks = task_view_task::Entity::find()
-        .filter(task_view_task::Column::TaskId.eq(res.id))
+        .filter(task_view_task::Column::TaskId.eq(res.id.clone()))
         .all(db)
         .await
         .map_err(|e| e.to_string())?;
@@ -363,7 +348,7 @@ pub async fn delete_task_by_id(
     id: String,
 ) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = task::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task::Entity::find_by_id(id.clone());
     let deleted_task = pk
         .one(db_guard.get_connection())
         .await
@@ -372,7 +357,7 @@ pub async fn delete_task_by_id(
 
     // 拼接关联的taskviewtasks
     let deleted_task_view_tasks = task_view_task::Entity::find()
-        .filter(task_view_task::Column::TaskId.eq(deleted_task.id))
+        .filter(task_view_task::Column::TaskId.eq(deleted_task.id.clone()))
         .all(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
@@ -399,27 +384,23 @@ pub async fn delete_task_by_id(
 fn batch_create_tasks<'a>(
     txn: &'a sea_orm::DatabaseTransaction,
     create: Vec<task::BatchCreateTaskModel>,
-    parent_id: Option<Uuid>,
+    parent_id: Option<String>,
 ) -> BoxFuture<'a, Result<Vec<task::Model>, String>> {
     async move {
         let mut all_results = Vec::new();
         for data in create {
-            let task_id = uuid::Uuid::new_v4();
+            let task_id = uuid::Uuid::new_v4().to_string();
 
             let active_model = task::ActiveModel {
-                id: ActiveValue::Set(task_id),
+                id: ActiveValue::Set(task_id.clone()),
                 sort_order: ActiveValue::Set(0),
                 content: ActiveValue::Set(data.task.content),
                 description: ActiveValue::Set(data.task.description),
-                group_id: ActiveValue::Set(
-                    Uuid::parse_str(&data.task.group_id).map_err(|err| err.to_string())?,
-                ),
-                parent_id: match parent_id {
-                    Some(pid) => ActiveValue::Set(Some(pid)),
+                group_id: ActiveValue::Set(data.task.group_id),
+                parent_id: match parent_id.clone() {
+                    Some(pid) => ActiveValue::Set(Some(pid.clone())),
                     None => ActiveValue::Set(match data.task.parent_id {
-                        Some(ref pids) => {
-                            Some(Uuid::parse_str(&pids).map_err(|err| err.to_string())?)
-                        }
+                        Some(ref pids) => Some(pids.clone()),
                         None => None,
                     }),
                 },
@@ -454,13 +435,7 @@ fn batch_create_tasks<'a>(
                 } else {
                     ActiveValue::NotSet
                 },
-                created_by_task_id: if let Some(cbtid) = data.task.created_by_task_id {
-                    ActiveValue::Set(Some(
-                        Uuid::parse_str(&cbtid).map_err(|err| err.to_string())?,
-                    ))
-                } else {
-                    ActiveValue::NotSet
-                },
+                created_by_task_id: ActiveValue::Set(data.task.created_by_task_id),
                 create_index: if let Some(create_index) = data.task.create_index {
                     ActiveValue::Set(create_index)
                 } else {
@@ -477,11 +452,11 @@ fn batch_create_tasks<'a>(
                 .map_err(|err| err.to_string())?;
             if let Some(nt) = data.next_task {
                 let active_model: next_task::ActiveModel = next_task::ActiveModel {
-                    id: ActiveValue::Set(uuid::Uuid::new_v4()),
+                    id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
                     mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
                     a: ActiveValue::Set(nt.a),
                     b: ActiveValue::Set(nt.b),
-                    task_id: ActiveValue::Set(task_id),
+                    task_id: ActiveValue::Set(task_id.clone()),
                     created_at: ActiveValue::Set(Utc::now()),
                     updated_at: ActiveValue::Set(Utc::now()),
                     ..Default::default()
@@ -508,7 +483,7 @@ pub async fn fill_task_with_default(
     txn: &impl ConnectionTrait,
     tasks: Vec<task::Model>,
 ) -> Result<Value, String> {
-    let ids = tasks.iter().map(|t| t.id).collect::<Vec<Uuid>>();
+    let ids = tasks.iter().map(|t| t.id.clone()).collect::<Vec<String>>();
     let taks_view_tasks = task_view_task::Entity::find()
         .filter(task_view_task::Column::TaskId.is_in(ids.clone()))
         .all(txn)
@@ -563,9 +538,8 @@ pub async fn batch_edit_tasks(
                 // Promise.all
                 let mut update_futures = Vec::new();
                 for item in update {
-                    if let Some(id) = &item.id {
-                        let task_id = uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?;
-                        let pk = task::Entity::find_by_id(task_id);
+                    if let Some(task_id) = &item.id.clone() {
+                        let pk = task::Entity::find_by_id(task_id.clone());
 
                         let mut active_model = pk
                             .one(txn)
@@ -575,7 +549,8 @@ pub async fn batch_edit_tasks(
                             .map_err(|err| err.to_string())?
                             .into_active_model();
 
-                        update_task_by_active_model(txn, task_id, &mut active_model, item).await?;
+                        update_task_by_active_model(txn, task_id.as_str(), &mut active_model, item)
+                            .await?;
 
                         update_futures.push(task::Entity::update(active_model).exec(txn));
                     }
@@ -595,8 +570,8 @@ pub async fn batch_edit_tasks(
         .created
         .iter()
         .chain(ret.as_ref().map_err(|e| e.to_string())?.updated.iter())
-        .map(|task| task.id)
-        .collect::<Vec<Uuid>>();
+        .map(|task| task.id.clone())
+        .collect::<Vec<String>>();
     // 根据task_ids 搜索taskViewTasks
     let task_view_tasks = task_view_task::Entity::find()
         .filter(task_view_task::Column::TaskId.is_in(task_ids.clone()))

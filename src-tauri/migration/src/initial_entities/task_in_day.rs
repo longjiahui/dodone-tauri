@@ -16,17 +16,17 @@ pub enum TaskInDayType {
 #[sea_orm(table_name = "TaskInDay")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
-    pub id: Uuid,
+    pub id: String,
     #[sea_orm(column_type = "Text")]
     pub color: String,
     #[sea_orm(column_name = "notificationId", column_type = "Text", nullable, unique)]
-    pub notification_id: Option<Uuid>,
+    pub notification_id: Option<String>,
     #[sea_orm(column_type = "Text")]
     pub r#type: TaskInDayType,
     #[sea_orm(column_type = "Text", nullable)]
     pub content: Option<String>,
     #[sea_orm(column_name = "taskId", column_type = "Text", indexed)]
-    pub task_id: Uuid,
+    pub task_id: String,
     #[sea_orm(column_name = "date", indexed)]
     pub date: DateTimeUtc,
     #[sea_orm(column_name = "startTime", indexed)]

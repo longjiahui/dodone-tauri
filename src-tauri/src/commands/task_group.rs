@@ -27,7 +27,7 @@ pub async fn create_task_group(
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_group::ActiveModel = task_group::ActiveModel {
         sort_order: ActiveValue::Set(0),
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         color: ActiveValue::Set(data.color),
         icon: ActiveValue::Set(data.icon),
         name: ActiveValue::Set(data.name),
@@ -53,7 +53,7 @@ pub async fn update_task_group_by_id(
     data: task_group::UpdateModel,
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = task_group::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task_group::Entity::find_by_id(id);
     let mut active_model = pk
         .one(db_guard.get_connection())
         .await
@@ -106,7 +106,7 @@ pub async fn delete_task_group_by_id(
     id: String,
 ) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = task_group::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task_group::Entity::find_by_id(id);
     let deleted_task_group = pk
         .one(db_guard.get_connection())
         .await
@@ -137,9 +137,7 @@ pub async fn change_task_group_orders(
         .await
         .map_err(|e| e.to_string())?;
     for (index, data) in datas.into_iter().enumerate() {
-        let pk = task_group::Entity::find_by_id(
-            uuid::Uuid::parse_str(data.id.as_str()).map_err(|err| err.to_string())?,
-        );
+        let pk = task_group::Entity::find_by_id(data.id);
 
         let mut active_model = pk
             .one(&txn)

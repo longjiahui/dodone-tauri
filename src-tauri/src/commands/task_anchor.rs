@@ -25,8 +25,8 @@ pub async fn create_task_anchor(
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_anchor::ActiveModel = task_anchor::ActiveModel {
         sort_order: ActiveValue::Set(0),
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
-        task_id: ActiveValue::Set(uuid::Uuid::parse_str(&data.task_id).map_err(|e| e.to_string())?),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+        task_id: ActiveValue::Set(data.task_id),
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
         ..Default::default()
@@ -44,8 +44,7 @@ pub async fn delete_task_anchor_by_id(
     id: String,
 ) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk =
-        task_anchor::Entity::find_by_id(uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?);
+    let pk = task_anchor::Entity::find_by_id(id);
     let deleted_task_anchor = pk
         .one(db_guard.get_connection())
         .await
@@ -74,9 +73,7 @@ pub async fn change_task_anchor_orders(
         .await
         .map_err(|e| e.to_string())?;
     for (index, data) in datas.into_iter().enumerate() {
-        let pk = task_anchor::Entity::find_by_id(
-            uuid::Uuid::parse_str(data.id.as_str()).map_err(|err| err.to_string())?,
-        );
+        let pk = task_anchor::Entity::find_by_id(data.id);
 
         let mut active_model = pk
             .one(&txn)

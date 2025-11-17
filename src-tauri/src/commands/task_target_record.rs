@@ -22,10 +22,7 @@ pub async fn get_task_target_records(
     // search by task_id
     let db_guard = get_db_manage(db_manage).await?;
     TaskTargetRecord::find()
-        .filter(
-            task_target_record::Column::TaskId
-                .eq(uuid::Uuid::parse_str(&search.task_id).map_err(|e| e.to_string())?),
-        )
+        .filter(task_target_record::Column::TaskId.eq(search.task_id))
         .into_json()
         .all(db_guard.get_connection())
         .await
@@ -39,10 +36,10 @@ pub async fn create_task_target_record(
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: task_target_record::ActiveModel = task_target_record::ActiveModel {
-        id: ActiveValue::Set(uuid::Uuid::new_v4()),
+        id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
         value: ActiveValue::Set(data.value),
         record_at: ActiveValue::Set(Utc::now()),
-        task_id: ActiveValue::Set(uuid::Uuid::parse_str(&data.task_id).map_err(|e| e.to_string())?),
+        task_id: ActiveValue::Set(data.task_id),
 
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
@@ -62,9 +59,7 @@ pub async fn update_task_target_record_by_id(
     data: task_target_record::UpdateModel,
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = task_target_record::Entity::find_by_id(
-        uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
-    );
+    let pk = task_target_record::Entity::find_by_id(id);
     let mut active_model = pk
         .one(db_guard.get_connection())
         .await
@@ -95,9 +90,7 @@ pub async fn delete_task_target_record_by_id(
     id: String,
 ) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
-    let pk = task_target_record::Entity::find_by_id(
-        uuid::Uuid::parse_str(&id).map_err(|e| e.to_string())?,
-    );
+    let pk = task_target_record::Entity::find_by_id(id);
     let deleted_task_target_record = pk
         .one(db_guard.get_connection())
         .await
