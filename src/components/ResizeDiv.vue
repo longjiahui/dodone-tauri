@@ -128,7 +128,17 @@ function tryInitOffset() {
     offset.value = defaultOffset.value;
   }
 }
-const finalOffset = computed(() => applyMinMax(applyAutoMin(offset.value)));
+const _resize_hook = ref<number>();
+function effect_resize_hook() {
+  _resize_hook.value = Math.random();
+}
+const { stop } = useResizeObserver(containerRef, effect_resize_hook);
+onBeforeUnmount(() => stop());
+const finalOffset = computed(() => {
+  // resize hook
+  _resize_hook.value;
+  return applyMinMax(applyAutoMin(offset.value));
+});
 onMounted(() => {
   tryInitOffset();
 });
