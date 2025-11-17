@@ -11,7 +11,7 @@ import { backend } from "@/utils/backend";
 import { dayjs, makeDayjsByDateTime } from "@/utils/time";
 import { calculateTheme } from "@/utils/color";
 import { themeHSColorL, themeHSColorS } from "@/const";
-import { BackwardOutlined, ForwardOutlined } from "@ant-design/icons-vue";
+import { ForwardOutlined } from "@ant-design/icons-vue";
 
 const params = useUrlSearchParams<{
   type: DoingWindowType;
@@ -22,8 +22,110 @@ const params = useUrlSearchParams<{
     type: "auto-task-in-day",
   },
 });
+
+const tasks = ref<ReadOnlyTaskWithChildren[]>([]);
+const taskInDays = ref<ReadOnlyTaskInDayWithExtra[]>([]);
 const taskContentRef = ref<HTMLDivElement>();
 const taskContentRefSize = useElementSize(taskContentRef);
+
+const taskInDaysDict = computed(() => {
+  const dict: Partial<Record<string, ReadOnlyTaskInDayWithExtra>> = {};
+  taskInDays.value.forEach((tid) => {
+    dict[tid.taskId] = tid;
+  });
+  return dict;
+});
+
+const currentTask = computed<ReadOnlyTaskWithChildren | null>(() => {
+  if (params.type === "auto-task-in-day") {
+    return (
+      tasks.value.find((t) => t.id === currentTaskInDay.value?.taskId) || null
+    );
+  } else if (params.type === "specific-task" && params.taskId) {
+    return tasks.value.find((t) => t.id === params.taskId) || null;
+  }
+  return null;
+});
+const nextTask = computed<ReadOnlyTaskWithChildren | null>(() => {
+  if (params.type === "auto-task-in-day") {
+    return (
+      tasks.value.find((t) => t.id === nextTaskInDay.value?.taskId) || null
+    );
+  } else {
+    return null;
+  }
+});
+const finalTask = computed(() => currentTask.value || nextTask.value);
+
+const off_setDoingWindowParams = backend.on_setDoingWindowParams(
+  handleSetDoingWindowParams
+);
+const off_updateTaskInDays = backend.on_updateTaskInDays(refreshTasks);
+const off_deleteTaskInDay = backend.on_deleteTaskInDay(refreshTasks);
+const off_batchUpsertTasks = backend.on_batchUpsertTasks(
+  handleBatchUpsertTasks
+);
+
+const now = ref(dayjs());
+const inst = setInterval(() => (now.value = dayjs()), 1000);
+const currentTaskInDay = computed(() => {
+  if (params.type === "auto-task-in-day") {
+    return taskInDays.value.find((d) => {
+      return now.value.isBetween(
+        makeDayjsByDateTime(new Date(d.date), new Date(d.startTime)),
+        makeDayjsByDateTime(new Date(d.date), new Date(d.endTime))
+      );
+    });
+  } else {
+    return null;
+  }
+});
+const nextTaskInDay = computed(() => {
+  if (params.type === "auto-task-in-day") {
+    const futureTasks = taskInDays.value.filter((d) =>
+      makeDayjsByDateTime(new Date(d.date), new Date(d.startTime)).isAfter(
+        now.value
+      )
+    );
+    futureTasks.sort((a, b) =>
+      makeDayjsByDateTime(new Date(a.date), new Date(a.startTime)).isAfter(
+        makeDayjsByDateTime(new Date(b.date), new Date(b.startTime))
+      )
+        ? 1
+        : -1
+    );
+    return futureTasks.length ? futureTasks[0] : null;
+  } else {
+    return null;
+  }
+});
+const finalTaskGroup = computedAsync(async () =>
+  finalTask.value?.groupId
+    ? await backend.getTaskGroupById({ id: finalTask.value.groupId })
+    : null
+);
+
+const progressTotal = computed(() => {
+  if (params.type === "auto-task-in-day") {
+    return dayjs(currentTaskInDay.value?.endTime).diff(
+      currentTaskInDay.value?.startTime,
+      "minute"
+    );
+  } else {
+    return null;
+  }
+});
+const progressCurrent = computed(() => {
+  if (params.type === "auto-task-in-day") {
+    return now.value.diff(currentTaskInDay.value?.startTime, "minute");
+  } else {
+    return null;
+  }
+});
+
+const isShowNextTaskTimeInfo = computed(
+  () => !currentTask.value && nextTask.value
+);
 function handleSetDoingWindowParams(t: DoingWindowType, taskId?: string): void {
   params.type = t;
   params.taskId = taskId;
@@ -63,32 +165,12 @@ async function handleBatchUpsertTasks(d: BatchEditTasksResult) {
   }
 }
 
-const off_setDoingWindowParams = backend.on_setDoingWindowParams(
-  handleSetDoingWindowParams
-);
-const off_updateTaskInDays = backend.on_updateTaskInDays(refreshTasks);
-const off_deleteTaskInDay = backend.on_deleteTaskInDay(refreshTasks);
-const off_batchUpsertTasks = backend.on_batchUpsertTasks(
-  handleBatchUpsertTasks
-);
-
 onBeforeUnmount(() => {
   off_setDoingWindowParams.then((d) => d());
   off_updateTaskInDays.then((d) => d());
   off_deleteTaskInDay.then((d) => d());
   off_batchUpsertTasks.then((d) => d());
 });
-
-const tasks = ref<ReadOnlyTaskWithChildren[]>([]);
-const taskInDays = ref<ReadOnlyTaskInDayWithExtra[]>([]);
-const taskInDaysDict = computed(() => {
-  const dict: Partial<Record<string, ReadOnlyTaskInDayWithExtra>> = {};
-  taskInDays.value.forEach((tid) => {
-    dict[tid.taskId] = tid;
-  });
-  return dict;
-});
-
 async function refreshTasks() {
   const val = params.type;
   if (val === "auto-task-in-day") {
@@ -130,59 +212,7 @@ watch(
   },
   { immediate: true }
 );
-
-const now = ref(dayjs());
-const inst = setInterval(() => (now.value = dayjs()), 1000);
-const currentTaskInDay = computed(() => {
-  if (params.type === "auto-task-in-day") {
-    return taskInDays.value.find((d) => {
-      return now.value.isBetween(
-        makeDayjsByDateTime(new Date(d.date), new Date(d.startTime)),
-        makeDayjsByDateTime(new Date(d.date), new Date(d.endTime))
-      );
-    });
-  } else {
-    return null;
-  }
-});
-const nextTaskInDay = computed(() => {
-  if (params.type === "auto-task-in-day") {
-    const futureTasks = taskInDays.value.filter((d) =>
-      dayjs(d.startTime).isAfter(now.value)
-    );
-    futureTasks.sort((a, b) =>
-      makeDayjsByDateTime(a.date, a.startTime).isAfter(
-        makeDayjsByDateTime(b.date, b.startTime)
-      )
-        ? 1
-        : -1
-    );
-    return futureTasks.length ? futureTasks[0] : null;
-  } else {
-    return null;
-  }
-});
 onBeforeUnmount(() => clearInterval(inst));
-const currentTask = computed<ReadOnlyTaskWithChildren | null>(() => {
-  if (params.type === "auto-task-in-day") {
-    return (
-      tasks.value.find((t) => t.id === currentTaskInDay.value?.taskId) || null
-    );
-  } else if (params.type === "specific-task" && params.taskId) {
-    return tasks.value.find((t) => t.id === params.taskId) || null;
-  }
-  return null;
-});
-const nextTask = computed<ReadOnlyTaskWithChildren | null>(() => {
-  if (params.type === "auto-task-in-day") {
-    return (
-      tasks.value.find((t) => t.id === nextTaskInDay.value?.taskId) || null
-    );
-  } else {
-    return null;
-  }
-});
-const finalTask = computed(() => currentTask.value || nextTask.value);
 onMounted(() => {
   watch(
     [params, finalTask],
@@ -201,33 +231,6 @@ onMounted(() => {
     { immediate: true }
   );
 });
-const finalTaskGroup = computedAsync(async () =>
-  finalTask.value?.groupId
-    ? await backend.getTaskGroupById({ id: finalTask.value.groupId })
-    : null
-);
-
-const progressTotal = computed(() => {
-  if (params.type === "auto-task-in-day") {
-    return dayjs(currentTaskInDay.value?.endTime).diff(
-      currentTaskInDay.value?.startTime,
-      "minute"
-    );
-  } else {
-    return null;
-  }
-});
-const progressCurrent = computed(() => {
-  if (params.type === "auto-task-in-day") {
-    return now.value.diff(currentTaskInDay.value?.startTime, "minute");
-  } else {
-    return null;
-  }
-});
-
-const isShowNextTaskTimeInfo = computed(
-  () => !currentTask.value && nextTask.value
-);
 </script>
 
 <template>
@@ -300,9 +303,18 @@ const isShowNextTaskTimeInfo = computed(
               class="bg-primary self-start rounded px-2 text-sm text-white"
             >
               {{
-                dayjs(nextTaskInDay!.startTime).diff(now, "minute") > 60
-                  ? dayjs(nextTaskInDay!.startTime).diff(now, "hour") + "小时"
-                  : dayjs(nextTaskInDay!.startTime).diff(now, "minute") + "分钟"
+                makeDayjsByDateTime(
+                  new Date(nextTaskInDay!.date),
+                  new Date(nextTaskInDay!.startTime)
+                ).diff(now, "minute") > 60
+                  ? makeDayjsByDateTime(
+                      new Date(nextTaskInDay!.date),
+                      new Date(nextTaskInDay!.startTime)
+                    ).diff(now, "hour") + "小时"
+                  : makeDayjsByDateTime(
+                      new Date(nextTaskInDay!.date),
+                      new Date(nextTaskInDay!.startTime)
+                    ).diff(now, "minute") + "分钟"
               }}
               后开始
             </div>
