@@ -3,11 +3,6 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    entities::task,
-    utils::option3::{de_option3, Option3},
-};
-
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum TaskState {
@@ -100,80 +95,3 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateModel {
-    pub content: String,
-    pub group_id: String,
-    pub create_index: Option<i32>,
-    pub priority: Option<i32>,
-    pub factor: Option<i32>,
-    pub description: Option<String>,
-    pub parent_id: Option<String>,
-    pub state: Option<TaskState>,
-    pub target: Option<Decimal>,
-    pub target_type: Option<String>,
-    pub start_at: Option<String>,
-    pub end_at: Option<String>,
-    pub done_at: Option<String>,
-    pub created_by_task_id: Option<String>,
-}
-
-// export type BatchCreateTask = {
-//   task: Partial<
-//     Omit<
-//       Task,
-//       | "state"
-//       | "id"
-//       | "children"
-//       | "nextTask"
-//       | "createdAt"
-//       | "updatedAt"
-//       | "taskViewTasks"
-//     >
-//   > &
-//     Required<Pick<Task, TaskRequiredKeys>>
-//   nextTask?: Omit<NextTask, "taskId" | "id" | "createdAt" | "updatedAt">
-//   children?: BatchCreateTask[]
-// }
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct BatchCreateTaskModel {
-    pub task: CreateModel,
-    pub next_task: Option<super::next_task::CreateModelForBatchCreateTask>,
-    pub children: Option<Vec<BatchCreateTaskModel>>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct UpdateModel {
-    pub id: Option<String>,
-    pub sort_order: Option<i32>,
-    pub content: Option<String>,
-    pub group_id: Option<String>,
-    pub create_index: Option<i32>,
-    pub priority: Option<i32>,
-    pub factor: Option<i32>,
-    pub state: Option<TaskState>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub description: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub parent_id: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub target: Option3<Decimal>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub target_type: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub start_at: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub end_at: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub done_at: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub created_by_task_id: Option3<String>,
-}
-
-#[derive(Deserialize, Serialize, Debug, Clone)]
-pub struct BatchEditTasksResult {
-    pub created: Vec<task::Model>,
-    pub updated: Vec<task::Model>,
-}

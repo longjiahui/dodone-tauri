@@ -9,10 +9,11 @@ use serde::{Deserialize, Serialize};
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: Uuid,
-    #[sea_orm(column_name = "sortOrder")]
+    #[sea_orm(column_name = "sortOrder", indexed)]
     pub sort_order: i32,
-    #[sea_orm(column_name = "taskId", column_type = "Text", unique)]
+    #[sea_orm(column_name = "taskId", column_type = "Text", unique, indexed)]
     pub task_id: Uuid,
+    #[sea_orm(column_name = "createdAt")]
     pub created_at: DateTimeUtc,
     #[sea_orm(column_name = "updatedAt")]
     pub updated_at: DateTimeUtc,

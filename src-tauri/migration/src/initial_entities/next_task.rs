@@ -3,8 +3,6 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::option3::{de_option3, Option3};
-
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum NextTaskMode {
@@ -43,29 +41,3 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct CreateModel {
-    // pub mode: NextTaskMode,
-    pub a: i32,
-    pub b: i32,
-    pub task_id: String,
-    pub end_date: Option<String>,
-}
-#[derive(Deserialize, Serialize, Debug)]
-pub struct CreateModelForBatchCreateTask {
-    // pub mode: NextTaskMode,
-    pub a: i32,
-    pub b: i32,
-    // pub task_id: String,
-    pub end_date: Option<String>,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-pub struct UpdateModel {
-    pub mode: Option<NextTaskMode>,
-    pub a: Option<i32>,
-    pub b: Option<i32>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub end_date: Option3<String>,
-}

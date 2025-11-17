@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use futures::lock::Mutex;
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
@@ -26,6 +25,7 @@ const DEFAULT_PRIMARY_WINDOW_LABEL: &str = "main";
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .setup(|app: &mut tauri::App| {

@@ -32,21 +32,3 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct CreateModel {
-    pub color: String,
-    pub name: String,
-    pub icon: Option<String>,
-    pub description: Option<String>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct UpdateModel {
-    pub color: Option<String>,
-    pub name: Option<String>,
-    pub icon: Option<Option<String>>,
-    pub description: Option<Option<String>>,
-    pub is_archived: Option<Option<bool>>,
-    pub is_hide_anchors: Option<Option<bool>>,
-}

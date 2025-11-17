@@ -16,7 +16,7 @@
         <ClickableIcon :icon="RobotOutlined"></ClickableIcon> -->
         <ClickableIcon
           @click="isShowCalendarView = !isShowCalendarView"
-          :icon="CalendarOutlined"
+          :icon="TableOutlined"
           :selected="isShowCalendarView"
           :tooltip="$t('calendar')"
           placement="right"
@@ -830,12 +830,13 @@
                 v
                 :disable2="!isShowScheduleView"
                 :disable1="!isShowCalendarView"
+                min="35%"
                 storage-key="task-page-main-right-calendar-schedule"
               >
                 <template #1>
                   <TaskCalendar
                     :padding-x="3"
-                    class="bg-light py-3"
+                    class="bg-light py-3 border-b border-light-5 border-dashed"
                   ></TaskCalendar>
                 </template>
                 <template #2>
@@ -883,6 +884,7 @@ import {
   ReloadOutlined,
   SettingOutlined,
   SmileOutlined,
+  TableOutlined,
 } from "@ant-design/icons-vue";
 import { useTaskStore } from "@/store/task";
 import { useTaskAnchorStore } from "@/store/taskAnchor";

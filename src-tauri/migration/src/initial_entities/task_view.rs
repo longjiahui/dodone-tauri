@@ -3,39 +3,6 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::utils::option3::{de_option3, Option3};
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct CreateModel {
-    pub r#type: TaskViewType,
-    pub name: String,
-
-    /// 可空字段
-    pub define_mode: Option<TaskViewDefineMode>,
-    pub description: Option<String>,
-    pub icon: Option<String>,
-    /// 可选排序，默认由后端处理
-    pub sort_order: Option<i32>,
-    pub guijson_data: Option<String>,
-    pub auto_script: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct UpdateModel {
-    pub name: Option<String>,
-    pub r#type: Option<TaskViewType>,
-    pub sort_order: Option<i32>,
-    pub define_mode: Option<TaskViewDefineMode>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub description: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub icon: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub guijson_data: Option3<String>,
-    #[serde(default, deserialize_with = "de_option3")]
-    pub auto_script: Option3<String>,
-}
-
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum TaskViewType {

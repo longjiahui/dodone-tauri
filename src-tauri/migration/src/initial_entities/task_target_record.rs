@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
-#[sea_orm(table_name = "TaskViewTask")]
+#[sea_orm(table_name = "TaskTargetRecord")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: Uuid,
-    #[sea_orm(column_name = "sortOrder", indexed)]
-    pub sort_order: i32,
-    #[sea_orm(column_name = "taskViewId", column_type = "Text", indexed)]
-    pub task_view_id: Uuid,
+    pub value: Decimal,
+
+    #[sea_orm(column_name = "recordAt")]
+    pub record_at: DateTimeUtc,
     #[sea_orm(column_name = "taskId", column_type = "Text", indexed)]
     pub task_id: Uuid,
     #[sea_orm(column_name = "createdAt")]
@@ -27,21 +27,6 @@ pub struct Model {
         on_delete = "Cascade"
     )]
     pub task: HasOne<super::task::Entity>,
-    #[sea_orm(
-        belongs_to,
-        from = "task_view_id",
-        to = "id",
-        on_update = "Cascade",
-        on_delete = "Cascade"
-    )]
-    pub task_view: HasOne<super::task_view::Entity>,
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct CreateModel {
-    // pub sort_order: i32,
-    pub task_view_id: String,
-    pub task_id: String,
-}

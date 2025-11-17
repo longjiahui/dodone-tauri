@@ -7,8 +7,10 @@ use crate::constants::{
 
 use super::entities::prelude::*;
 use futures::lock::Mutex;
+use migration::MigratorTrait;
 use sea_orm::{Database, DatabaseConnection};
 use tauri::{AppHandle, Manager};
+use tauri_plugin_dialog::DialogExt;
 
 pub type DbState = Arc<Mutex<Option<DatabaseManager>>>;
 
@@ -83,7 +85,7 @@ async fn connect_current_db(
 
 pub async fn init_database(app: &AppHandle) -> Result<DatabaseManager, Box<dyn std::error::Error>> {
     let db_manage = connect_current_db(app).await?;
-    migrate_db(&db_manage).await?;
+    migrate_db(app, &db_manage).await?;
     Ok(db_manage)
 }
 
@@ -97,7 +99,7 @@ pub async fn create_db_without_closing(
         .await
         .map_err(|err| err.to_string())?;
     let db_manage = DatabaseManager::new(db);
-    migrate_db(&db_manage).await?;
+    migrate_db(app, &db_manage).await?;
     Ok(db_manage)
 }
 
@@ -121,21 +123,37 @@ pub async fn delete_db(app: &AppHandle, file: &str) -> Result<(), String> {
     Ok(())
 }
 
-async fn migrate_db(db_manage: &DatabaseManager) -> Result<(), String> {
-    db_manage
-        .get_connection()
-        .get_schema_builder()
-        .register(Task)
-        .register(TaskGroup)
-        .register(TaskAnchor)
-        .register(TaskInDay)
-        .register(TaskTargetRecord)
-        .register(TaskView)
-        .register(TaskViewTask)
-        .register(NextTask)
-        .register(Notification)
-        .sync(db_manage.get_connection())
-        .await
-        .map_err(|err| err.to_string())?;
+async fn migrate_db(
+    app_handle: &tauri::AppHandle,
+    db_manage: &DatabaseManager,
+) -> Result<(), String> {
+    let db = db_manage.get_connection();
+    let ret = migration::Migrator::up(db, None).await;
+    match ret {
+        Err(e) => {
+            println!(
+                "Database migration error: {}, backup data and fresh file and report data loss",
+                e
+            );
+            app_handle
+                .dialog()
+                .message("数据可能损坏，将重新创建数据文件。")
+                .blocking_show();
+            let current_db_name = get_const_current_db_name(app_handle);
+            let db_file_name = match current_db_name.as_ref() {
+                Some(name) => name,
+                None => DEFAULT_DATABASE_FILE_NAME,
+            };
+            let db_path = get_database_path(app_handle, db_file_name);
+            let backup_path = db_path.with_extension("bak");
+            let origin_file_content = std::fs::read(&db_path)
+                .map_err(|err| format!("Failed to read database file for backup: {}", err))?;
+            std::fs::write(&backup_path, origin_file_content).map_err(|err| err.to_string())?;
+            migration::Migrator::fresh(db)
+                .await
+                .map_err(|err| err.to_string())?;
+        }
+        Ok(_) => {}
+    }
     Ok(())
 }

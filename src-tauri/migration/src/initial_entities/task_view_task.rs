@@ -38,10 +38,3 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct CreateModel {
-    // pub sort_order: i32,
-    pub task_view_id: String,
-    pub task_id: String,
-}

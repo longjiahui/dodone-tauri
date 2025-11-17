@@ -3,11 +3,6 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::{
-    entities::notification,
-    utils::option3::{de_option3, Option3},
-};
-
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum TaskInDayType {
@@ -61,30 +56,3 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateModel {
-    pub color: String,
-    pub r#type: TaskInDayType,
-    pub start_time: DateTimeUtc,
-    pub end_time: DateTimeUtc,
-    pub date: String,
-    pub task_id: String,
-
-    pub notification_id: Option<String>,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UpdateModel {
-    pub color: Option<String>,
-    pub r#type: Option<TaskInDayType>,
-    pub start_time: Option<DateTimeUtc>,
-    pub end_time: Option<DateTimeUtc>,
-    pub date: Option<String>,
-    pub task_id: Option<String>,
-
-    #[serde(default, deserialize_with = "de_option3")]
-    pub notification_id: Option3<String>,
-
-    pub notification: Option<notification::CreateModel>,
-}

@@ -24,17 +24,3 @@ pub struct Model {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CreateModel {
-    pub title: String,
-    pub content: String,
-    pub notify_at: String,
-}
-
-#[derive(Debug, Deserialize, Serialize)]
-pub struct UpdateModel {
-    pub title: Option<String>,
-    pub content: Option<String>,
-    pub notify_at: Option<String>,
-}
