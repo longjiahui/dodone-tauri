@@ -33,6 +33,7 @@
     "@tailwindcss/vite": "^4.1.17",
     "@tauri-apps/cli": "^2",
     "@types/markdown-it": "^14.1.2",
+    "@types/node": "^24.10.1",
     "@types/seed-random": "^2.2.4",
     "@types/throttle-debounce": "^5.0.2",
     "@vitejs/plugin-vue": "^5.2.1",

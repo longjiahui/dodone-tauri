@@ -4,8 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 import AutoImport from "unplugin-auto-import/vite";
 import AutoImportComponents from "unplugin-vue-components/vite";
 import { AntDesignVueResolver } from "unplugin-vue-components/resolvers";
+import { resolve } from "node:path";
 
-// @ts-expect-error process is a nodejs global
+////@ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vite.dev/config/
@@ -121,6 +122,14 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       "@": "/src",
+    },
+  },
+  build: {
+    rollupOptions: {
+      input: {
+        index: resolve(__dirname, "index.html"),
+        doing: resolve(__dirname, "src/src-doing/index.html"),
+      },
     },
   },
 }));

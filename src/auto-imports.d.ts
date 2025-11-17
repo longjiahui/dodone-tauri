@@ -6,20 +6,16 @@
 // biome-ignore lint: disable
 export {}
 declare global {
-  const BarChart: (typeof import("echarts/charts"))["BarChart"]
   const CanvasRenderer: typeof import('echarts/renderers').CanvasRenderer
   const DatasetComponent: typeof import('echarts/components').DatasetComponent
   const DatasetComponentOption: typeof import('echarts/components').DatasetComponentOption
   const EffectScope: typeof import('vue').EffectScope
-  const GraphChart: (typeof import("echarts/charts"))["GraphChart"]
   const GridComponent: typeof import('echarts/components').GridComponent
   const GridComponentOption: typeof import('echarts/components').GridComponentOption
   const LegendComponent: typeof import('echarts/components').LegendComponent
   const LegendComponentOption: typeof import('echarts/components').LegendComponentOption
   const LineChart: typeof import('echarts/charts').LineChart
   const MarkLineComponent: typeof import('echarts/components').MarkLineComponent
-  const PieChart: (typeof import("echarts/charts"))["PieChart"]
-  const SankeyChart: (typeof import("echarts/charts"))["SankeyChart"]
   const TitleComponent: typeof import('echarts/components').TitleComponent
   const TitleComponentOption: typeof import('echarts/components').TitleComponentOption
   const TooltipComponent: typeof import('echarts/components').TooltipComponent
@@ -109,7 +105,6 @@ declare global {
   const refWithControl: typeof import('@vueuse/core').refWithControl
   const resolveComponent: typeof import('vue').resolveComponent
   const resolveRef: typeof import('@vueuse/core').resolveRef
-  const resolveUnref: (typeof import("@vueuse/core"))["resolveUnref"]
   const shallowReactive: typeof import('vue').shallowReactive
   const shallowReadonly: typeof import('vue').shallowReadonly
   const shallowRef: typeof import('vue').shallowRef
