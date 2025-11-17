@@ -235,6 +235,18 @@ function handleWheel(event: WheelEvent) {
     // behavior: "smooth",
   });
 }
+function listenHorizontalScroll() {
+  wrapRef.value?.addEventListener(
+    "wheel",
+    (e) => {
+      handleWheel(e);
+    },
+    { passive: false }
+  );
+}
+function unlistenHorizontalScroll() {
+  wrapRef.value?.removeEventListener("wheel", handleWheel);
+}
 onMounted(() => {
   if (!props.native)
     nextTick(() => {
@@ -242,18 +254,23 @@ onMounted(() => {
     });
 
   if (props.horizontalScroll) {
-    wrapRef.value?.addEventListener(
-      "wheel",
-      (e) => {
-        handleWheel(e);
-      },
-      { passive: false }
-    );
+    listenHorizontalScroll();
   }
 });
 onBeforeUnmount(() => {
-  wrapRef.value?.removeEventListener("wheel", handleWheel);
+  unlistenHorizontalScroll();
 });
+watch(
+  () => props.horizontalScroll,
+  (val) => {
+    if (val) {
+      listenHorizontalScroll();
+    } else {
+      unlistenHorizontalScroll();
+    }
+  },
+  { immediate: true }
+);
 onUpdated(() => update());
 type ScrollBehavior = "auto" | "instant" | "smooth";
 interface ScrollOptions {
