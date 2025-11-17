@@ -202,8 +202,11 @@ pub fn run() {
                 // Extract the path from the URI
                 path = uri.trim_start_matches(&format!("{}://", IMAGE_PROTOCOL_NAME));
             }
-            let image_path =
-                get_image_dir(&app.app_handle()).join(path[..path.len() - 1].to_string());
+            let image_path = get_image_dir(&app.app_handle()).join(if path.ends_with("/") {
+                path[..path.len() - 1].to_string()
+            } else {
+                path.to_string()
+            });
             println!(
                 "Serving image from path: {:?} (path: {:?})",
                 image_path, path
