@@ -1,8 +1,6 @@
-use sea_orm::sea_query::extension::postgres::PgExpr;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::sync::OnceLock;
-use tauri::menu::{Menu, MenuItem};
-use tauri::{Manager, WebviewWindowBuilder};
+use tauri::Manager;
 
 // const winWidth = 240
 // const winHeight = 72

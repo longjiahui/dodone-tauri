@@ -1,11 +1,10 @@
 use std::sync::Arc;
 
 use crate::constants::{
-    get_const, get_const_current_db_name, get_database_dir, get_database_path,
-    set_const_current_db_name, DEFAULT_DATABASE_FILE_NAME,
+    get_const_current_db_name, get_database_path, set_const_current_db_name,
+    DEFAULT_DATABASE_FILE_NAME,
 };
 
-use super::entities::prelude::*;
 use futures::lock::Mutex;
 use migration::MigratorTrait;
 use sea_orm::{Database, DatabaseConnection};

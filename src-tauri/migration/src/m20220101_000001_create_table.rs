@@ -1,5 +1,4 @@
-use ::sea_orm::{Database, Schema};
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::prelude::*;
 
 use crate::initial_entities::{
     next_task, notification, task, task_anchor, task_group, task_in_day, task_target_record,

@@ -18,7 +18,6 @@ pub fn upload_images(
             return Err("File is not an image".into());
         }
         let ext = fmt.extension();
-        println!("File format: {:?}", fmt.extension());
         let md5 = format!(
             "{:x}",
             chksum_md5::chksum(&file).map_err(|err| err.to_string())?

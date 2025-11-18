@@ -1,4 +1,4 @@
-use sea_orm::{sea_query::Nullable, ActiveValue};
+// use sea_orm::{sea_query::Nullable, ActiveValue};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 pub fn de_option3<'de, T, D>(de: D) -> Result<Option3<T>, D::Error>
@@ -69,17 +69,17 @@ where
 
 // 为 Option3 添加便利方法
 impl<T> Option3<T> {
-    pub fn is_undefined(&self) -> bool {
-        matches!(self, Option3::Undefined)
-    }
+    // pub fn is_undefined(&self) -> bool {
+    //     matches!(self, Option3::Undefined)
+    // }
 
     pub fn is_null(&self) -> bool {
         matches!(self, Option3::Null)
     }
 
-    pub fn is_value(&self) -> bool {
-        matches!(self, Option3::Value(_))
-    }
+    // pub fn is_value(&self) -> bool {
+    //     matches!(self, Option3::Value(_))
+    // }
 
     pub fn as_option(&self) -> Option<T>
     where
@@ -91,26 +91,26 @@ impl<T> Option3<T> {
         }
     }
 
-    pub fn into_option(self) -> Option<T> {
-        match self {
-            Option3::Value(value) => Some(value),
-            _ => None,
-        }
-    }
+    // pub fn into_option(self) -> Option<T> {
+    //     match self {
+    //         Option3::Value(value) => Some(value),
+    //         _ => None,
+    //     }
+    // }
 
-    // 转换为数据库的 ActiveValue
-    pub fn to_active_value<F>(self, parser: F) -> Result<ActiveValue<Option<T>>, String>
-    where
-        F: FnOnce(T) -> Result<T, String>,
-        T: Into<sea_orm::Value> + Nullable,
-    {
-        match self {
-            Option3::Undefined => Ok(ActiveValue::NotSet), // 不更新字段
-            Option3::Null => Ok(ActiveValue::Set(None)),   // 设置为 NULL
-            Option3::Value(value) => {
-                let parsed_value = parser(value)?;
-                Ok(ActiveValue::Set(Some(parsed_value)))
-            }
-        }
-    }
+    // // 转换为数据库的 ActiveValue
+    // pub fn to_active_value<F>(self, parser: F) -> Result<ActiveValue<Option<T>>, String>
+    // where
+    //     F: FnOnce(T) -> Result<T, String>,
+    //     T: Into<sea_orm::Value> + Nullable,
+    // {
+    //     match self {
+    //         Option3::Undefined => Ok(ActiveValue::NotSet), // 不更新字段
+    //         Option3::Null => Ok(ActiveValue::Set(None)),   // 设置为 NULL
+    //         Option3::Value(value) => {
+    //             let parsed_value = parser(value)?;
+    //             Ok(ActiveValue::Set(Some(parsed_value)))
+    //         }
+    //     }
+    // }
 }

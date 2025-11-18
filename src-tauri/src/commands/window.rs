@@ -1,5 +1,3 @@
-use tauri::Manager;
-
 #[tauri::command]
 pub fn get_window_size(window: tauri::Window) -> Result<(f64, f64), String> {
     let size = window.outer_size().map_err(|e| e.to_string())?;

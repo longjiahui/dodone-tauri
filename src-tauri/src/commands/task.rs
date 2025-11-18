@@ -7,7 +7,6 @@ use sea_orm::{
     ModelTrait, QueryFilter, TransactionTrait,
 };
 use serde_json::Value;
-use uuid::Uuid;
 
 use crate::{
     database::{get_db_manage, DbState},
@@ -461,7 +460,7 @@ fn batch_create_tasks<'a>(
                     updated_at: ActiveValue::Set(Utc::now()),
                     ..Default::default()
                 };
-                let res = next_task::Entity::insert(active_model)
+                next_task::Entity::insert(active_model)
                     .exec_with_returning(txn)
                     .await
                     .map_err(|e| e.to_string())?;

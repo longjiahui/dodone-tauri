@@ -150,7 +150,7 @@ pub async fn change_task_group_orders(
         .begin()
         .await
         .map_err(|e| e.to_string())?;
-    for (index, data) in datas.into_iter().enumerate() {
+    for (_i, data) in datas.into_iter().enumerate() {
         let pk = task_group::Entity::find_by_id(data.id);
 
         let mut active_model = pk
@@ -159,7 +159,7 @@ pub async fn change_task_group_orders(
             .map_err(|e| e.to_string())?
             .ok_or_else(|| "TaskGroup not found".to_string())?
             .into_active_model();
-        active_model.sort_order = ActiveValue::Set(index as i32);
+        active_model.sort_order = ActiveValue::Set(data.sort_order);
         active_model.updated_at = ActiveValue::Set(Utc::now());
         task_group::Entity::update(active_model)
             .exec(&txn)

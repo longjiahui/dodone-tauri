@@ -1,6 +1,6 @@
 use futures::TryFutureExt;
 use sea_orm::{
-    ActiveModelTrait, ActiveValue, ColumnTrait, Condition, EntityTrait, ExprTrait, QueryFilter,
+    ActiveModelTrait, ActiveValue, ColumnTrait, Condition, EntityTrait, QueryFilter,
     TransactionTrait,
 };
 use serde_json::json;
@@ -9,7 +9,7 @@ use crate::{
     commands,
     database::{get_db_manage, DbState},
     entities::{
-        task::{self, BatchEditTasksResult, TaskState},
+        task::{self, TaskState},
         task_in_day,
     },
     utils::{

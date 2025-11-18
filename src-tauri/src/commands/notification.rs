@@ -53,7 +53,7 @@ pub async fn delete_notification_by_id_service(
         active_model.notification_id = ActiveValue::Set(None);
         active_model.updated_at = ActiveValue::Set(Utc::now());
         // 更新记录
-        let updated = task_in_day::Entity::update(active_model)
+        task_in_day::Entity::update(active_model)
             .exec(txn)
             .await
             .map_err(|e| e.to_string())?;

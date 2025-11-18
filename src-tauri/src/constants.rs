@@ -2,7 +2,6 @@ use std::{fs::create_dir_all, path::PathBuf};
 
 use serde_json::Value;
 use tauri::{self, path::BaseDirectory, Manager, Theme};
-use tokio::fs::create_dir;
 
 use crate::utils::event::broadcast_update_const;
 

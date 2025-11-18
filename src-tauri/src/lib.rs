@@ -30,7 +30,7 @@ fn focus_primary_window(app: &tauri::AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let tauri_builder = tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
@@ -44,12 +44,11 @@ pub fn run() {
             )?;
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open_primary_window_i, &quit_i])?;
-            let tray = TrayIconBuilder::new()
+            TrayIconBuilder::new()
                 .tooltip(app.package_info().name.clone())
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
                 .on_tray_icon_event(|ctx, event| {
-                    println!("tray icon event: {:?}", event);
                     match event {
                         tauri::tray::TrayIconEvent::Click {
                             button_state,
@@ -286,26 +285,29 @@ pub fn run() {
             }
         })
         .build(tauri::generate_context!())
-        .expect("error while building tauri application")
-        .run(|_app, event| {
+        .expect("error while building tauri application");
+    #[cfg(target_os = "macos")]
+    {
+        tauri_builder.run(|_app, event| {
             // reopen 是为了实现点击 Dock 图标时显示主窗口的功能，只有macos编译
-            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } = event
             {
-                if let tauri::RunEvent::Reopen {
-                    has_visible_windows,
-                    ..
-                } = event
-                {
-                    // Create or show a window as necessary
-                    if !has_visible_windows {
-                        if let Some(window) = _app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL)
-                        {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                            let _ = window.unminimize();
-                        }
+                // Create or show a window as necessary
+                if !has_visible_windows {
+                    if let Some(window) = _app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        let _ = window.unminimize();
                     }
                 }
             }
         });
+    }
+    #[cfg(target_os = "windows")]
+    {
+        tauri_builder.run(|_app, _event| {});
+    }
 }
