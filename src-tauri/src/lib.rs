@@ -55,13 +55,17 @@ pub fn run() {
                             button,
                             ..
                         } => {
-                            if button_state == tauri::tray::MouseButtonState::Up {
+                            if button_state == tauri::tray::MouseButtonState::Down {
+                                // do nothing on down
                                 if button == tauri::tray::MouseButton::Left {
                                     focus_primary_window(&ctx.app_handle());
-                                } else if button == tauri::tray::MouseButton::Right {
-                                    // do nothing, show menu
                                 }
                             }
+                            // else if button_state == tauri::tray::MouseButtonState::Up {
+                            //     if button == tauri::tray::MouseButton::Right {
+                            //         // do not   hing, show menu
+                            //     }
+                            // }
                         }
                         _ => {}
                     }
@@ -77,7 +81,8 @@ pub fn run() {
                         println!("menu item {:?} not handled", event.id);
                     }
                 })
-                // .show_menu_on_left_click(true)
+                // set to false, right click show menus
+                .show_menu_on_left_click(false)
                 .build(app)?;
 
             let handle = app.handle().clone();
