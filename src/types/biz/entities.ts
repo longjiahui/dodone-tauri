@@ -9,6 +9,7 @@
 //   TaskInDay,
 //   Notification,
 export type DateType = string;
+export type NumberType = string;
 
 export type TaskAnchor = {
   sortOrder: number;
@@ -51,7 +52,7 @@ export type Task = {
   parentId: string | null;
   createIndex: number;
   createdByTaskId: string | null;
-  target: number | null;
+  target: NumberType | null;
   targetType: $Enums.TaskTargetType | null;
 };
 
@@ -107,7 +108,7 @@ export type TaskTargetRecord = {
   createdAt: DateType;
   updatedAt: DateType;
   taskId: string;
-  value: number;
+  value: NumberType;
   recordAt: DateType;
 };
 export type TaskInDay = {

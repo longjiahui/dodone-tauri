@@ -3,13 +3,16 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::entities::NumberType;
+
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
 #[sea_orm(table_name = "TaskTargetRecord")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: String,
-    pub value: Decimal,
+    // 使用String的原因是因为原来的数字类型Decimal 在sqlite中非常不准确，小数点会很离谱
+    pub value: NumberType,
 
     #[sea_orm(column_name = "recordAt")]
     pub record_at: DateTimeUtc,
@@ -33,12 +36,12 @@ impl ActiveModelBehavior for ActiveModel {}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CreateModel {
-    pub value: Decimal,
+    pub value: NumberType,
     pub task_id: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateModel {
-    pub value: Option<Decimal>,
+    pub value: Option<NumberType>,
     pub record_at: Option<String>,
 }

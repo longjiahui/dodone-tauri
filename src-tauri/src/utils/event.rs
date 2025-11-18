@@ -14,9 +14,45 @@ fn broadcast(
 
 pub fn broadcast_batch_upsert_tasks(
     app_handle: &tauri::AppHandle,
-    results: impl Serialize + Clone,
+    created: impl Serialize + Clone,
+    updated: impl Serialize + Clone,
 ) -> Result<(), String> {
-    broadcast(app_handle, "batch_upsert_tasks", results)?;
+    broadcast(
+        app_handle,
+        "batch_upsert_tasks",
+        serde_json::json!({
+            "created": created,
+            "updated": updated,
+        }),
+    )?;
+    Ok(())
+}
+
+pub fn broadcast_batch_upsert_task_target_records(
+    app_handle: &tauri::AppHandle,
+    created: impl Serialize + Clone,
+    updated: impl Serialize + Clone,
+) -> Result<(), String> {
+    broadcast(
+        app_handle,
+        "batch_upsert_task_target_records",
+        serde_json::json!({
+            "created": created,
+            "updated": updated,
+        }),
+    )?;
+    Ok(())
+}
+
+pub fn broadcast_delete_task_target_records(
+    app_handle: &tauri::AppHandle,
+    deleted_task_target_records: impl Serialize + Clone,
+) -> Result<(), String> {
+    broadcast(
+        app_handle,
+        "delete_task_target_records",
+        deleted_task_target_records,
+    )?;
     Ok(())
 }
 

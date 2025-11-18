@@ -4,7 +4,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    entities::task,
+    entities::{task, NumberType},
     utils::option3::{de_option3, Option3},
 };
 
@@ -58,7 +58,7 @@ pub struct Model {
         indexed
     )]
     pub created_by_task_id: Option<String>,
-    pub target: Option<Decimal>,
+    pub target: Option<NumberType>,
     #[sea_orm(column_name = "targetType", column_type = "Text", nullable)]
     pub target_type: Option<String>,
     #[sea_orm(has_one)]
@@ -111,7 +111,7 @@ pub struct CreateModel {
     pub description: Option<String>,
     pub parent_id: Option<String>,
     pub state: Option<TaskState>,
-    pub target: Option<Decimal>,
+    pub target: Option<NumberType>,
     pub target_type: Option<String>,
     pub start_at: Option<String>,
     pub end_at: Option<String>,
@@ -159,7 +159,7 @@ pub struct UpdateModel {
     #[serde(default, deserialize_with = "de_option3")]
     pub parent_id: Option3<String>,
     #[serde(default, deserialize_with = "de_option3")]
-    pub target: Option3<Decimal>,
+    pub target: Option3<NumberType>,
     #[serde(default, deserialize_with = "de_option3")]
     pub target_type: Option3<String>,
     #[serde(default, deserialize_with = "de_option3")]

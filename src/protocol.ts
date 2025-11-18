@@ -457,6 +457,23 @@ export const webProtocols = {
       void
     >()
   ),
+  batchUpsertTaskTargetRecords: defineAPI(
+    "batchUpsertTaskTargetRecords",
+    defineAPIFunction<
+      [
+        {
+          created: TaskTargetRecord[];
+          updated: TaskTargetRecord[];
+        },
+      ],
+      void
+    >()
+  ),
+  deleteTaskTargetRecords: defineAPI(
+    "deleteTaskTargetRecords",
+    defineAPIFunction<[TaskTargetRecord[]], void>()
+  ),
+
   // 更改任务父任务独立于updateTask 因为有特殊处理
   // changeTaskParent: defineAPI(
   //   "changeTaskParent",

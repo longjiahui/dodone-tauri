@@ -19,7 +19,8 @@ use crate::{
     utils::{
         datetime::parse_datetime_string,
         event::{
-            broadcast_batch_upsert_tasks, broadcast_delete_task, broadcast_delete_task_view_tasks,
+            broadcast_batch_upsert_tasks, broadcast_delete_task,
+            broadcast_delete_task_target_records, broadcast_delete_task_view_tasks,
         },
         option3::Option3,
     },
@@ -137,33 +138,35 @@ pub async fn create_task(
         .map_err(|e| e.to_string())?;
     let _ = broadcast_batch_upsert_tasks(
         &app_handle,
-        BatchEditTasksResult {
-            created: vec![res.clone()],
-            updated: vec![],
-        },
+        serde_json::to_string(&vec![res.clone()]).map_err(|err| err.to_string())?,
+        serde_json::to_string(&Vec::<task::Model>::new()).map_err(|err| err.to_string())?,
     );
     serde_json::to_value(res).map_err(|e| e.to_string())
+}
+
+struct UpdateTaskByActiveModelResult {
+    deleted_task_target_records: Vec<task_target_record::Model>,
 }
 
 async fn update_task_by_active_model<C>(
     connection: &C,
     id: &str,
     model: &mut task::ActiveModel,
-    data: task::UpdateModel,
-) -> Result<(), String>
+    data: &task::UpdateModel,
+) -> Result<UpdateTaskByActiveModelResult, String>
 where
     C: ConnectionTrait,
 {
     if let Some(sort_order) = data.sort_order {
         model.sort_order = ActiveValue::Set(sort_order);
     }
-    if let Some(group_id) = data.group_id {
-        model.group_id = ActiveValue::Set(group_id)
+    if let Some(group_id) = &data.group_id {
+        model.group_id = ActiveValue::Set(group_id.clone())
     } else {
         model.group_id = ActiveValue::NotSet
     };
-    if let Some(content) = data.content {
-        model.content = ActiveValue::Set(content);
+    if let Some(content) = &data.content {
+        model.content = ActiveValue::Set(content.clone());
     }
     if data.description != Option3::Undefined {
         model.description = ActiveValue::Set(if let Some(desc) = data.description.as_option() {
@@ -212,8 +215,8 @@ where
             ActiveValue::Set(None)
         };
     }
-    if let Some(state) = data.state {
-        model.state = ActiveValue::Set(state);
+    if let Some(state) = &data.state {
+        model.state = ActiveValue::Set(state.clone());
     }
     if let Some(priority) = data.priority {
         model.priority = ActiveValue::Set(priority);
@@ -252,6 +255,7 @@ where
     if let Some(create_index) = data.create_index {
         model.create_index = ActiveValue::Set(create_index);
     }
+    let mut deleted_task_target_records = Vec::<task_target_record::Model>::new();
     if data.target != Option3::Undefined {
         model.target = ActiveValue::Set(if let Some(tgt) = data.target.as_option() {
             Some(tgt.clone())
@@ -260,7 +264,12 @@ where
         });
         if data.target == Option3::Null {
             // 删除所有目标records
-            let _ = task_target_record::Entity::delete_many()
+            deleted_task_target_records = task_target_record::Entity::find()
+                .filter(task_target_record::Column::TaskId.eq(id))
+                .all(connection)
+                .await
+                .map_err(|e| e.to_string())?;
+            task_target_record::Entity::delete_many()
                 .filter(task_target_record::Column::TaskId.eq(id))
                 .exec(connection)
                 .await
@@ -275,7 +284,9 @@ where
         });
     }
     model.updated_at = ActiveValue::Set(Utc::now());
-    Ok(())
+    Ok(UpdateTaskByActiveModelResult {
+        deleted_task_target_records,
+    })
 }
 
 #[tauri::command]
@@ -295,7 +306,8 @@ pub async fn update_task_by_id(
         .ok_or_else(|| "Task not found".to_string())?
         .into_active_model();
 
-    update_task_by_active_model(db, id.as_str(), &mut active_model, data).await?;
+    let update_result =
+        update_task_by_active_model(db, id.as_str(), &mut active_model, &data).await?;
     let res = task::Entity::update(active_model)
         .exec(db)
         .await
@@ -318,25 +330,17 @@ pub async fn update_task_by_id(
         );
     }
 
-    let mut result_json = serde_json::to_value(&BatchEditTasksResult {
-        created: vec![],
-        updated: vec![],
-    })
-    .unwrap();
-    if let serde_json::Value::Object(ref mut map) = result_json {
-        map.insert(
-            "updated".to_string(),
-            serde_json::Value::Array(vec![serde_json::to_value(&res).unwrap()]),
-        );
-    }
     let _ = broadcast_batch_upsert_tasks(
         &app_handle,
-        result_json,
-        // BatchEditTasksResult {
-        //     created: vec![],
-        //     updated: vec![serde_json::to_value(&res).unwrap()],
-        // },
+        Vec::<task::Model>::new(),
+        Value::Array(vec![serde_json::to_value(&res).unwrap()]),
     );
+    if data.target == Option3::Null && update_result.deleted_task_target_records.len() > 0 {
+        let _ = broadcast_delete_task_target_records(
+            &app_handle,
+            update_result.deleted_task_target_records,
+        )?;
+    }
     Ok(task_json)
 }
 
@@ -548,8 +552,13 @@ pub async fn batch_edit_tasks(
                             .map_err(|err| err.to_string())?
                             .into_active_model();
 
-                        update_task_by_active_model(txn, task_id.as_str(), &mut active_model, item)
-                            .await?;
+                        update_task_by_active_model(
+                            txn,
+                            task_id.as_str(),
+                            &mut active_model,
+                            &item,
+                        )
+                        .await?;
 
                         update_futures.push(task::Entity::update(active_model).exec(txn));
                     }
@@ -633,6 +642,6 @@ pub async fn batch_edit_tasks(
         "created": creates,
         "updated": updates,
     });
-    let _ = broadcast_batch_upsert_tasks(&app_handle, &final_ret);
+    let _ = broadcast_batch_upsert_tasks(&app_handle, creates, updates);
     Ok(final_ret)
 }

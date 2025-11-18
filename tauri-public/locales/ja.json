@@ -179,5 +179,8 @@
   "closeDoingWindow": "実行中ウィンドウを閉じる",
   "uploadImage": "画像をアップロード",
   "scrollOption": "スクロールオプション",
-  "isReverseScrollCross": "垂直スクロールを水平に反転"
+  "isReverseScrollCross": "垂直スクロールを水平に反転",
+  "confirmOperation": "操作の確認",
+  "autoSetTargetByContent": "内容から目標値を自動設定",
+  "detectTargetFailed": "適切な目標値が検出されませんでした"
 }

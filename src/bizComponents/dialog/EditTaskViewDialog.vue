@@ -217,7 +217,13 @@
         <div class="h items-center gap-2">
           <div>
             <div>{{ $t("icon") }}</div>
-            <SelectIcon v-model="data.icon"></SelectIcon>
+            <SelectIcon
+              @update:model-value="(d) => (data.icon = d)"
+              :model-value="
+                data.icon ??
+                (data.type ? defaultTaskViewIcon(data.type) : undefined)
+              "
+            ></SelectIcon>
           </div>
           <div class="stretch">
             <div>{{ $t("name") }}</div>
@@ -345,6 +351,7 @@ const props = defineProps<{
 
 const data = ref<Partial<Omit<TaskViewWithExtra, "GUIData">>>({
   ...props.taskView,
+  type: props.taskView?.type ?? "ALTERNATIVE",
 });
 const taskViewGUIMetaStore = useTaskViewGUIMetaStore();
 const fields = computed(() => taskViewGUIMetaStore.fields.slice());

@@ -179,5 +179,8 @@
   "closeDoingWindow": "Fermer la fenêtre de travail en cours",
   "uploadImage": "Télécharger une image",
   "scrollOption": "Options de défilement",
-  "isReverseScrollCross": "Inverser le défilement vertical vers horizontal"
+  "isReverseScrollCross": "Inverser le défilement vertical vers horizontal",
+  "confirmOperation": "Confirmer l'opération",
+  "autoSetTargetByContent": "Définir automatiquement l'objectif par contenu",
+  "detectTargetFailed": "Aucune valeur cible appropriée détectée"
 }

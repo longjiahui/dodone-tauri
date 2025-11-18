@@ -3,13 +3,15 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::initial_entities::NumberType;
+
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
 #[sea_orm(table_name = "TaskTargetRecord")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: String,
-    pub value: Decimal,
+    pub value: NumberType,
 
     #[sea_orm(column_name = "recordAt")]
     pub record_at: DateTimeUtc,

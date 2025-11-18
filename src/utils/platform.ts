@@ -2,7 +2,6 @@ import { imageProtocolNamePromise } from "@/store/system";
 
 export async function getImageFileNameFromURL(url: string) {
   const protocolName = await imageProtocolNamePromise;
-  console.debug(url, protocolName);
   // macos protocol://
   // windows //protocol.localhost/
   if (url.startsWith(`${protocolName}://`)) {

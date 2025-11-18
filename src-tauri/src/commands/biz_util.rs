@@ -3,7 +3,6 @@ use sea_orm::{
     ActiveModelTrait, ActiveValue, ColumnTrait, Condition, EntityTrait, QueryFilter,
     TransactionTrait,
 };
-use serde_json::json;
 
 use crate::{
     commands,
@@ -121,10 +120,8 @@ pub async fn rest_a_day(
         .map_err(|e| e.to_string())?;
     let _ = broadcast_batch_upsert_tasks(
         &app_handle,
-        json!({
-            "created": Vec::<task::Model>::new(),
-            "updated": commands::task::fill_task_with_default(conn, result.tasks).await?
-        }),
+        Vec::<task::Model>::new(),
+        commands::task::fill_task_with_default(conn, result.tasks).await?,
     );
     let _ = broadcast_update_task_in_days(&app_handle, result.task_in_days);
     Ok(())

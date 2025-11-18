@@ -88,9 +88,8 @@ export const useTaskViewStore = defineStore("taskView", () => {
         throw new Error("Task view is not in SCRIPT or GUI define mode");
       }
       return (d: ReadOnlyTaskWithChildren) =>
-        scriptFunc(d) &&
-        // 只对叶子节点生效
-        !d.children?.length;
+        scriptFunc(d); /* 只对叶子节点生效 */
+      //  && !d.children?.length;
     } else {
       throw new Error("Task view is not of type AUTO");
     }

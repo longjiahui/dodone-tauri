@@ -175,5 +175,8 @@
   "closeDoingWindow": "Close Doing Window",
   "uploadImage": "Upload Image",
   "scrollOption": "Scroll Option",
-  "isReverseScrollCross": "Reverse Vertical Scroll to Horizontal"
+  "isReverseScrollCross": "Reverse Vertical Scroll to Horizontal",
+  "confirmOperation": "Confirm Operation",
+  "autoSetTargetByContent": "Auto Set Target by Content",
+  "detectTargetFailed": "No Suitable Target Value Detected"
 }

@@ -444,7 +444,7 @@
                   <OrderContainer
                     v-if="taskGroups.length > 0 && isShowGroups"
                     class="stretch order-container-gap-2 overflow-x-hidden"
-                    :datas="taskGroups.slice()"
+                    :datas="taskGroups"
                     #default="{
                       data: g,
                       setDragRef: setOrderContainerDragRef,
@@ -461,7 +461,7 @@
                     :drop-channel="() => 'order-taskgroup'"
                     @order="taskGroupStore.changeOrders($event)"
                   >
-                    <div :class="['v gap-2']">
+                    <div :key="g.id" :class="['v gap-2']">
                       <Scope
                         :d="{
                           isSelected:

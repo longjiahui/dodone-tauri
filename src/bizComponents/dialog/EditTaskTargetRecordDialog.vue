@@ -20,7 +20,7 @@
         type="primary"
         @click="
           dialog.finish({
-            value: isNaN(+localData.value) ? 0 : +localData.value,
+            value: isNaN(+localData.value) ? '0' : localData.value,
             recordAt: dayjs(localData.recordAt).toDate().toISOString(),
           })
         "

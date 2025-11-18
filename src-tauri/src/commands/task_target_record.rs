@@ -1,12 +1,15 @@
 use chrono::Utc;
-use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter};
+use sea_orm::{ActiveValue, ColumnTrait, EntityTrait, IntoActiveModel, QueryFilter, QueryOrder};
 use serde::Deserialize;
 use serde_json::Value;
 
 use crate::{
     database::{get_db_manage, DbState},
     entities::{prelude::TaskTargetRecord, task_target_record},
-    utils::datetime::parse_datetime_string,
+    utils::{
+        datetime::parse_datetime_string,
+        event::{broadcast_batch_upsert_task_target_records, broadcast_delete_task_target_records},
+    },
 };
 
 #[derive(Debug, Deserialize, Clone)]
@@ -23,6 +26,7 @@ pub async fn get_task_target_records(
     let db_guard = get_db_manage(db_manage).await?;
     TaskTargetRecord::find()
         .filter(task_target_record::Column::TaskId.eq(search.task_id))
+        .order_by_desc(task_target_record::Column::RecordAt)
         .into_json()
         .all(db_guard.get_connection())
         .await
@@ -31,6 +35,7 @@ pub async fn get_task_target_records(
 
 #[tauri::command]
 pub async fn create_task_target_record(
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     data: task_target_record::CreateModel,
 ) -> Result<Value, String> {
@@ -49,11 +54,17 @@ pub async fn create_task_target_record(
         .exec_with_returning(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
+    let _ = broadcast_batch_upsert_task_target_records(
+        &app_handle,
+        serde_json::to_string(&vec![res.clone()]).map_err(|err| err.to_string())?,
+        Vec::<task_target_record::Model>::new(),
+    );
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn update_task_target_record_by_id(
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
     data: task_target_record::UpdateModel,
@@ -81,11 +92,17 @@ pub async fn update_task_target_record_by_id(
         .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
+    let _ = broadcast_batch_upsert_task_target_records(
+        &app_handle,
+        Vec::<task_target_record::Model>::new(),
+        serde_json::to_string(&vec![res.clone()]).map_err(|err| err.to_string())?,
+    );
     serde_json::to_value(res).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
 pub async fn delete_task_target_record_by_id(
+    app_handle: tauri::AppHandle,
     db_manage: tauri::State<'_, DbState>,
     id: String,
 ) -> Result<(), String> {
@@ -97,11 +114,16 @@ pub async fn delete_task_target_record_by_id(
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "TaskGroup not found".to_string())?;
 
+    let deleted_task_target_record_for_broadcast = deleted_task_target_record.clone();
     let active_model = deleted_task_target_record.into_active_model();
 
     task_target_record::Entity::delete(active_model)
         .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
+    let _ = broadcast_delete_task_target_records(
+        &app_handle,
+        vec![deleted_task_target_record_for_broadcast],
+    )?;
     Ok(())
 }

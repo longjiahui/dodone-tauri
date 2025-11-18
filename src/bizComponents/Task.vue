@@ -115,7 +115,18 @@
                   <Button type="text">
                     <AimOutlined></AimOutlined>
                   </Button>
+
+                  <div class="w-[64px]" v-if="taskRecords.length > 1">
+                    <FactorProgressBar
+                      :finish="targetFinished"
+                      :total="targetTotal"
+                      hide-finish-total
+                      :hue="taskGroup?.color"
+                    ></FactorProgressBar>
+                  </div>
                   <div>
+                    {{ isNaN(latestRecordValue) ? "_" : latestRecordValue }}
+                    /
                     {{ modelValue.target }}
                   </div>
                 </div>
@@ -214,15 +225,18 @@
                     <ReloadOutlined></ReloadOutlined>
                   </Button>
                   <div>
-                    {{ modelValue.nextTask.a }} + count({{
-                      modelValue.createIndex
-                    }}) %
-                    {{ modelValue.nextTask.b }}
+                    每{{ modelValue.nextTask.a }}天
+                    <template v-if="modelValue.nextTask.b > 1">
+                      （休息间隔 {{ modelValue.nextTask.b }}）
+                    </template>
+                    <span class="text-sm">
+                      已循环 {{ modelValue.createIndex }} 次
+                    </span>
                   </div>
                 </div>
               </div>
             </div>
-            <div>
+            <div class="relative top-0.5">
               <div
                 :class="[
                   'cursor-pointer rounded px-0.5 opacity-0 duration-300 group-hover:opacity-100',
@@ -254,7 +268,11 @@ import {
   themeHSColorS,
 } from "@/const";
 import { useTaskStore } from "@/store/task";
-import { DropdownPlacement, ReadOnlyTaskWithChildren } from "@/types";
+import {
+  DropdownPlacement,
+  ReadOnlyTaskWithChildren,
+  TaskTargetRecord,
+} from "@/types";
 import {
   calculateFinishLeaveTasksFactor,
   calculateTotalLeaveTasksFactor,
@@ -281,6 +299,7 @@ import {
 import { useTaskViewStore } from "@/store/taskView";
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { useTheme } from "@/utils/color";
+import { backend } from "@/utils/backend";
 
 const props = withDefaults(
   defineProps<{
@@ -338,6 +357,63 @@ const theme = useTheme(
     l: themeHSColorL,
   }
 );
+
+const taskRecords = ref<TaskTargetRecord[]>([]);
+async function refreshTaskRecords() {
+  if (props.modelValue.target != null) {
+    taskRecords.value = await backend.getTaskTargetRecords({
+      search: { taskId: props.modelValue.id },
+    });
+  } else {
+    taskRecords.value = [];
+  }
+}
+watch(() => props.modelValue.id, refreshTaskRecords, { immediate: true });
+const off_batchUpsertTaskTargetRecords =
+  backend.on_batchUpsertTaskTargetRecords(refreshTaskRecords);
+const off_deleteTaskTargetRecords =
+  backend.on_deleteTaskTargetRecords(refreshTaskRecords);
+onBeforeUnmount(() => {
+  off_batchUpsertTaskTargetRecords.then((d) => d());
+  off_deleteTaskTargetRecords.then((d) => d());
+});
+const latestRecordValue = computed(() => {
+  if (props.modelValue.targetType === "DEFAULT") {
+    return +taskRecords.value?.[0]?.value;
+  } else {
+    return taskRecords.value.reduce((sum, r) => sum + +r.value, 0);
+  }
+});
+const targetTotal = computed(() => {
+  if (props.modelValue.target) {
+    if (props.modelValue.targetType === "DEFAULT") {
+      return Math.max(
+        ...taskRecords.value.map((r) =>
+          Math.abs(+r.value - +props.modelValue.target!)
+        )
+      );
+    } else {
+      // 增量
+      return +props.modelValue.target;
+    }
+  } else {
+    return 0;
+  }
+});
+const targetFinished = computed(() => {
+  if (props.modelValue.target) {
+    if (props.modelValue.targetType === "DEFAULT") {
+      return (
+        targetTotal.value -
+        Math.abs(latestRecordValue.value - +props.modelValue.target!)
+      );
+    } else {
+      return latestRecordValue.value;
+    }
+  } else {
+    return 0;
+  }
+});
 </script>
 
 <style scoped>

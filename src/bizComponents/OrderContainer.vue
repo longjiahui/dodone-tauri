@@ -29,7 +29,7 @@
         </div>
       </div>
     </DefineBizDropStyle>
-    <template v-for="(d, i) in datas">
+    <template v-for="(d, i) in datas" :key="d[dataKey]">
       <BizDrag :drag-datas="() => dragDatas(d, i)" #default="{ setRef }">
         <div class="relative">
           <BizDrop
@@ -67,62 +67,61 @@
   </div>
 </template>
 <script setup lang="ts" generic="T">
-import { DragData } from "./drag/drag"
+import { DragData } from "./drag/drag";
 const props = withDefaults(
   defineProps<{
-    datas: T[]
-    dataKey?: keyof T
-    dragDatas: (d: T, index: number) => DragData<T>[]
-    dropChannel: (d: T, index: number) => DragData["type"] | DragData["type"][]
-    dropAreaWidth?: number
+    datas: T[];
+    dataKey?: keyof T;
+    dragDatas: (d: T, index: number) => DragData<T>[];
+    dropChannel: (d: T, index: number) => DragData["type"] | DragData["type"][];
+    dropAreaWidth?: number;
   }>(),
   {
     dataKey: "id" as keyof T,
     dropAreaWidth: 32,
-  },
-)
+  }
+);
 
 const emit = defineEmits<{
-  (e: "order", datas: T[]): void
-}>()
-
+  (e: "order", datas: T[]): void;
+}>();
 const [DefineBizDropStyle, UseBizDropStyle] = createReusableTemplate<{
-  setRef: any
-  isDroppingActive: boolean
-  isDragging: boolean
-  isTop?: boolean
-}>()
+  setRef: any;
+  isDroppingActive: boolean;
+  isDragging: boolean;
+  isTop?: boolean;
+}>();
 
 function dropEvents(
   _d: T,
   i: number,
   _channel: DragData["type"],
-  dragData: DragData<T>,
+  dragData: DragData<T>
 ) {
   // 先新增，再删除
   const newDataKeys: any[] = dragData.datas.map(
-    (d) => d[props.dataKey as keyof T],
-  )
-  const tempDatas = [...props.datas]
-  tempDatas.splice(i, 0, ...dragData.datas)
-  const finalDatas: typeof tempDatas = []
+    (d) => d[props.dataKey as keyof T]
+  );
+  const tempDatas = [...props.datas];
+  tempDatas.splice(i, 0, ...dragData.datas);
+  const finalDatas: typeof tempDatas = [];
   tempDatas.forEach((td, index) => {
     if (index < i) {
       if (newDataKeys.includes(td[props.dataKey as keyof T])) {
         // 什么都不做
       } else {
-        finalDatas.push(td)
+        finalDatas.push(td);
       }
     } else if (index > i + dragData.datas.length - 1) {
       if (newDataKeys.includes(td[props.dataKey as keyof T])) {
         // 什么都不做
       } else {
-        finalDatas.push(td)
+        finalDatas.push(td);
       }
     } else {
-      finalDatas.push(td)
+      finalDatas.push(td);
     }
-  })
-  emit("order", finalDatas)
+  });
+  emit("order", finalDatas);
 }
 </script>

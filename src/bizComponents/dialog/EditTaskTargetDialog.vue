@@ -12,7 +12,7 @@
           }).finishPromise((d) => {
             if (d != null && d !== '') {
               return taskStore.updateTaskById(props.taskId, {
-                target: !d || isNaN(+d!) ? null : +d!,
+                target: isNaN(+d) ? null : d,
               });
             }
           })
@@ -171,7 +171,7 @@ const { state: records, execute: refreshRecords } = useAsyncState(
   { immediate: true }
 );
 const recordsTotal = computed(() =>
-  records.value.reduce((sum, r) => sum + r.value, 0)
+  records.value.reduce((sum, r) => sum + +r.value, 0)
 );
 const finalRecords = computed(() => {
   // 增量时候 计算累计值
@@ -179,10 +179,10 @@ const finalRecords = computed(() => {
     const arr: { value: number; recordAt: Date }[] = [];
     [...records.value].reverse().forEach((r, index) => {
       if (index === 0) {
-        arr.push({ value: r.value, recordAt: new Date(r.recordAt) });
+        arr.push({ value: +r.value, recordAt: new Date(r.recordAt) });
       } else {
         arr.push({
-          value: arr[index - 1].value + r.value,
+          value: arr[index - 1].value + +r.value,
           recordAt: new Date(r.recordAt),
         });
       }
@@ -201,7 +201,7 @@ function handleCreateTaskTargetRecord() {
   if (value.value && !isNaN(+value.value)) {
     return backend
       .createTaskTargetRecord({
-        data: { taskId: props.taskId, value: +value.value },
+        data: { taskId: props.taskId, value: value.value },
       })
       .then(() => {
         value.value = "";

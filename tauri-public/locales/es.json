@@ -179,5 +179,8 @@
   "closeDoingWindow": "Cerrar ventana de trabajo actual",
   "uploadImage": "Subir imagen",
   "scrollOption": "Opciones de desplazamiento",
-  "isReverseScrollCross": "Invertir desplazamiento vertical a horizontal"
+  "isReverseScrollCross": "Invertir desplazamiento vertical a horizontal",
+  "confirmOperation": "Confirmar operación",
+  "autoSetTargetByContent": "Establecer objetivo automáticamente por contenido",
+  "detectTargetFailed": "No se detectó un valor objetivo adecuado"
 }

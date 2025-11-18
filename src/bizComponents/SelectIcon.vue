@@ -1,5 +1,5 @@
 <template>
-  <DefaultDropdown trigger="click">
+  <DefaultDropdown trigger="click" v-model:visible="visible">
     <div
       class="h border-light-4 bg-bg size-[32px] cursor-pointer items-center justify-center rounded border"
     >
@@ -31,7 +31,10 @@
         >
           <div
             v-for="d in finalAntdIcons"
-            @click="icon = d"
+            @click="
+              icon = d;
+              visible = false;
+            "
             class="hover:text-primary text-light hover:bg-light-2 h size-[50px] cursor-pointer items-center justify-center rounded text-3xl duration-300"
           >
             <!-- <template v-if="hasEmoji(d)"> -->
@@ -41,7 +44,13 @@
           </div>
         </Scrollbar>
         <div class="px-4">
-          <Button @click="icon = null">{{ $t("clear") }}</Button>
+          <Button
+            @click="
+              icon = null;
+              visible = false;
+            "
+            >{{ $t("clear") }}</Button
+          >
         </div>
       </div>
     </template>
@@ -52,6 +61,7 @@
 import * as Icons from "@ant-design/icons-vue";
 import { getAllEmojis, hasEmoji } from "unicode-emoji-utils";
 
+const visible = ref(false);
 const page = ref(1);
 const pageSize = 40;
 // const emojis = computed(() => finalAntdIcons.value.concat(...getAllEmojis()))

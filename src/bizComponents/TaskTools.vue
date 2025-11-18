@@ -143,14 +143,36 @@
           </Button>
         </DefaultDropdownMenu>
       </Tooltip>
-      <Tooltip
+      <ToolItem
+        :tooltip="$t('targetValue')"
+        :icon="AimOutlined"
+        :menus="[
+          {
+            name: $t('autoSetTargetByContent'),
+            click: () => {
+              let ret = /\d+/.exec(realTask?.content || '')?.[0];
+              let finalRet = !isNaN(+ret!) ? +ret! : undefined;
+              if (finalRet) {
+                return taskStore.updateTaskById(realTask!.id, {
+                  target: finalRet.toString(),
+                });
+              } else {
+                dialogs.MessageDialog({
+                  content: $t('detectTargetFailed'),
+                });
+              }
+            },
+          },
+        ]"
+      ></ToolItem>
+      <!-- <Tooltip
         :title="$t('targetValue')"
         :visible-disable-controller="tooltipVisibleDisabledController"
       >
         <Button type="text" @click="handleEditTaskTarget(task)">
           <AimOutlined></AimOutlined>
         </Button>
-      </Tooltip>
+      </Tooltip> -->
       <Tooltip
         :content="$t('moveTo')"
         :visible-disable-controller="tooltipVisibleDisabledController"

@@ -179,5 +179,8 @@
   "closeDoingWindow": "Arbeitsfenster schließen",
   "uploadImage": "Bild hochladen",
   "scrollOption": "Scroll-Optionen",
-  "isReverseScrollCross": "Vertikales Scrollen zu horizontal umkehren"
+  "isReverseScrollCross": "Vertikales Scrollen zu horizontal umkehren",
+  "confirmOperation": "Vorgang bestätigen",
+  "autoSetTargetByContent": "Ziel automatisch nach Inhalt setzen",
+  "detectTargetFailed": "Kein geeigneter Zielwert erkannt"
 }

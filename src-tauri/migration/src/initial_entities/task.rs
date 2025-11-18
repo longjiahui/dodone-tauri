@@ -3,6 +3,8 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::initial_entities::NumberType;
+
 #[derive(DeriveActiveEnum, EnumIter, Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum TaskState {
@@ -53,7 +55,7 @@ pub struct Model {
         indexed
     )]
     pub created_by_task_id: Option<String>,
-    pub target: Option<Decimal>,
+    pub target: Option<NumberType>,
     #[sea_orm(column_name = "targetType", column_type = "Text", nullable)]
     pub target_type: Option<String>,
     #[sea_orm(has_one)]

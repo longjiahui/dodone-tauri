@@ -68,7 +68,7 @@ watch(
   font-size: inherit !important;
   font-family: inherit !important;
   img {
-    @apply border-dark-3 inline size-[var(--markdown-image-size,80px)] cursor-pointer rounded-lg border shadow duration-300 hover:opacity-85;
+    @apply border-dark-3 inline size-[var(--markdown-image-size,80px)] cursor-pointer rounded-lg border shadow duration-300 hover:opacity-85 mb-3;
   }
   ul,
   ol,

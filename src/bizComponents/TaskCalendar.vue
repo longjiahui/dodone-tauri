@@ -55,14 +55,15 @@
               >
                 <div
                   :class="[
-                    'relative p-1 px-4 text-center text-sm',
+                    'relative p-1 px-4 text-sm text-light',
                     isToday ? 'bg-primary text-white' : 'bg-light-3',
                   ]"
                 >
+                  <!-- 左边的竖线 -->
                   <div
                     :class="[
                       'absolute top-0 left-0 h-full w-1',
-                      isToday ? '' : 'bg-light-4',
+                      isToday ? 'bg-primary-dark' : 'bg-light-5',
                     ]"
                   ></div>
                   {{ date }}
@@ -71,7 +72,7 @@
                 <div
                   :class="[
                     'stretch flex flex-col gap-1 py-1',
-                    //   isToday ? 'bg-light-4' : '',
+                    d.isSameOrAfter(dayjs().startOf('day')) ? 'bg-light-1' : '',
                   ]"
                 >
                   <Scope
@@ -82,7 +83,7 @@
                         )
                       ) + 1
                     ).fill(0)"
-                    :key="i"
+                    :key="tasksInDate[date]?.[i]?.task?.id ?? i"
                     :d="{
                       ...tasksInDate[date]?.[i],
                       taskGroup:
@@ -98,151 +99,159 @@
                       taskGroup,
                     }"
                   >
-                    <BizDrag
-                      :drag-datas="
-                        () => [
-                          {
-                            type: 'move-tasks',
-                            datas: [task],
-                          },
-                          {
-                            type: `move-tasks-${task?.groupId}`,
-                            datas: [task],
-                          },
-                        ]
-                      "
-                      #default="{ setRef }"
+                    <Scope
+                      :d="{
+                        isCurrentHover:
+                          currentHover && currentHover === task?.id,
+                      }"
+                      #default="{ isCurrentHover }"
                     >
-                      <TaskToolsDropdown :task hide-delete>
-                        <!-- <template #start>
+                      <BizDrag
+                        :drag-datas="
+                          () => [
+                            {
+                              type: 'move-tasks',
+                              datas: [task],
+                            },
+                            {
+                              type: `move-tasks-${task?.groupId}`,
+                              datas: [task],
+                            },
+                          ]
+                        "
+                        #default="{ setRef }"
+                      >
+                        <TaskToolsDropdown :task hide-delete>
+                          <!-- <template #start>
                           <ToolItem
                             :icon="AimOutlined"
                             tooltip="在列表中定位到这个任务"
                             @click="defaultEvent.emit('focusTask', task!)"
                           ></ToolItem>
                         </template> -->
-                        <template v-if="task" #before-delete>
-                          <ToolItem
-                            @click="
-                              () =>
-                                taskStore.updateTaskById(task.id, {
-                                  startAt: null,
-                                  endAt: null,
-                                })
-                            "
-                            :tooltip="$t('removeFromCalendar')"
-                            :icon="CloseOutlined"
-                            danger
-                          ></ToolItem>
-                        </template>
-                        <template #default>
-                          <!-- <Tooltip
+                          <template v-if="task" #before-delete>
+                            <ToolItem
+                              @click="
+                                () =>
+                                  taskStore.updateTaskById(task.id, {
+                                    startAt: null,
+                                    endAt: null,
+                                  })
+                              "
+                              :tooltip="$t('removeFromCalendar')"
+                              :icon="CloseOutlined"
+                              danger
+                            ></ToolItem>
+                          </template>
+                          <template #default>
+                            <!-- <Tooltip
                             :content="
                               isModifying || isDragging ? '' : task?.content
                             "
                           > -->
-                          <div
-                            :ref="setRef"
-                            :title="task?.content"
-                            @mouseenter="currentHover = task?.id"
-                            @mouseleave="currentHover = undefined"
-                            :class="[
-                              'relative h-[32px] overflow-hidden px-4 text-sm leading-[32px] duration-300',
-                              task?.state === 'UNDONE' ? '' : 'opacity-30!',
-                              isModifying && isModifyingId !== task?.id
-                                ? 'opacity-30'
-                                : '',
-                              currentHover && currentHover !== task?.id
-                                ? 'opacity-75'
-                                : '',
-                              // 圆角
-                              // date === startDate || date === 1
-                              // 	? 'rounded-tl rounded-bl'
-                              // 	: '',
-                              // date === endDate ? 'rounded-tr rounded-br' : '',
-                            ]"
-                            :style="{
-                              ...(taskGroup?.color
-                                ? calculateTheme(taskGroup.color, {
-                                    a: 1,
-                                    s: themeHSColorS,
-                                    l: themeHSColorL,
-                                  }).cssVariables
-                                : {}),
-                              ...(task?.id
-                                ? {
-                                    // '--color': 'hsl(var(--value), 45%, 85%)',
-                                    background: 'var(--bg)',
-                                    color: 'var(--text-default)',
-                                    cursor: 'pointer',
-                                  }
-                                : {}),
-                              // ...(task?.id &&
-                              // (currentHover === task?.id ||
-                              //   task.id === isModifyingId)
-                              //   ? {
-                              //       background: 'var(--bg-a60)',
-                              //       // color: 'white',
-                              //     }
-                              //   : {}),
-                            }"
-                          >
-                            <!-- 调整长短pplaceholder -->
                             <div
-                              v-if="task && date === startDate"
-                              @mousedown="
-                                handleStartModifyStartDate($event, task)
-                              "
-                              class="absolute top-0 left-0 h-full w-3 cursor-w-resize"
-                            ></div>
-                            <!-- @mousemove="handleModifyingEndDate($event, task)" -->
-                            <div
-                              v-if="task && date === endDate"
-                              @mousedown="
-                                handleStartModifyEndDate($event, task)
-                              "
-                              class="absolute top-0 right-0 h-full w-2 cursor-e-resize"
-                            ></div>
-                            <div
-                              v-if="date === startDate"
-                              class="flex items-center gap-2"
+                              :ref="setRef"
+                              :title="task?.content"
+                              @mouseenter="currentHover = task?.id"
+                              @mouseleave="currentHover = undefined"
+                              :class="[
+                                'relative h-[32px] px-4 text-sm leading-[32px] duration-300',
+                                task?.state === 'UNDONE' ? '' : 'opacity-30!',
+                                isModifying && isModifyingId !== task?.id
+                                  ? 'opacity-30'
+                                  : '',
+                                isCurrentHover
+                                  ? 'bg-[var(--theme-light-4)]!'
+                                  : '',
+                                // 圆角
+                                // date === startDate || date === 1
+                                //   ? 'rounded-tl rounded-bl'
+                                //   : '',
+                                // date === endDate ? 'rounded-tr rounded-br' : '',
+                              ]"
+                              :style="{
+                                ...(taskGroup?.color
+                                  ? calculateTheme(taskGroup.color, {
+                                      a: 1,
+                                      s: themeHSColorS,
+                                      l: themeHSColorL,
+                                    }).cssVariables
+                                  : {}),
+                                ...(task?.id
+                                  ? {
+                                      // '--color': 'hsl(var(--value), 45%, 85%)',
+                                      background: 'var(--bg)',
+                                      color: 'var(--text-default)',
+                                      cursor: 'pointer',
+                                    }
+                                  : {}),
+                                // ...(task?.id &&
+                                // (currentHover === task?.id ||
+                                //   task.id === isModifyingId)
+                                //   ? {
+                                //       background: 'var(--bg-a60)',
+                                //       // color: 'white',
+                                //     }
+                                //   : {}),
+                              }"
                             >
+                              <!-- 调整长短pplaceholder -->
                               <div
-                                class="absolute top-1/2 left-0 h-full w-1 translate-y-[-50%] bg-[var(--theme)]"
+                                v-if="task && date === startDate"
+                                @mousedown="
+                                  handleStartModifyStartDate($event, task)
+                                "
+                                class="absolute top-0 left-0 h-full w-3 cursor-w-resize"
+                              ></div>
+                              <!-- @mousemove="handleModifyingEndDate($event, task)" -->
+                              <div
+                                v-if="task && date === endDate"
+                                @mousedown="
+                                  handleStartModifyEndDate($event, task)
+                                "
+                                class="absolute top-0 right-0 h-full w-2 cursor-e-resize"
                               ></div>
                               <div
-                                :class="[
-                                  'truncate',
-                                  isDone ? 'line-through' : '',
-                                ]"
+                                v-if="date === startDate"
+                                class="flex items-center gap-2"
                               >
-                                {{ task?.content }}
+                                <div
+                                  class="absolute top-1/2 left-0 h-full w-1 translate-y-[-50%] bg-[var(--theme)]"
+                                ></div>
+                                <div
+                                  :class="[
+                                    'truncate',
+                                    isDone ? 'line-through' : '',
+                                  ]"
+                                >
+                                  {{ task?.content }}
+                                </div>
                               </div>
-                            </div>
-                            <!-- 上面是连续多天的任务的头部、后面是尾部、然后如果跨周了，头部需要显示任务的内容 -->
-                            <div
-                              v-else-if="
-                                d.week() !== dayjs(startDate).week() &&
-                                // 国际惯例 0 是周日
-                                // 如果是周日开始，则是0 周一开始则是1
-                                d.day() === 1
-                              "
-                              class="flex items-center gap-2"
-                            >
+                              <!-- 上面是连续多天的任务的头部、后面是尾部、然后如果跨周了，头部需要显示任务的内容 -->
                               <div
-                                :class="[
-                                  'truncate',
-                                  isDone ? 'line-through' : '',
-                                ]"
+                                v-else-if="
+                                  d.week() !== dayjs(startDate).week() &&
+                                  // 国际惯例 0 是周日
+                                  // 如果是周日开始，则是0 周一开始则是1
+                                  d.day() === 1
+                                "
+                                class="flex items-center gap-2"
                               >
-                                {{ task?.content }}
+                                <div
+                                  :class="[
+                                    'truncate',
+                                    isDone ? 'line-through' : '',
+                                  ]"
+                                >
+                                  {{ task?.content }}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                          <!-- </Tooltip> -->
-                        </template>
-                      </TaskToolsDropdown>
-                    </BizDrag>
+                            <!-- </Tooltip> -->
+                          </template>
+                        </TaskToolsDropdown>
+                      </BizDrag>
+                    </Scope>
                   </Scope>
                 </div>
               </div>
@@ -282,7 +291,6 @@ import { sortTasks } from "@/utils/biz";
 defineProps<{
   paddingX?: number;
 }>();
-
 const month = ref(dayjs());
 const taskSort = ref<TaskSort>({
   field: "groupId",
@@ -314,7 +322,8 @@ const inMonthTasks = computed(() => {
   });
 });
 
-const { state: tasks, execute: refreshTasks } = useAsyncState(async () => {
+const tasks = ref<ReadOnlyTaskWithChildren[]>([]);
+async function refreshTasks() {
   const ret = await Promise.all(
     inMonthTasks.value.map(async (t) => {
       // 应用过滤
@@ -326,8 +335,8 @@ const { state: tasks, execute: refreshTasks } = useAsyncState(async () => {
       }
     })
   ).then((datas) => datas.filter((d) => !!d).map((d) => d!));
-  return ret;
-}, []);
+  tasks.value = ret;
+}
 
 watch(inMonthTasks, () => refreshTasks());
 // month改变时需要tasks清空、否则在切换月份时因为要渲染上个月的任务而导致卡顿。
