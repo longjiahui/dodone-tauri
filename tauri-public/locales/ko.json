@@ -182,5 +182,12 @@
   "isReverseScrollCross": "세로 스크롤을 가로로 반전",
   "confirmOperation": "작업 확인",
   "autoSetTargetByContent": "콘텐츠별 목표 자동 설정",
-  "detectTargetFailed": "적절한 목표 값을 감지하지 못했습니다"
+  "detectTargetFailed": "적절한 목표 값을 감지하지 못했습니다",
+  "remark": "비고",
+
+  "nSecondsAgo": "{n}초 전",
+  "nMinutesAgo": "{n}분 전",
+  "halfHourAgo": "30분 전",
+  "nHoursAgo": "{n}시간 전",
+  "nDaysAgo": "{n}일 전"
 }

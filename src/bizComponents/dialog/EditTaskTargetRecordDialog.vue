@@ -13,6 +13,12 @@
           <DateTimePicker v-model="localData.recordAt"></DateTimePicker>
         </div>
       </div>
+      <div>
+        <div class="font-semibold">{{ $t("remark") }}</div>
+        <div>
+          <Input v-model="localData.remark" :placeholder="$t('remark')"></Input>
+        </div>
+      </div>
     </template>
     <template #footer>
       <Button @click="dialog.close()">{{ $t("close") }}</Button>
@@ -22,6 +28,7 @@
           dialog.finish({
             value: isNaN(+localData.value) ? '0' : localData.value,
             recordAt: dayjs(localData.recordAt).toDate().toISOString(),
+            remark: localData.remark,
           })
         "
         >{{ $t("save") }}</Button
@@ -36,12 +43,16 @@ import { dayjs } from "@/utils/time";
 import { TaskTargetRecord } from "@/types";
 
 const props = defineProps<{
-  dialog: DialogType<any, Pick<TaskTargetRecord, "value" | "recordAt">>;
+  dialog: DialogType<
+    any,
+    Pick<TaskTargetRecord, "value" | "recordAt" | "remark">
+  >;
   record: TaskTargetRecord;
 }>();
 
 const localData = ref({
   value: props.record.value,
   recordAt: dayjs(props.record.recordAt),
+  remark: props.record.remark || "",
 });
 </script>

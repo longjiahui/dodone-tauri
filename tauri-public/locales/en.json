@@ -178,5 +178,12 @@
   "isReverseScrollCross": "Reverse Vertical Scroll to Horizontal",
   "confirmOperation": "Confirm Operation",
   "autoSetTargetByContent": "Auto Set Target by Content",
-  "detectTargetFailed": "No Suitable Target Value Detected"
+  "detectTargetFailed": "No Suitable Target Value Detected",
+  "remark": "Remark",
+
+  "nSecondsAgo": "{n} seconds ago",
+  "nMinutesAgo": "{n} minutes ago",
+  "halfHourAgo": "half an hour ago",
+  "nHoursAgo": "{n} hours ago",
+  "nDaysAgo": "{n} days ago"
 }

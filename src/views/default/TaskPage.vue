@@ -272,7 +272,7 @@
                   <Scope
                     :d="{
                       isSelected:
-                        currentType === 'taskView' && currentId === v.id,
+                        currentType === 'taskView' && finalId === v.id,
                       pendingLeaveTasksFactor: calculatePendingLeaveTasksFactor(
                         taskViewTasksMap[v.id]?.tasks.slice() || []
                       ),
@@ -619,7 +619,7 @@
                           :d="{
                             isSelected:
                               currentType === 'taskAnchor' &&
-                              currentId === anchor.id,
+                              finalId === anchor.id,
                             pendingLeaveTasksFactor:
                               calculatePendingLeaveTasksFactor(
                                 anchor.task.children.slice()
@@ -739,7 +739,7 @@
                 <div
                   class="size-full stretch v gap-3"
                   v-if="currentType !== 'taskView'"
-                  :key="currentId + currentType"
+                  :key="finalId + currentType"
                 >
                   <template
                     v-if="currentType === 'taskAnchor' && finalTaskAnchor"
@@ -817,7 +817,7 @@
                   :key="finalTaskView.id"
                 >
                   <TaskListTemplate
-                    :tasks="(taskViewTasksMap[currentId]?.tasks || []).slice()"
+                    :tasks="(taskViewTasksMap[finalId]?.tasks || []).slice()"
                     :currentView="finalTaskView"
                     disable-order
                   >
@@ -988,27 +988,43 @@ watch(
 
 const pageDomain = (d: string) => `taskpage-${d}`;
 const currentId = useLocalStorage<string>(pageDomain("currentId"), "");
-const currentType = useLocalStorage<"taskAnchor" | "taskGroup" | "taskView">(
-  pageDomain("currentType"),
-  "taskGroup"
-);
+const finalId = computed(() => {
+  return (
+    [...taskGroups.value, ...taskanchors.value, ...taskViews.value].find(
+      (v) => v.id === currentId.value
+    )?.id ?? [...taskGroups.value, ...taskViews.value]?.[0]?.id
+  );
+});
+const currentType = computed<"taskAnchor" | "taskGroup" | "taskView">(() => {
+  return taskGroups.value.find((g) => g.id === finalId.value)
+    ? "taskGroup"
+    : taskanchors.value.find((a) => a.id === finalId.value)
+      ? "taskAnchor"
+      : taskViews.value.find((tv) => tv.id === finalId.value)
+        ? "taskView"
+        : "taskGroup";
+});
+// const currentType = useLocalStorage<"taskAnchor" | "taskGroup" | "taskView">(
+//   pageDomain("currentType"),
+//   "taskGroup"
+// );
 const { isShowFinishedTasks, isOnlyShowLeaves, filterEntity } =
   useTaskListToolsOptions();
 
 const finalGroupId = computed(() =>
   currentType.value === "taskGroup"
-    ? (taskGroups.value.find((g) => g.id === currentId.value)?.id ??
+    ? (taskGroups.value.find((g) => g.id === finalId.value)?.id ??
       taskGroups.value[0]?.id)
     : undefined
 );
-const finalTaskAnchorId = computed(() =>
-  currentType.value === "taskAnchor"
-    ? taskanchors.value.find((tv) => tv.id === currentId.value)?.id
-    : undefined
-);
+// const finalTaskAnchorId = computed(() =>
+//   currentType.value === "taskAnchor"
+//     ? taskanchors.value.find((tv) => tv.id === finalId.value)?.id
+//     : undefined
+// );
 const finalTaskAnchor = computed(() =>
   currentType.value === "taskAnchor"
-    ? taskanchors.value.find((tv) => tv.id === currentId.value)
+    ? taskanchors.value.find((tv) => tv.id === finalId.value)
     : undefined
 );
 const taskAnchorTask = computed(() => {
@@ -1018,7 +1034,7 @@ const taskAnchorTask = computed(() => {
 });
 const finalTaskView = computed(() =>
   currentType.value === "taskView"
-    ? taskViews.value.find((tv) => tv.id === currentId.value)
+    ? taskViews.value.find((tv) => tv.id === finalId.value)
     : undefined
 );
 
@@ -1061,11 +1077,11 @@ function handleCreateTaskGroup() {
 }
 
 watch(
-  [currentType, currentId],
+  [currentType, finalId],
   ([type, id]) => {
     Promise.all([fetchDataStore.loadingPromise()]).then(() => {
       if (type === "taskView" && taskViews.value.find((v) => v.id === id)) {
-        taskViewStore.loadTasks(currentId.value);
+        taskViewStore.loadTasks(finalId.value);
       }
     });
   },

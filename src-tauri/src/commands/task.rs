@@ -42,25 +42,25 @@ pub async fn get_tasks(db_manage: tauri::State<'_, DbState>) -> Result<Vec<Value
         .map_err(|e| e.to_string())?;
 
     // 组合数据
-    let result: Vec<_> = tasks
+    let result: Vec<Value> = tasks
         .into_iter()
         .zip(next_tasks.into_iter())
         .zip(task_view_tasks.into_iter())
         .map(|((task, next_task), view_tasks)| {
-            let mut task_json = serde_json::to_value(&task).unwrap();
+            let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
             if let serde_json::Value::Object(ref mut map) = task_json {
                 map.insert(
                     "taskViewTasks".to_string(),
-                    serde_json::to_value(&view_tasks).unwrap(),
+                    serde_json::to_value(&view_tasks).map_err(|e| e.to_string())?,
                 );
                 map.insert(
                     "nextTask".to_string(),
-                    serde_json::to_value(&next_task).unwrap(),
+                    serde_json::to_value(&next_task).map_err(|e| e.to_string())?,
                 );
             }
-            task_json
+            Ok(task_json)
         })
-        .collect();
+        .collect::<Result<Vec<Value>, String>>()?;
     Ok(result)
 }
 
@@ -94,15 +94,15 @@ pub async fn get_task_by_id(
         .map_err(|e| e.to_string())?;
 
     // Combine data
-    let mut task_json = serde_json::to_value(&task).unwrap();
+    let mut task_json = serde_json::to_value(&task).map_err(|e| e.to_string())?;
     if let serde_json::Value::Object(ref mut map) = task_json {
         map.insert(
             "taskViewTasks".to_string(),
-            serde_json::to_value(&task_view_tasks).unwrap(),
+            serde_json::to_value(&task_view_tasks).map_err(|e| e.to_string())?,
         );
         map.insert(
             "nextTask".to_string(),
-            serde_json::to_value(&next_task).unwrap(),
+            serde_json::to_value(&next_task).map_err(|e| e.to_string())?,
         );
     }
 
@@ -322,18 +322,18 @@ pub async fn update_task_by_id(
 
     // 拼接数据并返回
     // serde_json::to_value(res).map_err(|e| e.to_string())
-    let mut task_json = serde_json::to_value(&res).unwrap();
+    let mut task_json = serde_json::to_value(&res).map_err(|e| e.to_string())?;
     if let serde_json::Value::Object(ref mut map) = task_json {
         map.insert(
             "task_view_tasks".to_string(),
-            serde_json::to_value(&task_view_tasks).unwrap(),
+            serde_json::to_value(&task_view_tasks).map_err(|e| e.to_string())?,
         );
     }
 
     let _ = broadcast_batch_upsert_tasks(
         &app_handle,
         Vec::<task::Model>::new(),
-        Value::Array(vec![serde_json::to_value(&res).unwrap()]),
+        Value::Array(vec![task_json.clone()]),
     );
     if data.target == Option3::Null && update_result.deleted_task_target_records.len() > 0 {
         let _ = broadcast_delete_task_target_records(
@@ -365,11 +365,11 @@ pub async fn delete_task_by_id(
         .await
         .map_err(|e| e.to_string())?;
 
-    let mut deleted_task_json = serde_json::to_value(&deleted_task).unwrap();
+    let mut deleted_task_json = serde_json::to_value(&deleted_task).map_err(|e| e.to_string())?;
     if let serde_json::Value::Object(ref mut map) = deleted_task_json {
         map.insert(
             "task_view_tasks".to_string(),
-            serde_json::to_value(&deleted_task_view_tasks).unwrap(),
+            serde_json::to_value(&deleted_task_view_tasks).map_err(|e| e.to_string())?,
         );
     }
 

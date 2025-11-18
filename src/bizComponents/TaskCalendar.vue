@@ -338,12 +338,21 @@ async function refreshTasks() {
   tasks.value = ret;
 }
 
-watch(inMonthTasks, () => refreshTasks());
-// month改变时需要tasks清空、否则在切换月份时因为要渲染上个月的任务而导致卡顿。
-watch([month, filterEntity], () => refreshTasks(), {
-  immediate: true,
-  deep: true,
+watch(inMonthTasks, () => {
+  return refreshTasks();
 });
+// month改变时需要tasks清空、否则在切换月份时因为要渲染上个月的任务而导致卡顿。
+watch(
+  [month, filterEntity],
+  () => {
+    tasks.value = [];
+    refreshTasks();
+  },
+  {
+    immediate: true,
+    deep: true,
+  }
+);
 
 const monthBeginDate = computed(() => month.value.startOf("month"));
 const monthEndDate = computed(() => month.value.endOf("month"));

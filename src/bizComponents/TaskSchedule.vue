@@ -22,7 +22,9 @@ const scheduleChartRef = ref<InstanceType<typeof ScheduleChart>>();
 
 function handleRequestDatas(start: Date, end: Date) {
   return backend
-    .getTaskInDays({ search: { startDate: start, endDate: end } })
+    .getTaskInDays({
+      search: { startDate: start.toISOString(), endDate: end.toISOString() },
+    })
     .then((d) => {
       return d.map((d) => {
         return task2ChartData(d);

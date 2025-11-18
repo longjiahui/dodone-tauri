@@ -182,5 +182,12 @@
   "isReverseScrollCross": "Vertikales Scrollen zu horizontal umkehren",
   "confirmOperation": "Vorgang bestätigen",
   "autoSetTargetByContent": "Ziel automatisch nach Inhalt setzen",
-  "detectTargetFailed": "Kein geeigneter Zielwert erkannt"
+  "detectTargetFailed": "Kein geeigneter Zielwert erkannt",
+  "remark": "Bemerkung",
+
+  "nSecondsAgo": "vor {n} Sekunden",
+  "nMinutesAgo": "vor {n} Minuten",
+  "halfHourAgo": "vor einer halben Stunde",
+  "nHoursAgo": "vor {n} Stunden",
+  "nDaysAgo": "vor {n} Tagen"
 }

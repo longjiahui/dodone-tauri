@@ -182,5 +182,12 @@
   "isReverseScrollCross": "反转垂直滚动至水平",
   "confirmOperation": "操作确认",
   "autoSetTargetByContent": "根据内容自动设置目标值",
-  "detectTargetFailed": "没检测到合适的目标值"
+  "detectTargetFailed": "没检测到合适的目标值",
+  "remark": "备注",
+
+  "nSecondsAgo": "{n}秒前",
+  "nMinutesAgo": "{n}分钟前",
+  "halfHourAgo": "半小时前",
+  "nHoursAgo": "{n}小时前",
+  "nDaysAgo": "{n}天前"
 }

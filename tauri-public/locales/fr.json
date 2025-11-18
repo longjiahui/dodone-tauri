@@ -182,5 +182,12 @@
   "isReverseScrollCross": "Inverser le défilement vertical vers horizontal",
   "confirmOperation": "Confirmer l'opération",
   "autoSetTargetByContent": "Définir automatiquement l'objectif par contenu",
-  "detectTargetFailed": "Aucune valeur cible appropriée détectée"
+  "detectTargetFailed": "Aucune valeur cible appropriée détectée",
+  "remark": "Remarque",
+
+  "nSecondsAgo": "il y a {n} secondes",
+  "nMinutesAgo": "il y a {n} minutes",
+  "halfHourAgo": "il y a une demi-heure",
+  "nHoursAgo": "il y a {n} heures",
+  "nDaysAgo": "il y a {n} jours"
 }

@@ -6,7 +6,7 @@ where
     T: Deserialize<'de>,
     D: Deserializer<'de>,
 {
-    let result: Option<Option<T>> = Deserialize::deserialize(de).map(Some).unwrap();
+    let result: Option<Option<T>> = Deserialize::deserialize(de).map(Some)?;
 
     match result {
         Some(inner) => match inner {

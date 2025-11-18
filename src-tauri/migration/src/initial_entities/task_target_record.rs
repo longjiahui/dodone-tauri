@@ -12,6 +12,9 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: String,
     pub value: NumberType,
+    // 備注
+    #[sea_orm(column_name = "remark", column_type = "Text", nullable)]
+    pub remark: Option<String>,
 
     #[sea_orm(column_name = "recordAt")]
     pub record_at: DateTimeUtc,

@@ -110,6 +110,7 @@ export type TaskTargetRecord = {
   taskId: string;
   value: NumberType;
   recordAt: DateType;
+  remark?: string;
 };
 export type TaskInDay = {
   id: string;

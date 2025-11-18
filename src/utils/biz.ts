@@ -216,9 +216,9 @@ export function task2ChartData(data: ReadOnlyTaskInDayWithExtra): ChartData {
   return {
     // name: (data.type === "CUSTOM" ? data.content : task?.content) as string,
     id: data.id,
-    date: dayjs(data.date).toDate(),
-    start: dayjs(data.startTime).toDate(),
-    end: dayjs(data.endTime).toDate(),
+    date: dayjs(new Date(data.date)).toDate(),
+    start: dayjs(new Date(data.startTime)).toDate(),
+    end: dayjs(new Date(data.endTime)).toDate(),
     color: data.color,
     data,
     // description: task?.description || "",

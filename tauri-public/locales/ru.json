@@ -182,5 +182,12 @@
   "isReverseScrollCross": "Инвертировать вертикальную прокрутку на горизонтальную",
   "confirmOperation": "Подтвердить операцию",
   "autoSetTargetByContent": "Автоматически установить цель по содержанию",
-  "detectTargetFailed": "Подходящее целевое значение не обнаружено"
+  "detectTargetFailed": "Подходящее целевое значение не обнаружено",
+  "remark": "Примечание",
+
+  "nSecondsAgo": "{n} секунд назад",
+  "nMinutesAgo": "{n} минут назад",
+  "halfHourAgo": "полчаса назад",
+  "nHoursAgo": "{n} часов назад",
+  "nDaysAgo": "{n} дней назад"
 }

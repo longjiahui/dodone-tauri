@@ -67,8 +67,13 @@
           <div>{{ recordsTotal }}</div>
         </div>
         <Scrollbar class="stretch" view-class="v gap-2">
-          <template v-if="records.length">
-            <div v-for="r in records">
+          <div v-if="records.length" class="v gap-5">
+            <div v-for="(r, i) in records" :key="r.id" class="v gap-1">
+              <Tooltip :title="formatDateTime(r.recordAt)">
+                <div class="text-light text-sm self-start">
+                  {{ formatDateTimeDescripable($t, r.recordAt) }}
+                </div>
+              </Tooltip>
               <SelectableTag
                 @click="
                   openDialog(EditTaskTargetRecordDialog, {
@@ -77,7 +82,9 @@
                     if (d) {
                       return backend
                         .updateTaskTargetRecordById({ id: r.id, data: d })
-                        .then(() => refreshRecords());
+                        .then((d) => {
+                          Object.assign(records[i], d);
+                        });
                     }
                   })
                 "
@@ -100,10 +107,10 @@
                     },
                   },
                 ]"
-                :content="formatDateTime(r.recordAt)"
+                :content="r.remark"
               ></SelectableTag>
             </div>
-          </template>
+          </div>
           <Empty v-else></Empty>
         </Scrollbar>
       </div>
@@ -139,13 +146,13 @@ import { AnyDialogType } from "@/components/dialog/dialog";
 import { openDialog } from "@/components/dialog/helper";
 import { useTaskStore } from "@/store/task";
 import { backend } from "@/utils/backend";
-import { formatDateTime } from "@/utils/time";
+import { formatDateTime, formatDateTimeDescripable } from "@/utils/time";
 import { DeleteOutlined, EditOutlined } from "@ant-design/icons-vue";
 import EditTaskTargetRecordDialog from "./EditTaskTargetRecordDialog.vue";
 import ConfirmDialog from "@/components/dialog/commonDialog/ConfirmDialog.vue";
 import { dialogs } from "@/components/dialog";
 import { getOptions } from "@/utils/tab";
-import { TaskTargetType } from "@/types";
+import { TaskTargetRecord, TaskTargetType } from "@/types";
 import { defaultTaskTargetType } from "@/const";
 
 use([
@@ -165,11 +172,13 @@ const props = defineProps<{
 
 const taskStore = useTaskStore();
 const task = computed(() => taskStore.tasksDict[props.taskId]);
-const { state: records, execute: refreshRecords } = useAsyncState(
-  () => backend.getTaskTargetRecords({ search: { taskId: props.taskId } }),
-  [],
-  { immediate: true }
-);
+const records = ref<TaskTargetRecord[]>([]);
+async function refreshRecords() {
+  records.value = await backend.getTaskTargetRecords({
+    search: { taskId: props.taskId },
+  });
+}
+watch(() => props.taskId, refreshRecords, { immediate: true });
 const recordsTotal = computed(() =>
   records.value.reduce((sum, r) => sum + +r.value, 0)
 );

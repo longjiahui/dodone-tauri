@@ -9,6 +9,7 @@ use crate::{
     utils::{
         datetime::parse_datetime_string,
         event::{broadcast_batch_upsert_task_target_records, broadcast_delete_task_target_records},
+        option3::Option3,
     },
 };
 
@@ -45,6 +46,7 @@ pub async fn create_task_target_record(
         value: ActiveValue::Set(data.value),
         record_at: ActiveValue::Set(Utc::now()),
         task_id: ActiveValue::Set(data.task_id),
+        remark: ActiveValue::Set(data.remark),
 
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
@@ -84,6 +86,9 @@ pub async fn update_task_target_record_by_id(
     }
     if let Some(record_at) = data.record_at {
         active_model.record_at = ActiveValue::Set(parse_datetime_string(&record_at)?);
+    }
+    if data.remark != Option3::Undefined {
+        active_model.remark = ActiveValue::Set(data.remark.as_option());
     }
 
     active_model.updated_at = ActiveValue::Set(Utc::now());

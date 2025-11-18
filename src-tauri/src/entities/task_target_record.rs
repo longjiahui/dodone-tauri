@@ -3,7 +3,10 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::entities::NumberType;
+use crate::{
+    entities::NumberType,
+    utils::option3::{de_option3, Option3},
+};
 
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
@@ -13,7 +16,9 @@ pub struct Model {
     pub id: String,
     // 使用String的原因是因为原来的数字类型Decimal 在sqlite中非常不准确，小数点会很离谱
     pub value: NumberType,
-
+    // 備注
+    #[sea_orm(column_name = "remark", column_type = "Text", nullable)]
+    pub remark: Option<String>,
     #[sea_orm(column_name = "recordAt")]
     pub record_at: DateTimeUtc,
     #[sea_orm(column_name = "taskId", column_type = "Text")]
@@ -38,10 +43,13 @@ impl ActiveModelBehavior for ActiveModel {}
 pub struct CreateModel {
     pub value: NumberType,
     pub task_id: String,
+    pub remark: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct UpdateModel {
     pub value: Option<NumberType>,
     pub record_at: Option<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub remark: Option3<String>,
 }

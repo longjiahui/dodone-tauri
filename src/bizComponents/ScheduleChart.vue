@@ -948,6 +948,23 @@ const datasInDate = computed(() => {
     dict[k]!.forEach((d) => {
       let placed = false;
       for (const group of collideGroups) {
+        // console.debug(
+        //   `checking for(${taskStore.tasksDict[d.data.taskId]?.content}): `,
+        //   d,
+        //   group.some(
+        //     (other) =>
+        //       (dayjs(d.start).isBefore(dayjs(other.end)) &&
+        //         dayjs(d.start).isAfter(dayjs(other.start))) ||
+        //       (dayjs(d.end).isAfter(dayjs(other.start)) &&
+        //         dayjs(d.end).isBefore(dayjs(other.end))) ||
+        //       dayjs(d.start).isSame(dayjs(other.start)) ||
+        //       dayjs(d.end).isSame(dayjs(other.end)) ||
+        //       (dayjs(d.start).isBefore(dayjs(other.start)) &&
+        //         dayjs(d.end).isAfter(dayjs(other.end)))
+        //   ),
+        //   d.id,
+        //   group
+        // );
         if (
           group.some(
             (other) =>
@@ -1147,8 +1164,14 @@ function handleDataMouseUp() {
       updateTaskInDayById(notificationStore, {
         id: interactData.value.id,
         data: {
-          startTime: interactData.value.start.toISOString(),
-          endTime: interactData.value.end.toISOString(),
+          startTime: makeDayjsByDateTime(
+            interactData.value.date,
+            interactData.value.start
+          ).toISOString(),
+          endTime: makeDayjsByDateTime(
+            interactData.value.date,
+            interactData.value.end
+          ).toISOString(),
           date: interactData.value.date.toISOString(),
         },
       });
@@ -1157,7 +1180,10 @@ function handleDataMouseUp() {
       updateTaskInDayById(notificationStore, {
         id: interactData.value.id,
         data: {
-          startTime: interactData.value.start.toISOString(),
+          startTime: makeDayjsByDateTime(
+            interactData.value.date,
+            interactData.value.start
+          ).toISOString(),
         },
       });
     } else if (interactType.value === "resizeEnd") {
@@ -1165,7 +1191,10 @@ function handleDataMouseUp() {
       updateTaskInDayById(notificationStore, {
         id: interactData.value.id,
         data: {
-          endTime: interactData.value.end.toISOString(),
+          endTime: makeDayjsByDateTime(
+            interactData.value.date,
+            interactData.value.end
+          ).toISOString(),
         },
       });
     }
@@ -1225,13 +1254,14 @@ function handleBizDrop(
               .toDate()
               .toISOString(),
           }),
-          ...(data.startAt
-            ? []
-            : [
-                taskStore.updateTaskById(data.id, {
-                  startAt: m.date(d).toDate().toISOString(),
-                }),
-              ]),
+          // 取消自动设置日历
+          // ...(data.startAt
+          //   ? []
+          //   : [
+          //       taskStore.updateTaskById(data.id, {
+          //         startAt: m.date(d).toDate().toISOString(),
+          //       }),
+          //     ]),
         ])
       )
     ).then((ds) => {
@@ -1248,8 +1278,22 @@ function updateData(
   return updateTaskInDayById(notificationStore, {
     id: chartData.data.id,
     data: {
-      ...(start ? { startTime: start.toISOString() } : {}),
-      ...(end ? { endTime: end.toISOString() } : {}),
+      ...(start
+        ? {
+            startTime: makeDayjsByDateTime(
+              chartData.data.date,
+              start
+            ).toISOString(),
+          }
+        : {}),
+      ...(end
+        ? {
+            endTime: makeDayjsByDateTime(
+              chartData.data.date,
+              end
+            ).toISOString(),
+          }
+        : {}),
     },
   }).then(() =>
     Object.assign(chartData, {

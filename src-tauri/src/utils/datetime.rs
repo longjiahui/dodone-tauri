@@ -18,7 +18,9 @@ pub fn parse_datetime_string(date_str: &str) -> Result<DateTime<Utc>, String> {
 
     // 尝试只有日期的格式
     if let Ok(naive_date) = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d") {
-        let naive_datetime = naive_date.and_hms_opt(0, 0, 0).unwrap();
+        let naive_datetime = naive_date
+            .and_hms_opt(0, 0, 0)
+            .ok_or_else(|| "Invalid time".to_string())?;
         return Ok(Utc.from_utc_datetime(&naive_datetime));
     }
 

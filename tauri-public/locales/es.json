@@ -182,5 +182,12 @@
   "isReverseScrollCross": "Invertir desplazamiento vertical a horizontal",
   "confirmOperation": "Confirmar operación",
   "autoSetTargetByContent": "Establecer objetivo automáticamente por contenido",
-  "detectTargetFailed": "No se detectó un valor objetivo adecuado"
+  "detectTargetFailed": "No se detectó un valor objetivo adecuado",
+  "remark": "Observación",
+
+  "nSecondsAgo": "hace {n} segundos",
+  "nMinutesAgo": "hace {n} minutos",
+  "halfHourAgo": "hace media hora",
+  "nHoursAgo": "hace {n} horas",
+  "nDaysAgo": "hace {n} días"
 }

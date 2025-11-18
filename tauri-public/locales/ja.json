@@ -182,5 +182,12 @@
   "isReverseScrollCross": "垂直スクロールを水平に反転",
   "confirmOperation": "操作の確認",
   "autoSetTargetByContent": "内容から目標値を自動設定",
-  "detectTargetFailed": "適切な目標値が検出されませんでした"
+  "detectTargetFailed": "適切な目標値が検出されませんでした",
+  "remark": "備考",
+
+  "nSecondsAgo": "{n}秒前",
+  "nMinutesAgo": "{n}分前",
+  "halfHourAgo": "30分前",
+  "nHoursAgo": "{n}時間前",
+  "nDaysAgo": "{n}日前"
 }
