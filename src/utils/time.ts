@@ -43,7 +43,9 @@ export function formatDateTimeDescripable(
     // 小于1分钟，显示多少秒前
     const now = localDayjs();
     const diffSeconds = now.diff(val, "second");
-    if (diffSeconds < 60) {
+    if (diffSeconds < 0) {
+      return formatDateTime(d);
+    } else if (diffSeconds < 60) {
       return t("nSecondsAgo", { n: diffSeconds });
     } else if (diffSeconds < 3600) {
       const diffMinutes = now.diff(val, "minute");

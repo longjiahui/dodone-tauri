@@ -232,9 +232,9 @@ const chartOption = computed<() => EChartsOption>(() => {
         containLabel: true,
       },
       xAxis: {
-        type: "category",
+        type: "time",
         show: false,
-        data: [...finalRecords.value].map((d) => formatDateTime(d.recordAt)),
+        // data: [...finalRecords.value].map((d) => new Date(d.recordAt)),
       },
       yAxis: {
         type: "value",
@@ -252,7 +252,7 @@ const chartOption = computed<() => EChartsOption>(() => {
       },
       series: [
         {
-          data: [...finalRecords.value].map((d) => d.value),
+          data: [...finalRecords.value].map((d) => [d.recordAt, d.value]),
           type: "line",
           markLine: {
             // 去掉箭头
