@@ -1,7 +1,7 @@
 import { backend } from "@/utils/backend";
 import { defineStore } from "pinia";
 import { useFetchDataStore } from "./fetchData";
-import { taskEvent } from "./events";
+import { localTaskEvent } from "./events";
 import {
   ReadOnlyTaskGroupWithExtra,
   ReadOnlyTaskWithChildren,
@@ -60,9 +60,9 @@ export const useTaskGroupStore = defineStore("taskGroup", () => {
       }
     });
   }
-  taskEvent.on("createTask", (t) => updateTaskGroupProgress([t]));
-  taskEvent.on("updateTask", (t) => updateTaskGroupProgress([t]));
-  taskEvent.on("deleteTasks", updateTaskGroupProgress);
+  localTaskEvent.on("createTask", (t) => updateTaskGroupProgress([t]));
+  localTaskEvent.on("updateTask", (t) => updateTaskGroupProgress([t]));
+  localTaskEvent.on("deleteTasks", updateTaskGroupProgress);
 
   return {
     taskGroups: readonly(taskGroups),

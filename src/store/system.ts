@@ -2,6 +2,7 @@
 import { backend } from "@/utils/backend";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { defineStore } from "pinia";
+import { backendEvent } from "./events";
 //
 // 关于颜色，现在prefers-color-schema暂时是用不了的，所以需要使用tauri本身的theme接口来做
 export const imageProtocolNamePromise = backend.getImageProtocolName();
@@ -31,7 +32,7 @@ export const useSystemStore = defineStore("systemStore", () => {
   );
 
   // 监听const配置更新
-  backend.on_updateConst((constObject) => {
+  backendEvent.on("updateConst", (constObject) => {
     colorMode.value = constObject.colorMode;
     locale.value = constObject.locale;
   });

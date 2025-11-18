@@ -760,6 +760,7 @@ import { useTaskGroupStore } from "@/store/taskGroup";
 import { calculateTheme } from "@/utils/color";
 import { useI18n } from "vue-i18n";
 import { useNotificationStore } from "@/store/notification";
+import { backendEvent } from "@/store/events";
 
 const props = withDefaults(
   defineProps<{
@@ -887,11 +888,9 @@ function handleUpdateTaskInDays(taskInDays: TaskInDay[]) {
   });
 }
 
-const off_updateTaskInDays = backend.on_updateTaskInDays(
-  handleUpdateTaskInDays
-);
+backendEvent.on("updateTaskInDays", handleUpdateTaskInDays);
 onBeforeUnmount(() => {
-  off_updateTaskInDays.then((d) => d());
+  backendEvent.off("updateTaskInDays", handleUpdateTaskInDays);
 });
 
 function filterData(d: ChartData) {

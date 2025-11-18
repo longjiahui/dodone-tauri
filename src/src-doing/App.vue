@@ -12,6 +12,7 @@ import { dayjs, makeDayjsByDateTime } from "@/utils/time";
 import { calculateTheme } from "@/utils/color";
 import { themeHSColorL, themeHSColorS } from "@/const";
 import { ForwardOutlined } from "@ant-design/icons-vue";
+import { backendEvent } from "@/store/events";
 
 const params = useUrlSearchParams<{
   type: DoingWindowType;
@@ -57,14 +58,10 @@ const nextTask = computed<ReadOnlyTaskWithChildren | null>(() => {
 });
 const finalTask = computed(() => currentTask.value || nextTask.value);
 
-const off_setDoingWindowParams = backend.on_setDoingWindowParams(
-  handleSetDoingWindowParams
-);
-const off_updateTaskInDays = backend.on_updateTaskInDays(refreshTasks);
-const off_deleteTaskInDay = backend.on_deleteTaskInDay(refreshTasks);
-const off_batchUpsertTasks = backend.on_batchUpsertTasks(
-  handleBatchUpsertTasks
-);
+backendEvent.on("setDoingWindowParams", handleSetDoingWindowParams);
+backendEvent.on("updateTaskInDays", refreshTasks);
+backendEvent.on("deleteTaskInDay", refreshTasks);
+backendEvent.on("batchUpsertTasks", handleBatchUpsertTasks);
 
 const now = ref(dayjs());
 const inst = setInterval(() => (now.value = dayjs()), 1000);
@@ -172,10 +169,10 @@ async function handleBatchUpsertTasks(d: BatchEditTasksResult) {
 }
 
 onBeforeUnmount(() => {
-  off_setDoingWindowParams.then((d) => d());
-  off_updateTaskInDays.then((d) => d());
-  off_deleteTaskInDay.then((d) => d());
-  off_batchUpsertTasks.then((d) => d());
+  backendEvent.off("setDoingWindowParams", handleSetDoingWindowParams);
+  backendEvent.off("updateTaskInDays", refreshTasks);
+  backendEvent.off("deleteTaskInDay", refreshTasks);
+  backendEvent.off("batchUpsertTasks", handleBatchUpsertTasks);
 });
 async function refreshTasks() {
   const val = params.type;

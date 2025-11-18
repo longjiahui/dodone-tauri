@@ -197,6 +197,7 @@ import {
 import { backend } from "@/utils/backend";
 import { type TaskSort } from "./sort";
 import { queueAsyncCall } from "@/utils/promise";
+import { backendEvent } from "@/store/events";
 
 const props = defineProps<{
   modelValue: ReadOnlyTaskWithChildren[];
@@ -286,7 +287,7 @@ watch(
 );
 
 // 补充任务的更新、上面是array的更新
-// backend.on_batchUpsertTasks((_, updates) => {
+// backendEvent.on('batchUpsertTasks', (_, updates) => {
 //   updates.forEach((u) => {
 //     const t = showedTasks.value.find((t) => t.id === u.id)
 //     if (t) {
@@ -294,13 +295,14 @@ watch(
 //     }
 //   })
 // })
-const off_updateTaskInDays = backend.on_updateTaskInDays(refreshShowedTasks);
-const off_deleteTaskInDay = backend.on_deleteTaskInDay(refreshShowedTasks);
-const off_createTaskInDay = backend.on_createTaskInDay(refreshShowedTasks);
+backendEvent.on("updateTaskInDays", refreshShowedTasks);
+backendEvent.on("deleteTaskInDay", refreshShowedTasks);
+backendEvent.on("createTaskInDay", refreshShowedTasks);
+
 onBeforeUnmount(() => {
-  off_updateTaskInDays.then((d) => d());
-  off_deleteTaskInDay.then((d) => d());
-  off_createTaskInDay.then((d) => d());
+  backendEvent.off("updateTaskInDays", refreshShowedTasks);
+  backendEvent.off("deleteTaskInDay", refreshShowedTasks);
+  backendEvent.off("createTaskInDay", refreshShowedTasks);
 });
 
 const pendingFactor = computed(() =>

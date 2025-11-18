@@ -47,15 +47,15 @@ export function formatDateTimeDescripable(
       return formatDateTime(d);
     } else if (diffSeconds < 60) {
       return t("nSecondsAgo", { n: diffSeconds });
-    } else if (diffSeconds < 3600) {
+    } else if (diffSeconds < 60 * 30) {
       const diffMinutes = now.diff(val, "minute");
       return t("nMinutesAgo", { n: diffMinutes });
-    } else if (diffSeconds < 3600 * 30) {
+    } else if (diffSeconds < 60 * 60) {
       return t("halfHourAgo");
-    } else if (diffSeconds < 3600 * 24) {
+    } else if (diffSeconds < 60 * 60 * 24) {
       const diffHours = now.diff(val, "hour");
       return t("nHoursAgo", { n: diffHours });
-    } else if (diffSeconds < 3600 * 24 * 30) {
+    } else {
       const diffDays = now.diff(val, "day");
       if (diffDays < 4) {
         return t("nDaysAgo", { n: diffDays });

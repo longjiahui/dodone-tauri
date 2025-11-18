@@ -71,7 +71,7 @@
             <div v-for="(r, i) in records" :key="r.id" class="v gap-1">
               <Tooltip :title="formatDateTime(r.recordAt)">
                 <div class="text-light text-sm self-start">
-                  {{ formatDateTimeDescripable($t, r.recordAt) }}
+                  {{ formatDateTimeDescripable($t, new Date(r.recordAt)) }}
                 </div>
               </Tooltip>
               <SelectableTag

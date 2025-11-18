@@ -6,7 +6,7 @@ import { backend } from "@/utils/backend";
 import { groupBy } from "@/utils/groupBy";
 import { defineStore } from "pinia";
 import { useFetchDataStore } from "./fetchData";
-import { taskEvent } from "./events";
+import { backendEvent, localTaskEvent } from "./events";
 import { sortTaskAnchors } from "@/utils/biz";
 
 export const useTaskAnchorStore = defineStore("taskAnchor", () => {
@@ -39,18 +39,18 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
       taskAnchor2TaskAnchorWithTaskGroupId(tv)
     );
   });
-  backend.on_deleteTaskGroup((g) => {
+  backendEvent.on("deleteTaskGroup", (g) => {
     taskAnchors.value = taskAnchors.value.filter(
       (tv) => tv.taskGroupId !== g.id
     );
   });
-  taskEvent.on("updateTask", (t) => {
+  localTaskEvent.on("updateTask", (t) => {
     const found = taskAnchorsDictByTaskId.value[t.id];
     if (found) {
       found.taskGroupId = t.groupId;
     }
   });
-  taskEvent.on("deleteTasks", (ts) => {
+  localTaskEvent.on("deleteTasks", (ts) => {
     const ids = ts.map((t) => t.id);
     taskAnchors.value = taskAnchors.value.filter(
       (tv) => !ids.includes(tv.taskId)

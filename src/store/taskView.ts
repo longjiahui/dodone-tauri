@@ -12,7 +12,7 @@ import {
   TVGCDateTimeSelect,
   type TaskViewTask,
 } from "@/types";
-import { taskEvent } from "./events";
+import { backendEvent, localTaskEvent } from "./events";
 import {
   calculateFinishLeaveTasksFactor,
   calculateTotalLeaveTasksFactor,
@@ -125,7 +125,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
       throw new Error(`Task view with id ${taskViewId} not found`);
     }
   }
-  backend.on_createTaskViewTask(async (taskViewTask) => {
+  backendEvent.on("createTaskViewTask", async (taskViewTask) => {
     // })
     // taskViewEvent.on("createTaskViewTask", (taskViewTask) => {
     const item = initTaskViewTasksMapIfNeeded(
@@ -151,7 +151,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
       _updateTaskViewFactorProgress(taskViewTask.taskViewId);
     }
   }
-  backend.on_deleteTaskGroup(async (group) => {
+  backendEvent.on("deleteTaskGroup", async (group) => {
     for (const tv of taskViews.value) {
       const item = initTaskViewTasksMapIfNeeded(tv);
       if (item.loaded) {
@@ -160,7 +160,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
       }
     }
   });
-  backend.on_deleteTaskViewTasks(async (ts) => {
+  backendEvent.on("deleteTaskViewTasks", async (ts) => {
     // taskViewEvent.on("deleteTaskViewTask", (taskViewTask) => {
     return _deleteTaskViewTasks(ts);
   });
@@ -204,9 +204,9 @@ export const useTaskViewStore = defineStore("taskView", () => {
       }
     });
   }
-  taskEvent.on("createTask", _updateTask);
-  taskEvent.on("updateTask", _updateTask);
-  taskEvent.on("deleteTasks", (ts) => {
+  localTaskEvent.on("createTask", _updateTask);
+  localTaskEvent.on("updateTask", _updateTask);
+  localTaskEvent.on("deleteTasks", (ts) => {
     const ids = ts.map((t) => t.id);
     const autoTaskViews = taskViews.value.filter((tv) => tv.type === "AUTO");
     autoTaskViews.forEach((tv) => {
@@ -219,7 +219,7 @@ export const useTaskViewStore = defineStore("taskView", () => {
       }
     });
   });
-  // taskEvent.on("deleteTask", async (t) => {
+  // localTaskEvent.on("deleteTask", async (t) => {
   //   await Promise.all(
   //     t.taskViewTasks.map((d) => {
   //       taskViewEvent.emit("deleteTaskViewTask", d)

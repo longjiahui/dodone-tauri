@@ -22,7 +22,7 @@ import { dayjs } from "@/utils/time";
 import { dialogs } from "@/components/dialog";
 import { cloneTasks, sortTasks } from "@/utils/biz";
 import { useFetchDataStore } from "./fetchData";
-import { taskEvent } from "./events";
+import { backendEvent, localTaskEvent } from "./events";
 
 export const useTaskStore = defineStore("task", () => {
   const flatTasks = ref<TaskWithChildren[]>([]);
@@ -116,15 +116,19 @@ export const useTaskStore = defineStore("task", () => {
     const updateTasks = updateTaskLocals.map((d) =>
       taskLocal2TaskWithChildren(d)
     );
-    promises.push(...createTasks.map((t) => taskEvent.emit("createTask", t)));
-    promises.push(...updateTasks.map((t) => taskEvent.emit("updateTask", t)));
+    promises.push(
+      ...createTasks.map((t) => localTaskEvent.emit("createTask", t))
+    );
+    promises.push(
+      ...updateTasks.map((t) => localTaskEvent.emit("updateTask", t))
+    );
     // parents
     promises.push(
       ...[...createTasks, ...updateTasks].map(async (t) => {
         if (t.parentId) {
           const parent = tasksDict.value[t.parentId];
           if (parent) {
-            return taskEvent.emit("updateTask", parent);
+            return localTaskEvent.emit("updateTask", parent);
           }
         }
       })
@@ -132,7 +136,7 @@ export const useTaskStore = defineStore("task", () => {
     await Promise.all(promises);
   }
 
-  backend.on_batchUpsertTasks(async (d) => {
+  backendEvent.on("batchUpsertTasks", async (d) => {
     const { created, updated } = d || {};
     if (created?.length || updated?.length) {
       return _upsertTasks2Tree(created || [], updated || []);
@@ -202,7 +206,7 @@ export const useTaskStore = defineStore("task", () => {
           );
         }
       }
-      promises.push(taskEvent.emit("deleteTasks", deletedTasks));
+      promises.push(localTaskEvent.emit("deleteTasks", deletedTasks));
       await Promise.all(promises);
     } else {
       console.warn(`Task with id ${taskId} not found for deletion.`);
@@ -224,19 +228,19 @@ export const useTaskStore = defineStore("task", () => {
     const existingTask = tasksDict.value[taskId];
     if (existingTask) {
       Object.assign(existingTask, task);
-      await taskEvent.emit("updateTask", existingTask);
+      await localTaskEvent.emit("updateTask", existingTask);
     } else {
       console.warn(`Task with id ${taskId} not found for updateTask.`);
     }
   }
-  backend.on_createTaskViewTask(async (t) => {
+  backendEvent.on("createTaskViewTask", async (t) => {
     // })
     // taskViewEvent.on("createTaskViewTask", async (t) => {
     await updateLocalTask(t.taskId, {
       taskViewTasks: [...(tasksDict.value[t.taskId]?.taskViewTasks || []), t],
     });
   });
-  backend.on_deleteTaskViewTasks(async (ts) => {
+  backendEvent.on("deleteTaskViewTasks", async (ts) => {
     // taskViewEvent.on("deleteTaskViewTask", async (t) => {
     await Promise.all(
       ts.map((t) =>
@@ -249,14 +253,14 @@ export const useTaskStore = defineStore("task", () => {
     );
   });
 
-  backend.on_deleteTask(async (task) => {
+  backendEvent.on("deleteTask", async (task) => {
     return _deleteTask2Tree(task.id);
   });
-  backend.on_deleteTaskGroup(async (group) => {
+  backendEvent.on("deleteTaskGroup", async (group) => {
     const needDeletes = flatTasks.value.filter((t) => t.groupId === group.id);
     await Promise.all(
       needDeletes.map(async (d) => {
-        await taskEvent.emit("deleteTasks", [d]);
+        await localTaskEvent.emit("deleteTasks", [d]);
         delete tasksDict.value[d.id];
       })
     );
@@ -276,14 +280,14 @@ export const useTaskStore = defineStore("task", () => {
       const newParent = newParentId ? tasksDict.value[newParentId] : null;
       if (oldParent) {
         oldParent.children = oldParent.children.filter((c) => c.id !== id);
-        taskEvent.emit("updateTask", oldParent);
+        localTaskEvent.emit("updateTask", oldParent);
       } else {
         // 从根节点删除
         treeTasks.value = treeTasks.value.filter((c) => c.id !== id);
       }
       if (newParent) {
         newParent.children.push(task);
-        taskEvent.emit("updateTask", newParent);
+        localTaskEvent.emit("updateTask", newParent);
       } else {
         // 加到根节点
         treeTasks.value.push(task);
@@ -528,7 +532,7 @@ export const useTaskStore = defineStore("task", () => {
       if (task && task.nextTask) {
         return backend.deleteNextTaskById({ id: task.nextTask.id }).then(() => {
           task.nextTask = null;
-          taskEvent.emit("updateTask", task);
+          localTaskEvent.emit("updateTask", task);
         });
       } else {
         throw new Error("task not found: " + taskId);

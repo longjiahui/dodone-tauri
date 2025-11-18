@@ -116,7 +116,10 @@
                     <AimOutlined></AimOutlined>
                   </Button>
 
-                  <div class="w-[64px]" v-if="taskRecords.length > 1">
+                  <div
+                    class="w-[64px]"
+                    v-if="taskRecords.length > 1 && !isFinished"
+                  >
                     <FactorProgressBar
                       :finish="targetFinished"
                       :total="targetTotal"
@@ -125,8 +128,10 @@
                     ></FactorProgressBar>
                   </div>
                   <div>
-                    {{ isNaN(latestRecordValue) ? "_" : latestRecordValue }}
-                    /
+                    <template v-if="!isFinished">
+                      {{ isNaN(latestRecordValue) ? "_" : latestRecordValue }}
+                      /
+                    </template>
                     {{ modelValue.target }}
                   </div>
                 </div>
@@ -300,6 +305,7 @@ import { useTaskViewStore } from "@/store/taskView";
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { useTheme } from "@/utils/color";
 import { backend } from "@/utils/backend";
+import { backendEvent } from "@/store/events";
 
 const props = withDefaults(
   defineProps<{
@@ -360,7 +366,7 @@ const theme = useTheme(
 
 const taskRecords = ref<TaskTargetRecord[]>([]);
 async function refreshTaskRecords() {
-  if (props.modelValue.target != null) {
+  if (props.modelValue.target != null && !isFinished.value) {
     taskRecords.value = await backend.getTaskTargetRecords({
       search: { taskId: props.modelValue.id },
     });
@@ -369,13 +375,11 @@ async function refreshTaskRecords() {
   }
 }
 watch(() => props.modelValue.id, refreshTaskRecords, { immediate: true });
-const off_batchUpsertTaskTargetRecords =
-  backend.on_batchUpsertTaskTargetRecords(refreshTaskRecords);
-const off_deleteTaskTargetRecords =
-  backend.on_deleteTaskTargetRecords(refreshTaskRecords);
+backendEvent.on("batchUpsertTaskTargetRecords", refreshTaskRecords);
+backendEvent.on("deleteTaskTargetRecords", refreshTaskRecords);
 onBeforeUnmount(() => {
-  off_batchUpsertTaskTargetRecords.then((d) => d());
-  off_deleteTaskTargetRecords.then((d) => d());
+  backendEvent.off("batchUpsertTaskTargetRecords", refreshTaskRecords);
+  backendEvent.off("deleteTaskTargetRecords", refreshTaskRecords);
 });
 const latestRecordValue = computed(() => {
   if (props.modelValue.targetType === "DEFAULT") {
