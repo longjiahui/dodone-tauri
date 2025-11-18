@@ -1,9 +1,14 @@
 import api from "@/api";
+import { error } from "@tauri-apps/plugin-log";
 import { copy } from "fast-copy";
 
 function shortid() {
   return Math.random().toString(36).slice(-6);
 }
+
+// async function getDialogs() {
+//   return import("@/components/dialog").then((d) => d.dialogs);
+// }
 
 export const backend = Object.entries(api).reduce(
   (t, [k, v]) => {
@@ -17,10 +22,23 @@ export const backend = Object.entries(api).reduce(
           ...(k.startsWith("on_") ? args : copy(args))
         );
         if (ret instanceof Promise) {
-          return ret.then((d) => {
-            console.debug(`[${id}]backend call ${k} result`, d);
-            return d;
-          });
+          return ret
+            .then((d) => {
+              console.debug(`[${id}]backend call ${k} result`, d);
+              return d;
+            })
+            .catch(async (err) => {
+              const errorMessage = `[${id}]backend call ${k} error: ${err}`;
+              console.error(errorMessage);
+              error(errorMessage);
+              try {
+                error(
+                  `${id}backend call ${k} parameters: ${JSON.stringify(args)}`
+                );
+              } catch (e) {
+                error("call args stringify failed!");
+              }
+            });
         } else {
           return ret;
         }
