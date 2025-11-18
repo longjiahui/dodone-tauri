@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
@@ -8,10 +6,9 @@ use tauri::{
 
 use crate::{
     constants::{
-        get_app_data_dir, get_database_dir, get_image_dir, get_image_protocol_path,
-        get_public_resource, IMAGE_PROTOCOL_NAME,
+        get_app_data_dir, get_database_dir, get_image_dir, get_public_resource, IMAGE_PROTOCOL_NAME,
     },
-    database::{init_database, make_db_state, DbState},
+    database::{init_database, make_db_state},
 };
 
 mod constants;
@@ -22,6 +19,14 @@ mod utils;
 mod commands;
 
 const DEFAULT_PRIMARY_WINDOW_LABEL: &str = "main";
+
+fn focus_primary_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
+        let _ = window.show();
+        let _ = window.set_focus();
+        let _ = window.unminimize();
+    }
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -43,22 +48,37 @@ pub fn run() {
                 .tooltip(app.package_info().name.clone())
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
+                .on_tray_icon_event(|ctx, event| {
+                    println!("tray icon event: {:?}", event);
+                    match event {
+                        tauri::tray::TrayIconEvent::Click {
+                            button_state,
+                            button,
+                            ..
+                        } => {
+                            if button_state == tauri::tray::MouseButtonState::Up {
+                                if button == tauri::tray::MouseButton::Left {
+                                    focus_primary_window(&ctx.app_handle());
+                                } else if button == tauri::tray::MouseButton::Right {
+                                    // do nothing, show menu
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                })
                 .on_menu_event(|app, event| match event.id.as_ref() {
                     "quit" => {
                         app.exit(0);
                     }
                     "open_primary_window" => {
-                        if let Some(window) = app.get_webview_window(DEFAULT_PRIMARY_WINDOW_LABEL) {
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                            let _ = window.unminimize();
-                        }
+                        focus_primary_window(&app);
                     }
                     _ => {
                         println!("menu item {:?} not handled", event.id);
                     }
                 })
-                .show_menu_on_left_click(true)
+                // .show_menu_on_left_click(true)
                 .build(app)?;
 
             let handle = app.handle().clone();
