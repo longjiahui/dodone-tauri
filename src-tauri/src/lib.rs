@@ -34,13 +34,8 @@ pub fn run() {
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(tauri_plugin_log::log::LevelFilter::Info)
-                .target(tauri_plugin_log::Target::new(
-                    tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("logs".to_string()),
-                    },
-                ))
-                .max_file_size(100_000 /* bytes */)
-                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(5))
+                .max_file_size(50_000 /* bytes */)
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(3))
                 .build(),
         )
         .plugin(tauri_plugin_dialog::init())
