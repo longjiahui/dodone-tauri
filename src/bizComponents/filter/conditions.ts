@@ -86,7 +86,7 @@ export function useDefinedConditions() {
         getValue() {
           return dialogs
             .SelectDialog({ options: taskGroupOptions })
-            .finishPromise((d) => (d ? [d.id] : undefined));
+            .finishPromise((d) => (d ? [d.id as string] : undefined));
         },
       }),
       state: createCondition<[boolean]>({
@@ -100,16 +100,16 @@ export function useDefinedConditions() {
             .SelectDialog({
               options: [
                 {
-                  id: true,
+                  id: "true",
                   name: t("done"),
                 },
                 {
-                  id: false,
+                  id: "false",
                   name: t("undone"),
                 },
               ],
             })
-            .finishPromise((d) => (d ? [d.id] : undefined));
+            .finishPromise((d) => (d ? [d.id === "true"] : undefined));
         },
       }),
       // priority: createCondition<[[number, number]]>({
@@ -198,16 +198,16 @@ export function useDefinedConditions() {
             .SelectDialog({
               options: [
                 {
-                  id: true,
+                  id: "true",
                   name: t("hasChildren"),
                 },
                 {
-                  id: false,
+                  id: "false",
                   name: t("noChildren"),
                 },
               ],
             })
-            .finishPromise((d) => (d ? [d.id] : undefined));
+            .finishPromise((d) => (d ? [d.id === "true"] : undefined));
         },
       }),
       view: createCondition<[string]>({
@@ -224,7 +224,7 @@ export function useDefinedConditions() {
         getValue() {
           return dialogs
             .SelectDialog({ options: taskViewOptions })
-            .finishPromise((d) => (d ? [d.id] : undefined));
+            .finishPromise((d) => (d ? [d.id as string] : undefined));
         },
       }),
       contentAndDescription: createCondition<[string]>({

@@ -193,7 +193,7 @@
                         () =>
                           dialogs.SelectTaskDialog().finishPromise((d) => {
                             if (d) {
-                              c.value = d;
+                              c.value = d.taskId;
                             }
                           })
                       "

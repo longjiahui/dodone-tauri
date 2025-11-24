@@ -146,6 +146,8 @@
       <ToolItem
         :tooltip="$t('targetValue')"
         :icon="AimOutlined"
+        :visible-disable-controller="tooltipVisibleDisabledController"
+        @click="handleEditTaskTarget(task)"
         :menus="[
           {
             name: $t('autoSetTargetByContent'),
@@ -185,9 +187,11 @@
                 groupSelectable: true,
                 self: realTask,
               })
-              .finishPromise((id) => {
-                if (id !== undefined) {
-                  return taskStore.updateTaskParent(realTask!.id, id);
+              .finishPromise((d) => {
+                if (d) {
+                  return taskStore.updateTaskParent(realTask!.id, d.taskId, {
+                    groupId: d.groupId,
+                  });
                 }
               })
           "

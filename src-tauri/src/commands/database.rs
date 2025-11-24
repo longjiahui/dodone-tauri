@@ -1,5 +1,5 @@
 use crate::{
-    constants::{get_const_current_db_name, DEFAULT_DATABASE_FILE_NAME},
+    constants::{get_const_current_db_name, DATABASEFILE_EXTENSION, DEFAULT_DATABASE_FILE_NAME},
     database::{create_db, delete_db, shift_database},
 };
 
@@ -19,7 +19,9 @@ pub fn get_databases(app_handle: tauri::AppHandle) -> Result<Vec<String>, String
         for entry in std::fs::read_dir(db_dir).map_err(|e| e.to_string())? {
             let entry = entry.map_err(|e| e.to_string())?;
             let path = entry.path();
-            if path.is_file() {
+            if path.is_file()
+                && path.extension().and_then(|s| s.to_str()) == Some(DATABASEFILE_EXTENSION)
+            {
                 if let Some(file_name) = path.file_name() {
                     if let Some(file_name_str) = file_name.to_str() {
                         db_files.push(file_name_str.to_string());

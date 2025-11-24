@@ -17,6 +17,7 @@ pub fn get_database_dir(app: &tauri::AppHandle) -> std::path::PathBuf {
     path
 }
 
+pub const DATABASEFILE_EXTENSION: &str = "dodone";
 pub const DEFAULT_DATABASE_FILE_NAME: &str = "default.dodone";
 
 pub fn get_database_path(app: &tauri::AppHandle, file: &str) -> std::path::PathBuf {

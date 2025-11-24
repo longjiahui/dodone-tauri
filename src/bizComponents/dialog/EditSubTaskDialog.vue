@@ -6,7 +6,7 @@
         v-focus
         :placeholder="$t('taskContentInputPlaceholder')"
         v-model="taskContent"
-        @keyup.enter="handleSaveSubTask"
+        @enter="handleSaveSubTask"
       ></Input>
       <TaskListWithTools
         class="stretch"

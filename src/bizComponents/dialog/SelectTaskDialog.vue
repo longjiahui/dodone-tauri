@@ -18,7 +18,18 @@
               :title="taskGroup?.name"
               :content="taskGroup?.description"
               :selected="selectedId === null"
-            ></SelectableTag>
+            >
+              <template #title-prefix>
+                <div
+                  :class="[
+                    'px-2 rounded',
+                    selectedId === null ? 'bg-primary-dark' : 'bg-light-4',
+                  ]"
+                >
+                  {{ $t("taskGroup") }}
+                </div>
+              </template>
+            </SelectableTag>
             <Tree :loop-datas="tasks" default-expand-all>
               <template #default="{ item }">
                 <div class="p-1">
@@ -28,6 +39,9 @@
                     :content="item.description"
                     @click="selectedId = item.id"
                   >
+                    <template #title-prefix v-if="item.state === 'DONE'">
+                      <CheckCircleOutlined></CheckCircleOutlined>
+                    </template>
                   </SelectableTag>
                 </div>
               </template>
@@ -44,7 +58,12 @@
           (!!selectedId && !taskStore.tasksDict[selectedId!])
         "
         type="primary"
-        @click="dialog.finish(selectedId!)"
+        @click="
+          dialog.finish({
+            taskId: selectedId as string | null,
+            groupId: selectedtaskGroupId,
+          })
+        "
         >{{ $t("resolve") }}</Button
       >
     </template>
@@ -52,47 +71,63 @@
 </template>
 
 <script setup lang="ts">
-import { DialogType } from "@/components/dialog/dialog"
-import { useTaskStore } from "@/store/task"
-import { useTaskGroupStore } from "@/store/taskGroup"
-import { ReadOnlyTaskWithChildren } from "@/types"
-import { mapTree } from "@/utils/traverse"
+import { DialogType } from "@/components/dialog/dialog";
+import { useTaskStore } from "@/store/task";
+import { useTaskGroupStore } from "@/store/taskGroup";
+import { ReadOnlyTaskWithChildren } from "@/types";
+import { sortTasks } from "@/utils/biz";
+import { mapTree } from "@/utils/traverse";
+import { CheckCircleOutlined } from "@ant-design/icons-vue";
 
 const props = defineProps<{
-  dialog: DialogType<any, string | null>
+  dialog: DialogType<
+    any,
+    {
+      taskId: string | null;
+      groupId: string;
+    }
+  >;
 
-  groupSelectable?: boolean
-  self?: ReadOnlyTaskWithChildren
-}>()
+  groupSelectable?: boolean;
+  self?: ReadOnlyTaskWithChildren;
+}>();
 
-const taskStore = useTaskStore()
-const taskGroupStore = useTaskGroupStore()
+const taskStore = useTaskStore();
+const taskGroupStore = useTaskGroupStore();
 
 const taskGroup = computed(() =>
-  taskGroupStore.taskGroups.find((g) => g.id === finalGroupId.value),
-)
+  taskGroupStore.taskGroups.find((g) => g.id === finalGroupId.value)
+);
 // const tasks = computed(() =>
 //   taskStore.treeTasks.filter((t) => t.groupId === props.self.groupId),
 // )
-const tasks = computed(() =>
-  props.self?.id
-    ? mapTree(
-        taskStore.treeTasksGroupByTaskGroupId[finalGroupId.value]?.slice() ||
-          [],
-        (t) => ({ ...t }),
-        {
-          preFilter: (t) =>
-            t.id !== props.self!.id && t.groupId === props.self!.groupId,
-        },
-      )
-    : taskStore.treeTasksGroupByTaskGroupId[finalGroupId.value]?.slice() || [],
-)
-const selectedId = ref<string | null>()
+const tasks = computed(() => {
+  return mapTree(
+    taskStore.treeTasksGroupByTaskGroupId[finalGroupId.value]?.slice() || [],
+    (t) => ({ ...t }),
+    {
+      ...(props.self?.id
+        ? {
+            preFilter: (t) =>
+              t.id !== props.self!.id && t.groupId === props.self!.groupId,
+          }
+        : {}),
+      sort: sortTasks,
+    }
+  );
+});
+const selectedId = ref<string | null>();
+const selectedtaskGroupId = computed(
+  () =>
+    (selectedId.value != null
+      ? taskStore.tasksDict[selectedId.value]?.groupId
+      : null) ?? finalGroupId.value
+);
 
-const currentGroupId = ref<string | undefined>(props.self?.groupId)
+const currentGroupId = ref<string | undefined>(props.self?.groupId);
 const finalGroupId = computed(
   () =>
     taskGroupStore.taskGroups.find((g) => g.id === currentGroupId.value)?.id ??
-    taskGroupStore.taskGroups[0]?.id,
-)
+    taskGroupStore.taskGroups[0]?.id
+);
 </script>
