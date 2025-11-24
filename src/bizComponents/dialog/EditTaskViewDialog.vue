@@ -268,7 +268,7 @@
           ></Switch>
           <div>{{ tabs[1].title }}</div>
         </div>
-        <div class="stretch v" v-if="currentTab === 'SCRIPT'">
+        <div class="stretch v overflow-auto" v-if="currentTab === 'SCRIPT'">
           <!-- <Textarea class="stretch" v-model="data.autoScript!"></Textarea> -->
           <JSEditor v-model="data.autoScript!"></JSEditor>
         </div>

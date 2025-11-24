@@ -6,7 +6,7 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isLeapYear from "dayjs/plugin/isLeapYear";
 import weekOfYear from "dayjs/plugin/weekOfYear";
 import isToday from "dayjs/plugin/isToday";
-import weekday from "dayjs/plugin/weekday";
+import isoWeek from "dayjs/plugin/isoWeek";
 import isBetween from "dayjs/plugin/isBetween";
 import { useI18n } from "vue-i18n";
 localDayjs.extend(relativeTime);
@@ -15,7 +15,7 @@ localDayjs.extend(weekOfYear);
 localDayjs.extend(isToday);
 localDayjs.extend(isSameOrAfter);
 localDayjs.extend(isSameOrBefore);
-localDayjs.extend(weekday);
+localDayjs.extend(isoWeek);
 localDayjs.extend(isBetween);
 
 declare global {

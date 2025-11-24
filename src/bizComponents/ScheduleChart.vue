@@ -240,7 +240,7 @@
                     : ' ',
                 ]"
               >
-                {{ d }} {{ weekdayCH[(m.date(d).weekday() - 1 + 7) % 7] }}
+                {{ d }} {{ weekdayCH[m.date(d).isoWeekday() - 1] }}
               </div>
               <div
                 v-if="

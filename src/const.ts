@@ -85,15 +85,16 @@ export const taskViewPresets = {
     defineMode: "SCRIPT",
     autoScript: `t => {
   if(t.startAt || t.endAt){
-    const weekBetween = [dayjs().startOf('week'), dayjs().endOf('week')]
+    const weekBetween = [dayjs().startOf('isoWeek'), dayjs().endOf('isoWeek')]
     if(!(t.startAt && t.endAt)){
-      const d = t.startAt || t.endAt
-      if(dayjs(d).isBetween(...weekBetween)){
+      const d = dayjs(new Date(t.startAt) || new Date(t.endAt)).startOf('isoWeek')
+      if(d.isSameOrAfter(weekBetween[0]) && d.isSameOrBefore(weekBetween[1])){
         return true
       }
     }else{
       // both startAt endAt
-      return dayjs(t.endAt).isBetween(...weekBetween)
+      const d = dayjs(t.endAt).startOf('isoWeek')
+      return d.isSameOrAfter(weekBetween[0]) && d.isSameOrBefore(weekBetween[1])
     }
   }
   return false
