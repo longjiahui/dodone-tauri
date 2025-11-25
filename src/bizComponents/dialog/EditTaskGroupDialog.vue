@@ -37,7 +37,7 @@
               ? await taskGroupStore.updateTaskGroupById(taskGroup.id, {
                   name: group.name,
                   description: group.description,
-                  icon: group.icon,
+                  icon: group.icon || null,
                   color: group.color.toString(),
                 })
               : await taskGroupStore.createTaskGroup({ data: group });

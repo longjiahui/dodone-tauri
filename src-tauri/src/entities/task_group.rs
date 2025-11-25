@@ -3,6 +3,8 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::utils::option3::{de_option3, Option3};
+
 #[sea_orm::model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "TaskGroup")]
@@ -45,8 +47,12 @@ pub struct CreateModel {
 pub struct UpdateModel {
     pub color: Option<String>,
     pub name: Option<String>,
-    pub icon: Option<Option<String>>,
-    pub description: Option<Option<String>>,
-    pub is_archived: Option<Option<bool>>,
-    pub is_hide_anchors: Option<Option<bool>>,
+
+    pub is_archived: Option<bool>,
+    pub is_hide_anchors: Option<bool>,
+
+    #[serde(default, deserialize_with = "de_option3")]
+    pub icon: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub description: Option3<String>,
 }

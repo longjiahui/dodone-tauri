@@ -5,7 +5,10 @@ use serde_json::Value;
 use crate::{
     database::{get_db_manage, DbState},
     entities::{prelude::TaskGroup, task_group, OrderModel},
-    utils::event::{broadcast_create_task_group, broadcast_delete_task_group},
+    utils::{
+        event::{broadcast_create_task_group, broadcast_delete_task_group},
+        option3::Option3,
+    },
 };
 
 #[tauri::command]
@@ -82,26 +85,17 @@ pub async fn update_task_group_by_id(
     if let Some(name) = data.name {
         active_model.name = ActiveValue::Set(name);
     }
-    if let Some(icon) = data.icon {
-        active_model.icon = ActiveValue::Set(icon);
+    if data.icon != Option3::Undefined {
+        active_model.icon = ActiveValue::Set(data.icon.as_option());
     }
-    if let Some(description) = data.description {
-        active_model.description = ActiveValue::Set(description);
+    if data.description != Option3::Undefined {
+        active_model.description = ActiveValue::Set(data.description.as_option());
     }
     if let Some(is_archived) = data.is_archived {
-        active_model.is_archived = ActiveValue::Set(if let Some(is_archived) = is_archived {
-            is_archived
-        } else {
-            false
-        });
+        active_model.is_archived = ActiveValue::Set(is_archived);
     }
     if let Some(is_hide_anchors) = data.is_hide_anchors {
-        active_model.is_hide_anchors =
-            ActiveValue::Set(if let Some(is_hide_anchors) = is_hide_anchors {
-                is_hide_anchors
-            } else {
-                false
-            });
+        active_model.is_hide_anchors = ActiveValue::Set(is_hide_anchors);
     }
 
     active_model.updated_at = ActiveValue::Set(Utc::now());
