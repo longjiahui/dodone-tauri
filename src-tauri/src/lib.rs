@@ -184,7 +184,7 @@ pub fn run() {
             commands::task_anchor::get_task_anchors,
             commands::task_anchor::create_task_anchor,
             commands::task_anchor::delete_task_anchor_by_id,
-            commands::task_anchor::change_task_anchor_orders,
+            commands::task_anchor::create_and_change_task_anchor_orders,
             // task view task commands
             commands::task_view_task::get_task_view_tasks,
             commands::task_view_task::create_task_view_task,

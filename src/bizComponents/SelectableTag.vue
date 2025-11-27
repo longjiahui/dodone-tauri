@@ -2,7 +2,7 @@
   <div
     v-wave
     :class="[
-      'group/g rounded bg-light-2 shrink-0 cursor-pointer overflow-hidden',
+      'group/g rounded bg-light-2 shrink-0 cursor-pointer overflow-hidden break-all',
       selected
         ? '!bg-[var(--theme)] text-[var(--theme-text-color)]'
         : 'hover:bg-light-3',

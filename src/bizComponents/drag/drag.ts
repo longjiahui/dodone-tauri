@@ -1,4 +1,6 @@
+import { ReadOnlyTaskViewWithExtra, ReadOnlyTaskWithChildren } from "@/types";
 import { Emitter } from "@/utils/emitter";
+import type { TaskGroupOrAnchor } from "@/views/default/TaskPage.vue";
 
 /*
   move-tasks 指当前移动的是 ReadonlyTaskWithChildren[]
@@ -6,13 +8,23 @@ import { Emitter } from "@/utils/emitter";
   order-xxx 
     order-taskview
     order-task
-    order-taskgroup
+    order-taskgrouporanchor 数据是 TaskGroupOrAnchor[]
  */
-
 export type DragDataType =
   | `move-tasks`
   | `move-tasks-${string}`
   | `order-${string}`;
+export type GetDragDataType<T extends DragDataType> = T extends
+  | "move-tasks"
+  | "order-task"
+  | `move-tasks-${infer _}`
+  ? ReadOnlyTaskWithChildren[]
+  : T extends `order-taskgrouporanchor`
+    ? TaskGroupOrAnchor[]
+    : T extends "order-taskview"
+      ? ReadOnlyTaskViewWithExtra[]
+      : never;
+
 export interface DragData<T = any> {
   type: DragDataType;
   datas: T[];

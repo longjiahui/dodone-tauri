@@ -30,6 +30,7 @@ import { useI18n } from "vue-i18n";
 import { useSystemStore } from "./store/system";
 import { browserLocale } from "./i18n";
 import { useNotificationStore } from "./store/notification";
+import { backendEvent } from "./store/events";
 
 const i18n = useI18n();
 const systemStore = useSystemStore();
@@ -86,6 +87,10 @@ const locale = computed(
       hi: hiIN,
     })[i18n.locale.value]
 );
+
+backendEvent.on("switchDatabase", (_databaseName) => {
+  window.location.reload();
+});
 </script>
 
 <template>

@@ -284,9 +284,17 @@ export const protocols = {
     "changeTaskGroupOrders",
     defineAPIFunction<[{ datas: { id: string; sortOrder: number }[] }], void>()
   ),
-  changeTaskAnchorOrders: defineAPI(
-    "changeTaskAnchorOrders",
-    defineAPIFunction<[{ datas: { id: string; sortOrder: number }[] }], void>()
+  createAndChangeTaskAnchorOrders: defineAPI(
+    "createAndChangeTaskAnchorOrders",
+    defineAPIFunction<
+      [
+        {
+          creates: EntityWithRequiredKey<TaskAnchor, "taskId">[];
+          datas: { id: string; sortOrder: number }[];
+        },
+      ],
+      { created: TaskAnchor[] }
+    >()
   ),
 
   // non api kind of api
@@ -429,6 +437,10 @@ export const webProtocols = {
   deleteTaskInDay: defineAPI(
     "deleteTaskInDay",
     defineAPIFunction<[TaskInDay], void>()
+  ),
+  switchDatabase: defineAPI(
+    "switchDatabase",
+    defineAPIFunction<[{ name: string }], void>()
   ),
 
   // task更新 params [taskId]

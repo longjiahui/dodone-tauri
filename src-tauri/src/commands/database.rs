@@ -1,6 +1,6 @@
 use crate::{
     constants::{get_const_current_db_name, DATABASEFILE_EXTENSION, DEFAULT_DATABASE_FILE_NAME},
-    database::{create_db, delete_db, shift_database},
+    database::{create_db, delete_db, switch_database as switch_database_service},
 };
 
 #[tauri::command]
@@ -47,6 +47,6 @@ pub async fn delete_database(app: tauri::AppHandle, name: String) -> Result<(), 
 
 #[tauri::command]
 pub async fn switch_database(app: tauri::AppHandle, name: String) -> Result<(), String> {
-    shift_database(&app, name.as_str()).await?;
+    switch_database_service(&app, name.as_str()).await?;
     Ok(())
 }

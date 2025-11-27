@@ -1,4 +1,5 @@
 import {
+  TaskAnchor,
   taskAnchor2TaskAnchorWithTaskGroupId,
   TaskAnchorWithTaskGroupId,
 } from "@/types";
@@ -8,6 +9,7 @@ import { defineStore } from "pinia";
 import { useFetchDataStore } from "./fetchData";
 import { backendEvent, localTaskEvent } from "./events";
 import { sortTaskAnchors } from "@/utils/biz";
+import { EntityWithRequiredKey } from "@/protocol";
 
 export const useTaskAnchorStore = defineStore("taskAnchor", () => {
   const taskAnchors = ref<TaskAnchorWithTaskGroupId[]>([]);
@@ -94,15 +96,32 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
     isTaskAnchorCreated(taskId: string) {
       return !!taskAnchorsDictByTaskId.value[taskId];
     },
-    changeOrders(anchors: TaskAnchorWithTaskGroupId[]) {
-      const params = anchors.map((a, i) => ({ id: a.id, sortOrder: i }));
-      return backend.changeTaskAnchorOrders({ datas: params }).then(() => {
-        params.forEach((p) => {
-          if (taskAnchorsDict.value[p.id]) {
-            Object.assign(taskAnchorsDict.value[p.id]!, p);
-          }
+    createAndChangeOrders(
+      anchors: (
+        | TaskAnchorWithTaskGroupId
+        | EntityWithRequiredKey<TaskAnchor, "taskId">
+      )[]
+    ) {
+      anchors.forEach((d, i) => (d.sortOrder = i));
+      const creates = anchors
+        .filter((d) => !d.id)
+        .map((d) => ({ taskId: d.taskId, sortOrder: d.sortOrder! }));
+      const updates = anchors
+        .filter((d) => !!d.id)
+        .map((d) => ({ id: d.id!, sortOrder: d.sortOrder! }));
+      return backend
+        .createAndChangeTaskAnchorOrders({ creates, datas: updates })
+        .then((d) => {
+          const created = d?.created || [];
+          created.forEach((d) => {
+            taskAnchors.value.push(taskAnchor2TaskAnchorWithTaskGroupId(d));
+          });
+          updates.forEach((p) => {
+            if (taskAnchorsDict.value[p.id]) {
+              Object.assign(taskAnchorsDict.value[p.id]!, p);
+            }
+          });
         });
-      });
     },
   };
 });

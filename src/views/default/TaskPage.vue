@@ -442,7 +442,39 @@
                     tree-custom-expand-element
                     tree-expands-storage-key="taskpage-taskgrouporanchor-tree-expands"
                     #default="{ item: d, toggle, hasChildren, isExpand }"
+                    :change-parent-channel="() => `move-tasks`"
+                    :order-channel="
+                      (d) => [
+                        ...(d.type === 'anchor' ? ['move-tasks' as const] : []),
+                        'order-taskgrouporanchor',
+                      ]
+                    "
+                    :order-channel-data-adapter="
+                      (channel, d) => {
+                        if (channel === 'move-tasks') {
+                          const data =
+                            d as GetDragDataType<'move-tasks'>[number];
+                          return {
+                            anchor: { taskId: d.id },
+                          } as unknown as TaskGroupOrAnchor;
+                        } else if (channel === 'order-taskgrouporanchor') {
+                          return d as GetDragDataType<'order-taskgrouporanchor'>[number];
+                        }
+                      }
+                    "
+                    @order="
+                      (newDatas) => {
+                        return taskAnchorStore.createAndChangeOrders(
+                          newDatas
+                            .filter((d) => !!d.anchor)
+                            .map((d) => d.anchor!)
+                        );
+                      }
+                    "
                   >
+                    <!-- order-channel -->
+                    <!-- move-tasks 可以用于添加anchor -->
+                    <!-- order-taskgrouporanchor 用于调整grouporanchor的顺序 -->
                     <Scope
                       :d="{
                         isSelected: finalId === d.id,
@@ -1010,9 +1042,24 @@
     <LoadingOutlined></LoadingOutlined>
   </div>
 </template>
+<script lang="ts">
+// build taskgroup with anchors tree
+export type TaskGroupOrAnchor = {
+  id: string;
+  parentId: string | null;
+  type: "group" | "anchor";
+  group?: ReadOnlyTaskGroupWithExtra;
+  anchor?: TaskAnchorWithTaskGroupId;
+  children: TaskGroupOrAnchor[];
+};
+</script>
 <script setup lang="ts">
 import { dialogs } from "@/components/dialog";
-import type { GetAPIParams, protocols } from "@/protocol";
+import type {
+  EntityWithRequiredKey,
+  GetAPIParams,
+  protocols,
+} from "@/protocol";
 import {
   CalendarOutlined,
   CaretRightOutlined,
@@ -1048,7 +1095,7 @@ import {
   TaskAnchorWithTaskGroupId,
   TaskGroupWithExtra,
 } from "@/types";
-import { DragData } from "@/bizComponents/drag/drag";
+import { DragData, GetDragDataType } from "@/bizComponents/drag/drag";
 import {
   defaultPrimaryHue,
   defaultSortOrder,
@@ -1090,15 +1137,6 @@ const taskanchors = computed(() => taskAnchorStore.taskAnchors);
 const taskAnchorsGroupByTaskGroupId = computed(
   () => taskAnchorStore.taskAnchorsGroupByTaskGroupId
 );
-// build taskgroup with anchors tree
-type TaskGroupOrAnchor = {
-  id: string;
-  parentId: string | null;
-  type: "group" | "anchor";
-  group?: ReadOnlyTaskGroupWithExtra;
-  anchor?: TaskAnchorWithTaskGroupId;
-  children: TaskGroupOrAnchor[];
-};
 
 function _findParent(task: ReadOnlyTaskWithChildren) {
   const taskAnchorDict = taskAnchorStore.taskAnchorsDictByTaskId;

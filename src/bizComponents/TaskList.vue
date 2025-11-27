@@ -29,9 +29,9 @@
       }
     "
     :model-value
-    change-parent-channel="move-tasks"
-    order-channel="order-task"
-    :order-disabled="disableOrder"
+    :change-parent-channel="() => 'move-tasks'"
+    :order-channel="() => 'order-task'"
+    :order-disabled="() => disableOrder"
     :drag-datas="
       (d) => {
         return () => [

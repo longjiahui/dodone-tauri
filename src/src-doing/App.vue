@@ -14,6 +14,10 @@ import { themeHSColorL, themeHSColorS } from "@/const";
 import { ForwardOutlined } from "@ant-design/icons-vue";
 import { backendEvent } from "@/store/events";
 
+backendEvent.on("switchDatabase", (_databaseName) => {
+  window.location.reload();
+});
+
 const params = useUrlSearchParams<{
   type: DoingWindowType;
   // for specific-task

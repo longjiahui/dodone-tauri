@@ -1,8 +1,11 @@
 use std::sync::Arc;
 
-use crate::constants::{
-    get_const_current_db_name, get_database_path, set_const_current_db_name,
-    DEFAULT_DATABASE_FILE_NAME,
+use crate::{
+    constants::{
+        get_const_current_db_name, get_database_path, set_const_current_db_name,
+        DEFAULT_DATABASE_FILE_NAME,
+    },
+    utils::event::broadcast_switch_database,
 };
 
 use futures::lock::Mutex;
@@ -31,7 +34,7 @@ pub fn make_db_state(db: Option<DatabaseManager>) -> DbState {
     Arc::new(Mutex::new(db))
 }
 
-pub async fn shift_database(app: &AppHandle, file: &str) -> Result<DatabaseManager, String> {
+pub async fn switch_database(app: &AppHandle, file: &str) -> Result<DatabaseManager, String> {
     let db_path = get_database_path(app, file);
     if !db_path.exists() {
         return Err("Database file does not exist".to_string());
@@ -49,6 +52,7 @@ pub async fn shift_database(app: &AppHandle, file: &str) -> Result<DatabaseManag
         app.manage(make_db_state(Some(DatabaseManager::new(db.clone()))));
     }
     set_const_current_db_name(app, file)?;
+    broadcast_switch_database(app, file)?;
     Ok(DatabaseManager::new(db))
 }
 

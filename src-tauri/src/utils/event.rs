@@ -131,3 +131,15 @@ pub fn broadcast_update_const(
     broadcast(app_handle, "update_const", updated_const)?;
     Ok(())
 }
+
+pub fn broadcast_switch_database(
+    app_handle: &tauri::AppHandle,
+    database_name: &str,
+) -> Result<(), String> {
+    broadcast(
+        app_handle,
+        "switch_database",
+        serde_json::json!(database_name),
+    )?;
+    Ok(())
+}

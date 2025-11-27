@@ -192,13 +192,9 @@
                     })
                     .finishPromise((d) => {
                       if (d) {
-                        return backend
-                          .switchDatabase({
-                            name: d.id as string,
-                          })
-                          .then(() => {
-                            return getWindow().location.reload();
-                          });
+                        return backend.switchDatabase({
+                          name: d.id as string,
+                        });
                       }
                     })
                 "

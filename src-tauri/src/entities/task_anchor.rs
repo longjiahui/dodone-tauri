@@ -32,4 +32,5 @@ impl ActiveModelBehavior for ActiveModel {}
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct CreateModel {
     pub task_id: String,
+    pub sort_order: Option<i32>,
 }

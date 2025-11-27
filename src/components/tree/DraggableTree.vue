@@ -2,14 +2,20 @@
   <Define #default="{ isTop, datas, data, index, isBottom }">
     <div class="relative">
       <BizDrop
-        :channel="orderChannel"
-        :disabled="orderDisabled"
+        :channel="orderChannel?.(data as D)"
+        :disabled="orderDisabled?.(data as D)"
         @drop="
           (channel, d) => {
             // order
-            if (channel === 'order-task') {
+            let componentChannel = orderChannel?.(data as D) || [];
+            if (!(componentChannel instanceof Array)) {
+              componentChannel = [componentChannel];
+            }
+            if (componentChannel.includes(channel)) {
               const newDatas = [...datas] as D[];
-              const ds = d.datas as D[];
+              const ds = d.datas.map(
+                (d) => orderChannelDataAdapter?.(channel, d) ?? d
+              ) as D[];
               // 如果有旧数据先取出来
               ds.forEach((d) => {
                 const ind = newDatas.findIndex((data) => data.id === d.id);
@@ -34,7 +40,7 @@
             }
           }
         "
-        #default="{ setRef, isDroppingActive }"
+        #default="{ setRef, isDroppingActive, isDragging }"
       >
         <div class="relative">
           <div
@@ -44,6 +50,7 @@
               // 'bg-primary-dark/20',
               'absolute top-0 left-0 h-4 w-full',
               isTop ? '' : isBottom ? '-translate-y-full' : '-translate-y-1/2',
+              isDragging ? 'pointer-events-auto' : 'pointer-events-none',
             ]"
           >
             <div
@@ -77,11 +84,11 @@
       ></Template>
       <BizDrag :drag-datas="dragDatas?.(t) || (() => [])" #default="{ setRef }">
         <BizDrop
-          :channel="changeParentChannel"
-          :disabled="changeParentDisabled"
+          :channel="changeParentChannel?.(t)"
+          :disabled="changeParentDisabled?.(t)"
           @drop="
             (channel, d) => {
-              if (channel === changeParentChannel) {
+              if (channel === changeParentChannel?.(t)) {
                 const datas = d.datas as Data[];
                 datas.forEach(async (d) => {
                   // 如果t 是d的子孙item 或t和d一致，则不允许移动
@@ -148,6 +155,7 @@ import { ComponentProps } from "vue-component-type-helpers";
 import BizDrop from "@/bizComponents/drag/BizDrop.vue";
 import BizDrag from "@/bizComponents/drag/BizDrag.vue";
 import { TreeExpandStrategy } from "./Tree.vue";
+import { DragDataType } from "@/bizComponents/drag/drag";
 
 type Data = Partial<Record<string, any>> & {
   id: string;
@@ -158,11 +166,12 @@ const props = withDefaults(
 
     dragDatas?: (d: D) => ComponentProps<typeof BizDrag>["dragDatas"];
 
-    orderChannel?: ComponentProps<typeof BizDrop>["channel"];
-    orderDisabled?: ComponentProps<typeof BizDrop>["disabled"];
+    orderChannel?: (d: D) => ComponentProps<typeof BizDrop>["channel"];
+    orderChannelDataAdapter?: (channel: DragDataType, d: any) => D | undefined;
+    orderDisabled?: (d: D) => ComponentProps<typeof BizDrop>["disabled"];
 
-    changeParentChannel?: ComponentProps<typeof BizDrop>["channel"];
-    changeParentDisabled?: ComponentProps<typeof BizDrop>["disabled"];
+    changeParentChannel?: (d: D) => ComponentProps<typeof BizDrop>["channel"];
+    changeParentDisabled?: (d: D) => ComponentProps<typeof BizDrop>["disabled"];
 
     // tree relative
     treeExpandStrategy?: TreeExpandStrategy;
@@ -173,7 +182,7 @@ const props = withDefaults(
 );
 
 defineEmits<{
-  (e: "order", val: D[], dragDatas: D[], droppedData?: D): void;
+  (e: "order", newDatasOrdered: D[], dragDatas: D[], droppedData?: D): void;
   (e: "change-parent", dragData: D, droppaedData: D): void;
 }>();
 

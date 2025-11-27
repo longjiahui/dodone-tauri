@@ -196,7 +196,14 @@ export const useTaskViewStore = defineStore("taskView", () => {
             }
           } else {
             if (targetInd === -1) {
-              item.tasks.push(task);
+              // 查找原始数据
+              // setTimeout为了等待taskStore确实把数据设置到taskStore中
+              setTimeout(() => {
+                const t = taskStore.tasksDict[task.id];
+                if (t) {
+                  item.tasks.push(t);
+                }
+              });
             }
           }
         }
