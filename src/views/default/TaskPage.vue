@@ -271,8 +271,7 @@
                 >
                   <Scope
                     :d="{
-                      isSelected:
-                        currentType === 'taskView' && finalId === v.id,
+                      isSelected: finalType === 'taskView' && finalId === v.id,
                       pendingLeaveTasksFactor: calculatePendingLeaveTasksFactor(
                         taskViewTasksMap[v.id]?.tasks.slice() || []
                       ),
@@ -326,7 +325,6 @@
                           :icon="v.icon || defaultTaskViewIcon(v.type)"
                           @click="
                             () => {
-                              currentType = 'taskView';
                               currentId = v.id;
                             }
                           "
@@ -473,8 +471,6 @@
                           @click="
                             () => {
                               currentId = d.id;
-                              currentType =
-                                d.type === 'group' ? 'taskGroup' : 'taskAnchor';
                             }
                           "
                           :icon="d.group?.icon ?? defaultTaskGroupIcon"
@@ -611,7 +607,7 @@
                       <Scope
                         :d="{
                           isSelected:
-                            currentType === 'taskGroup' &&
+                            finalType === 'taskGroup' &&
                             finalGroupId === g.id,
                           hasAnchors:
                             !!taskAnchorsGroupByTaskGroupId[g.id]?.length,
@@ -706,7 +702,7 @@
                               ]"
                               @click="
                                 () => {
-                                  currentType = 'taskGroup';
+                                  finalType = 'taskGroup';
                                   currentId = g.id;
                                 }
                               "
@@ -764,7 +760,7 @@
                         <Scope
                           :d="{
                             isSelected:
-                              currentType === 'taskAnchor' &&
+                              finalType === 'taskAnchor' &&
                               finalId === anchor.id,
                             pendingLeaveTasksFactor:
                               calculatePendingLeaveTasksFactor(
@@ -810,7 +806,7 @@
                               <SelectableTag
                                 @click="
                                   () => {
-                                    currentType = 'taskAnchor';
+                                    finalType = 'taskAnchor';
                                     currentId = anchor.id;
                                   }
                                 "
@@ -884,11 +880,11 @@
               <div class="v size-full gap-3 overflow-auto py-3">
                 <div
                   class="size-full stretch v gap-3"
-                  v-if="currentType !== 'taskView'"
-                  :key="finalId + currentType"
+                  v-if="finalType !== 'taskView'"
+                  :key="finalId + finalType"
                 >
                   <template
-                    v-if="currentType === 'taskAnchor' && finalTaskAnchor"
+                    v-if="finalType === 'taskAnchor' && finalTaskAnchor"
                   >
                     <div
                       v-if="taskAnchorTask"
@@ -921,7 +917,7 @@
                         () => {
                           createTask({
                             content: inputTaskContent,
-                            ...(currentType === 'taskGroup'
+                            ...(finalType === 'taskGroup'
                               ? {
                                   groupId: finalGroup!.id,
                                 }
@@ -938,8 +934,8 @@
                   </div>
                   <div
                     class="size-full stretch"
-                    :key="finalGroupId + currentType"
-                    v-if="currentType === 'taskGroup'"
+                    :key="finalGroupId + finalType"
+                    v-if="finalType === 'taskGroup'"
                   >
                     <TaskListTemplate
                       hide-group-name
@@ -948,8 +944,8 @@
                   </div>
                   <div
                     class="size-full stretch"
-                    v-else-if="currentType === 'taskAnchor' && taskAnchorTask"
-                    :key="currentType"
+                    v-else-if="finalType === 'taskAnchor' && taskAnchorTask"
+                    :key="finalType"
                   >
                     <TaskListTemplate
                       :tasks="taskAnchorTask!.children.slice()"
@@ -1198,7 +1194,7 @@ const finalId = computed(() => {
     )?.id ?? [...taskGroups.value, ...taskViews.value]?.[0]?.id
   );
 });
-const currentType = computed<"taskAnchor" | "taskGroup" | "taskView">(() => {
+const finalType = computed<"taskAnchor" | "taskGroup" | "taskView">(() => {
   return taskGroups.value.find((g) => g.id === finalId.value)
     ? "taskGroup"
     : taskanchors.value.find((a) => a.id === finalId.value)
@@ -1207,26 +1203,26 @@ const currentType = computed<"taskAnchor" | "taskGroup" | "taskView">(() => {
         ? "taskView"
         : "taskGroup";
 });
-// const currentType = useLocalStorage<"taskAnchor" | "taskGroup" | "taskView">(
-//   pageDomain("currentType"),
+// const finalType = useLocalStorage<"taskAnchor" | "taskGroup" | "taskView">(
+//   pageDomain("finalType"),
 //   "taskGroup"
 // );
 const { isShowFinishedTasks, isOnlyShowLeaves, filterEntity } =
   useTaskListToolsOptions();
 
 const finalGroupId = computed(() =>
-  currentType.value === "taskGroup"
+  finalType.value === "taskGroup"
     ? (taskGroups.value.find((g) => g.id === finalId.value)?.id ??
       taskGroups.value[0]?.id)
     : undefined
 );
 // const finalTaskAnchorId = computed(() =>
-//   currentType.value === "taskAnchor"
+//   finalType.value === "taskAnchor"
 //     ? taskanchors.value.find((tv) => tv.id === finalId.value)?.id
 //     : undefined
 // );
 const finalTaskAnchor = computed(() =>
-  currentType.value === "taskAnchor"
+  finalType.value === "taskAnchor"
     ? taskanchors.value.find((tv) => tv.id === finalId.value)
     : undefined
 );
@@ -1236,7 +1232,7 @@ const taskAnchorTask = computed(() => {
     : undefined;
 });
 const finalTaskView = computed(() =>
-  currentType.value === "taskView"
+  finalType.value === "taskView"
     ? taskViews.value.find((tv) => tv.id === finalId.value)
     : undefined
 );
@@ -1280,7 +1276,7 @@ function handleCreateTaskGroup() {
 }
 
 watch(
-  [currentType, finalId],
+  [finalType, finalId],
   ([type, id]) => {
     Promise.all([fetchDataStore.loadingPromise()]).then(() => {
       if (type === "taskView" && taskViews.value.find((v) => v.id === id)) {

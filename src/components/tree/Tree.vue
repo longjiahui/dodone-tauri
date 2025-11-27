@@ -118,11 +118,6 @@ onMounted(() => {
     () => props.loopDatas,
     async (datas) => {
       traverse(datas, (d) => {
-        console.debug(
-          (d as any)?.id,
-          (d as any)?.group?.name,
-          expands.value[d[props.dataKey]]
-        );
         if (typeof expands.value[d[props.dataKey]] !== "boolean") {
           expands.value[d[props.dataKey]] = getFinalExpand(d[props.dataKey]);
         }
