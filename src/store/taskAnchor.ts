@@ -18,7 +18,7 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
         acc[tv.taskId] = tv;
         return acc;
       },
-      {} as Record<string, TaskAnchorWithTaskGroupId>
+      {} as Partial<Record<string, TaskAnchorWithTaskGroupId>>
     )
   );
   const taskAnchorsDict = computed(() => {

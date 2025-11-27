@@ -2,10 +2,10 @@
  * @file 树遍历函数
  */
 function isIdEmpty(id: string) {
-  return !!id
+  return !id;
 }
 
-type TreeData = Partial<Record<string | number | symbol, any>>
+type TreeData = Partial<Record<string | number | symbol, any>>;
 
 /**
  * @method              树遍历(先序)
@@ -20,28 +20,28 @@ export function traverse<T extends TreeData, R>(
     undefined as R,
   childrenKey: keyof T = "children",
   parents?: T[],
-  layer = 0,
+  layer = 0
 ): R | undefined {
   for (let i = 0; i < datas.length; ++i) {
-    const d = datas[i]
-    let ret: R | undefined = func(d, i, datas, parents || [], layer)
+    const d = datas[i];
+    let ret: R | undefined = func(d, i, datas, parents || [], layer);
     if (ret !== undefined) {
-      return ret
+      return ret;
     } else {
-      const ps = (parents || []).concat(d)
+      const ps = (parents || []).concat(d);
       if ((d[childrenKey] as any) instanceof Array) {
-        ret = traverse(d[childrenKey] as T[], func, childrenKey, ps, layer + 1)
+        ret = traverse(d[childrenKey] as T[], func, childrenKey, ps, layer + 1);
       } else if (d[childrenKey]) {
         ret = traverse(
           [d[childrenKey]] as T[],
           func,
           childrenKey,
           ps,
-          layer + 1,
-        )
+          layer + 1
+        );
       }
       if (ret !== undefined) {
-        return ret
+        return ret;
       }
     }
   }
@@ -62,46 +62,46 @@ export function traverseBackwards<T extends TreeData, R>(
     ds: T[],
     ps: T[],
     layer: number,
-    depth: number,
+    depth: number
   ) => R = () => undefined as R,
   childrenKey: keyof T = "children",
   parents?: T[],
-  layer = 0,
+  layer = 0
 ): R | undefined {
-  let depth = layer
+  let depth = layer;
   for (let i = 0; i < datas.length; ++i) {
-    const d = datas[i]
-    let ret: R | undefined
-    const ps = (parents || []).concat(d)
+    const d = datas[i];
+    let ret: R | undefined;
+    const ps = (parents || []).concat(d);
     if ((d[childrenKey] as any) instanceof Array) {
       ret = traverseBackwards(
         d[childrenKey] as T[],
         (...rest) => {
-          depth = Math.max(depth, rest[4])
-          return func(...rest)
+          depth = Math.max(depth, rest[4]);
+          return func(...rest);
         },
         childrenKey,
         ps,
-        layer + 1,
-      )
+        layer + 1
+      );
     } else if (d[childrenKey]) {
       ret = traverseBackwards(
         [d[childrenKey]] as T[],
         (...rest) => {
-          depth = Math.max(depth, rest[4])
-          return func(...rest)
+          depth = Math.max(depth, rest[4]);
+          return func(...rest);
         },
         childrenKey,
         ps,
-        layer + 1,
-      )
+        layer + 1
+      );
     }
     if (ret !== undefined) {
-      return ret
+      return ret;
     } else {
-      ret = func(d, i, datas, parents || [], layer, depth - layer)
+      ret = func(d, i, datas, parents || [], layer, depth - layer);
       if (ret !== undefined) {
-        return ret
+        return ret;
       }
     }
   }
@@ -123,7 +123,7 @@ export function flatMapTree<R = any, T extends TreeData = TreeData>(
     i: number,
     ds: T[],
     ps: T[] | undefined,
-    layer: number,
+    layer: number
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) => R,
   postFilter?: (
@@ -131,29 +131,29 @@ export function flatMapTree<R = any, T extends TreeData = TreeData>(
     i: number,
     ds: T[],
     ps: T[] | undefined,
-    layer: number,
+    layer: number
   ) => boolean,
-  childrenKey: keyof T = "children",
+  childrenKey: keyof T = "children"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): R[] {
-  const mapData: R[] = []
+  const mapData: R[] = [];
   traverse(
     datas,
     (d, i, ds, ps, layer) => {
-      const nextLayer = (layer || 0) + 1
-      const ret = func(d, i, ds, ps, nextLayer)
+      const nextLayer = (layer || 0) + 1;
+      const ret = func(d, i, ds, ps, nextLayer);
       if (postFilter instanceof Function) {
-        const isResolve = postFilter(d, i, ds, ps, layer)
+        const isResolve = postFilter(d, i, ds, ps, layer);
         if (isResolve) {
-          mapData.push(ret)
+          mapData.push(ret);
         }
       } else {
-        mapData.push(ret)
+        mapData.push(ret);
       }
     },
-    childrenKey,
-  )
-  return mapData
+    childrenKey
+  );
+  return mapData;
 }
 
 /**
@@ -170,14 +170,14 @@ export async function traverseAsync<T extends TreeData>(
   func: (d: T, i: number, ds: T[], ps: T[] | undefined, layer: number) => any,
   childrenKey: keyof T = "children",
   parents: T[] = [],
-  layer = 0,
+  layer = 0
 ) {
   if (func instanceof Function) {
     for (let i = 0; i < datas.length; ++i) {
-      const d = datas[i]
-      let ret = await func(d, i, datas, parents, layer)
+      const d = datas[i];
+      let ret = await func(d, i, datas, parents, layer);
       if (ret !== undefined) {
-        return ret
+        return ret;
       } else {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         if ((d[childrenKey] as any) instanceof Array) {
@@ -186,10 +186,10 @@ export async function traverseAsync<T extends TreeData>(
             func,
             childrenKey,
             (parents || []).concat(d),
-            layer + 1,
-          )
+            layer + 1
+          );
           if (ret !== undefined) {
-            return ret
+            return ret;
           }
         }
       }
@@ -213,7 +213,7 @@ export async function flatMapTreeAsync<T extends TreeData>(
     i: number,
     ds: T[],
     ps: T[] | undefined,
-    layer: number,
+    layer: number
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ) => any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -222,74 +222,80 @@ export async function flatMapTreeAsync<T extends TreeData>(
     i: number,
     ds: T[],
     ps: T[] | undefined,
-    layer: number,
+    layer: number
   ) => boolean,
-  childrenKey: keyof T = "children",
+  childrenKey: keyof T = "children"
 ): Promise<T[]> {
-  const mapData: T[] = []
+  const mapData: T[] = [];
   await traverse(
     datas,
     async (d, i, ds, ps, layer) => {
-      const nextLayer = (layer || 0) + 1
-      let ret = func(d, i, ds, ps, nextLayer)
+      const nextLayer = (layer || 0) + 1;
+      let ret = func(d, i, ds, ps, nextLayer);
       if (ret instanceof Promise) {
-        ret = await ret
+        ret = await ret;
       }
       if (filter instanceof Function) {
-        const isResolve = filter(d, i, ds, ps, nextLayer)
+        const isResolve = filter(d, i, ds, ps, nextLayer);
         if (isResolve) {
-          mapData.push(ret)
+          mapData.push(ret);
         }
       } else {
-        mapData.push(ret)
+        mapData.push(ret);
       }
     },
-    childrenKey,
-  )
-  return mapData
+    childrenKey
+  );
+  return mapData;
 }
 
 export function buildTree<
   T extends Partial<Record<string | number | symbol, any>>,
 >(
   datas: T[],
-  dataKey: keyof T = "id",
-  childrenKey: keyof T = "children",
-  parentKey: keyof T = "parentId",
+  options: {
+    dataKey?: keyof T;
+    childrenKey?: keyof T;
+    parentKey?: keyof T;
+  } = {}
 ) {
+  let { dataKey, childrenKey, parentKey } = options;
+  dataKey = dataKey ?? "id";
+  childrenKey = childrenKey ?? "children";
+  parentKey = parentKey ?? "parentId";
   const dict = datas.reduce<Partial<Record<string, T>>>((t, data) => {
-    t[data?.[dataKey as keyof T]] = { ...data, [childrenKey]: [] }
-    return t
-  }, {})
-  const tree: T[] = []
+    t[data?.[dataKey as keyof T]] = { ...data, [childrenKey]: [] };
+    return t;
+  }, {});
+  const tree: T[] = [];
   datas.forEach((data) => {
-    if (!isIdEmpty(data[parentKey])) {
-      const parent = dict[data[parentKey]]
-      parent![childrenKey].push(dict[data[dataKey]])
+    const parent = dict[data[parentKey]];
+    if (!isIdEmpty(data[parentKey]) && parent) {
+      parent[childrenKey].push(dict[data[dataKey]]);
     } else if (dict[data[dataKey]]) {
-      tree.push(dict[data[dataKey]]!)
+      tree.push(dict[data[dataKey]]!);
     }
-  })
-  return tree
+  });
+  return tree;
 }
 
 export function mapTree<T extends TreeData, R extends TreeData = any>(
   datas: T[],
   mapper: (d: T, i: number, ds: T[], ps: T[], layer: number) => R,
   options: {
-    preFilter?: (d: T, i: number, ds: T[], ps: T[], layer: number) => boolean
-    afterFilter?: (d: R, i: number, ds: T[], ps: T[], layer: number) => boolean
-    childrenKey?: keyof T
+    preFilter?: (d: T, i: number, ds: T[], ps: T[], layer: number) => boolean;
+    afterFilter?: (d: R, i: number, ds: T[], ps: T[], layer: number) => boolean;
+    childrenKey?: keyof T;
     // order?: { by: keyof R; type: "asc" | "desc" }
-    sort?: (a: R, b: R) => number
+    sort?: (a: R, b: R) => number;
   } = {},
   // inside use
   parents: T[] = [],
-  layer = 0,
+  layer = 0
 ) {
-  let { childrenKey } = options || {}
-  const { sort, preFilter, afterFilter } = options || {}
-  childrenKey = childrenKey ?? "children"
+  let { childrenKey } = options || {};
+  const { sort, preFilter, afterFilter } = options || {};
+  childrenKey = childrenKey ?? "children";
   // const sort = (d: R[]) =>
   //   order?.by
   //     ? d.sort((a, b) =>
@@ -298,28 +304,28 @@ export function mapTree<T extends TreeData, R extends TreeData = any>(
   //           : (b[order.by] || 0) - (a[order.by] || 0),
   //       )
   //     : d
-  const newDatas: R[] = []
+  const newDatas: R[] = [];
   datas.forEach((d, i) => {
     if (preFilter && !preFilter(d, i, datas, parents, layer)) {
-      return
+      return;
     }
-    const r = mapper(d, i, datas, parents, layer)
+    const r = mapper(d, i, datas, parents, layer);
     if (((d?.[childrenKey] as T[]) || []).length > 0) {
       r[childrenKey as keyof R] = mapTree(
         d[childrenKey] as T[],
         mapper,
         options,
         parents.concat(d),
-        layer + 1,
-      ) as any
+        layer + 1
+      ) as any;
     }
     if (afterFilter && !afterFilter(r, i, datas, parents, layer)) {
-      return
+      return;
     }
-    newDatas.push(r)
-  })
-  newDatas.sort(sort)
-  return newDatas
+    newDatas.push(r);
+  });
+  newDatas.sort(sort);
+  return newDatas;
 }
 
 export async function mapTreeAsync<
@@ -334,26 +340,26 @@ export async function mapTreeAsync<
       i: number,
       ds: T[],
       ps: T[],
-      layer: number,
-    ) => Promise<boolean> | boolean
+      layer: number
+    ) => Promise<boolean> | boolean;
     afterFilter?: (
       d: R,
       i: number,
       ds: T[],
       ps: T[],
-      layer: number,
-    ) => Promise<boolean> | boolean
-    childrenKey?: keyof T
+      layer: number
+    ) => Promise<boolean> | boolean;
+    childrenKey?: keyof T;
     // order?: { by: keyof R; type: "asc" | "desc" }
-    sort?: (a: R, b: R) => number
+    sort?: (a: R, b: R) => number;
   } = {},
   // inside use
   parents: T[] = [],
-  layer = 0,
+  layer = 0
 ) {
-  let { childrenKey } = options || {}
-  const { sort, preFilter, afterFilter } = options || {}
-  childrenKey = childrenKey ?? "children"
+  let { childrenKey } = options || {};
+  const { sort, preFilter, afterFilter } = options || {};
+  childrenKey = childrenKey ?? "children";
   // const sort = (d: R[]) =>
   //   order?.by
   //     ? d.sort((a, b) =>
@@ -362,40 +368,40 @@ export async function mapTreeAsync<
   //           : (b[order.by] || 0) - (a[order.by] || 0),
   //       )
   //     : d
-  const newDatas: R[] = []
+  const newDatas: R[] = [];
   for (let i = 0; i < datas.length; ++i) {
-    const d = datas[i]
+    const d = datas[i];
     if (preFilter && !(await preFilter(d, i, datas, parents, layer))) {
-      continue
+      continue;
     }
-    const r = await mapper(d, i, datas, parents, layer)
+    const r = await mapper(d, i, datas, parents, layer);
     if (((d?.[childrenKey] as T[]) || []).length > 0) {
       r[childrenKey as keyof R] = (await mapTreeAsync(
         d[childrenKey] as T[],
         mapper,
         options,
         parents.concat(d),
-        layer + 1,
-      )) as any
+        layer + 1
+      )) as any;
     }
     if (afterFilter && !(await afterFilter(r, i, datas, parents, layer))) {
-      continue
+      continue;
     }
-    newDatas.push(r)
+    newDatas.push(r);
   }
-  newDatas.sort(sort)
-  return newDatas
+  newDatas.sort(sort);
+  return newDatas;
 }
 
 export function findTreePath<T extends TreeData>(
   tree: T[] = [],
-  isIt: (d: T) => boolean = () => false,
+  isIt: (d: T) => boolean = () => false
 ) {
   return traverse(tree, (d, _i, _ds, ps) => {
     if (isIt(d)) {
-      return (ps || [])?.concat(d)
+      return (ps || [])?.concat(d);
     }
-  })
+  });
 }
 
 export function searchTree<T extends TreeData>(
@@ -403,34 +409,34 @@ export function searchTree<T extends TreeData>(
   // isIt 正向，搜索出来的节点的父节点、子节点都会添加、但不添加同级子节点
   isIt: (d: T) => boolean,
   options: {
-    key?: (d: T) => string
+    key?: (d: T) => string;
     // 剔除不满足的节点及其子节点
-    exclude?: (d: T) => boolean
-  } = {},
+    exclude?: (d: T) => boolean;
+  } = {}
 ) {
-  let { key, exclude } = options || {}
-  key = key || ((d) => d.id)
-  exclude = exclude || (() => false)
-  const isItMap = {} as Partial<{ [k: string]: boolean }>
+  let { key, exclude } = options || {};
+  key = key || ((d) => d.id);
+  exclude = exclude || (() => false);
+  const isItMap = {} as Partial<{ [k: string]: boolean }>;
   return mapTree(
     tree,
     (d, _, __, ps) => {
-      const ret = isItMap[key(d)] || isIt(d)
+      const ret = isItMap[key(d)] || isIt(d);
       if (ret) {
-        isItMap[key(d)] = true
-        ps.forEach((d) => (isItMap[key(d)] = true))
+        isItMap[key(d)] = true;
+        ps.forEach((d) => (isItMap[key(d)] = true));
       } else {
         // 父亲节点 有，则子节点加上，且不用再遍历父节点了。
         // isItMap[key(d)] = ps.some((d) => isItMap[key(d)])
       }
-      return { ...d }
+      return { ...d };
     },
     {
       afterFilter: (d) => {
-        return !!isItMap[key(d)] && !exclude(d)
+        return !!isItMap[key(d)] && !exclude(d);
       },
-    },
-  )
+    }
+  );
 }
 
 export async function searchTreeAsync<T extends TreeData>(
@@ -438,66 +444,66 @@ export async function searchTreeAsync<T extends TreeData>(
   // isIt 正向，搜索出来的节点的父节点、子节点都会添加、但不添加同级子节点
   isIt: (d: T) => boolean | Promise<boolean>,
   options: {
-    key?: (d: T) => string
+    key?: (d: T) => string;
     // 剔除不满足的节点及其子节点
-    exclude?: (d: T) => Promise<boolean> | boolean
-  } = {},
+    exclude?: (d: T) => Promise<boolean> | boolean;
+  } = {}
 ) {
-  let { key, exclude } = options || {}
-  key = key || ((d) => d.id)
-  exclude = exclude || (async () => false)
-  const isItMap = {} as Partial<{ [k: string]: boolean }>
+  let { key, exclude } = options || {};
+  key = key || ((d) => d.id);
+  exclude = exclude || (async () => false);
+  const isItMap = {} as Partial<{ [k: string]: boolean }>;
   return mapTreeAsync(
     tree,
     async (d, _, __, ps) => {
-      const ret = isItMap[key(d)] || (await isIt(d))
+      const ret = isItMap[key(d)] || (await isIt(d));
       if (ret) {
-        isItMap[key(d)] = true
-        ps.forEach((d) => (isItMap[key(d)] = true))
+        isItMap[key(d)] = true;
+        ps.forEach((d) => (isItMap[key(d)] = true));
       } else {
         // 父亲节点 有，则子节点加上，且不用再遍历父节点了。
         // isItMap[key(d)] = ps.some((d) => isItMap[key(d)])
       }
-      return { ...d }
+      return { ...d };
     },
     {
       afterFilter: async (d) => {
-        return !!isItMap[key(d)] && !(await exclude(d))
+        return !!isItMap[key(d)] && !(await exclude(d));
       },
-    },
-  )
+    }
+  );
 }
 
 export function traverseEvery<T extends TreeData>(
   tree: T[],
-  cb: (d: T) => boolean,
+  cb: (d: T) => boolean
 ) {
   return (
     traverse(tree, (d) => {
-      return cb(d) ? undefined : false
+      return cb(d) ? undefined : false;
     }) ?? true
-  )
+  );
 }
 
 export function traverseSome<T extends TreeData>(
   tree: T[],
-  cb: (d: T, layer: number) => boolean,
+  cb: (d: T, layer: number) => boolean
 ) {
   return (
     traverse(tree, (d, _, __, ___, layer) =>
-      cb(d, layer) ? true : undefined,
+      cb(d, layer) ? true : undefined
     ) ?? false
-  )
+  );
 }
 
 export function getTreeDepth(tree: TreeData[], childrenKey: keyof TreeData) {
-  let depth = 0
+  let depth = 0;
   traverse(
     tree,
     (_, __, ___, ____, layer) => {
-      depth = Math.max(depth, layer)
+      depth = Math.max(depth, layer);
     },
-    childrenKey,
-  )
-  return depth
+    childrenKey
+  );
+  return depth;
 }

@@ -30,7 +30,11 @@
                 </div>
               </template>
             </SelectableTag>
-            <Tree :loop-datas="tasks" default-expand-all>
+            <Tree
+              :loop-datas="tasks"
+              expand-strategy="all"
+              custom-expand-element
+            >
               <template #default="{ item }">
                 <div class="p-1">
                   <SelectableTag

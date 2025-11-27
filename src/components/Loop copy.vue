@@ -21,14 +21,18 @@
         :layer="layer"
         :children="getChildren(item)"
         :has-children="getChildren(item).length > 0"
-        :toggle="(options?: ToggleOptions) => toggleByData(item, options)"
-        :is-expand="!!expands[getKey(item)]"
+        :toggle="
+          (_item = item, options?: ToggleOptions) =>
+            toggleByData(_item, options)
+        "
+        :is-expand="!!getExpandState(getKey(item))"
         :parent="parent"
         :get-key="getKey"
         :join-keys="joinKeys"
       ></slot>
       <!-- 如果不触发transition 会有问题，不能展开时可以检查一下是否触发transitionend -->
       <!-- 这里不使用 overflow-hidden 是因为 table使用sticky做冻结列的时候会因为overflow-hidden而不生效 -->
+      {{ displays[getKey(item)] }}
       <div
         v-if="displays[getKey(item)]"
         :class="[
@@ -45,7 +49,6 @@
       >
         <!-- style="contain: paint" -->
         <Loop
-          @update:expands="$emit('update:expands', { ...expands, ...$event })"
           ref="subLoopRefs"
           v-bind="props"
           class="sub-loop"
@@ -79,6 +82,7 @@
 export default {
   name: "Loop",
 };
+export type LoopExpandStrategy = "firstLayer" | "all" | "none";
 </script>
 
 <script
@@ -96,10 +100,6 @@ const subLoopRefs = ref<
   | undefined
 >();
 
-const emit = defineEmits<{
-  (e: "update:expands", expands: Partial<Record<KeyType, boolean>>): void;
-}>();
-
 defineSlots<{
   default: (data: SlotData) => any;
 }>();
@@ -113,7 +113,7 @@ interface SlotData {
   layer: number;
   children: T[];
   hasChildren: boolean;
-  toggle: (options?: ToggleOptions) => Promise<void>;
+  toggle: () => Promise<void>;
   isExpand: boolean;
   parent: T;
   getKey: typeof getKey;
@@ -131,10 +131,18 @@ const props = withDefaults(
     wrapperClass?: string;
     containerClass?: string;
 
-    noToggleAnimation?: boolean;
+    // 是否记忆展开状态
+    expandsStorageKey?: string;
+    expandStrategy?: LoopExpandStrategy;
+
+    // doNotExpandFirst?: boolean;
+    // defaultExpands?: [any, any?][];
+    // defaultExpandAll?: boolean;
+    // noToggleAnimation?: boolean;
+
     toggleParent?: (options?: ToggleOptions) => Promise<void>;
     parent?: any;
-
+    // 这个属性是在以前做Table的时候用的。。
     // eslint-disable-next-line vue/prop-name-casing
     _overflowStrategy?: "contain" | "overflow" | "none";
   }>(),
@@ -147,7 +155,9 @@ const props = withDefaults(
     hideChildren: false,
     wrapperClass: "",
     containerClass: "",
-
+    doNotExpandFirst: false,
+    defaultExpandAll: false,
+    defaultExpands: () => [],
     noToggleAnimation: false,
     toggleParent: undefined,
 
@@ -157,15 +167,63 @@ const props = withDefaults(
 );
 type KeyType = string | number;
 const container = ref<HTMLDivElement | undefined>();
-const expands = ref<Partial<Record<KeyType, boolean>>>({});
-
-watch(expands, (d) => emit("update:expands", { ...d }), {
-  immediate: true,
-  deep: true,
-});
-
+const expands = props.expandsStorageKey
+  ? useLocalStorage<Partial<Record<KeyType, boolean>>>(
+      props.expandsStorageKey,
+      {}
+    )
+  : ref<Partial<Record<KeyType, boolean>>>({});
+function getExpandState(key: KeyType) {
+  const state = expands.value[key];
+  if (typeof state !== "boolean") {
+    // 如果没有记录，则根据props.expandStrategy来判断
+    switch (props.expandStrategy) {
+      case "none":
+        return false;
+      case "all":
+        return true;
+      case "firstLayer":
+        return props.layer <= 1;
+    }
+  } else {
+    return state;
+  }
+}
 // 因为收缩的时候需要等动画完成，v-if才能设置为false、所以这里需要
 const displays = ref<Partial<Record<KeyType, boolean>>>({});
+async function refreshDisplays() {
+  const newDisplays = Object.assign(
+    Object.entries(props.modelValue).reduce(
+      (acc, [_, d]) => {
+        acc[d[props.dataKey]] = getExpandState(d[props.dataKey]);
+        return acc;
+      },
+      {} as Partial<Record<KeyType, boolean>>
+    ),
+    displays.value
+  );
+  console.debug(Object.entries(newDisplays).filter(([_, d]) => !!d));
+  await Promise.all(
+    Object.entries(newDisplays)
+      .filter(([_, d]) => !!d)
+      .map(async (d) => {
+        const k = d[0];
+        console.debug(k);
+        await toggle(k, {
+          toState: true,
+          duration: 0,
+        });
+      })
+  );
+}
+
+watch(
+  () => props.modelValue,
+  () => {
+    refreshDisplays();
+  },
+  { immediate: true }
+);
 
 function joinKeys(key?: string, mixDataKey?: string) {
   return `${key || ""}${mixDataKey || ""}`;
@@ -186,7 +244,6 @@ interface ToggleOptions {
   toState?: boolean;
   duration?: number;
   ease?: string;
-  deep?: boolean;
 }
 async function toggle(
   key: string | number,
@@ -196,37 +253,25 @@ async function toggle(
     {
       duration: 0.5,
       ease: "power3.out",
-      // 收缩必然是deep
-      deep: false,
     },
     options
   );
   if (container.value) {
     const i = props.modelValue.findIndex((d) => getKey(d) === key);
     if (i > -1) {
-      const children = getChildren(props.modelValue[i]);
-      if (children.length === 0) {
+      if (getChildren(props.modelValue[i]).length === 0) {
         // 如果没有children，且为打开 则toggle parent
         if (options.toState) {
           await props.toggleParent?.(options);
         }
       } else {
         let div = container.value.children[i];
-        let currentExpandState = expands.value[key];
+        let currentExpandState = getExpandState(key);
         let toExpandState =
           options.toState === undefined
             ? !currentExpandState
             : !!options.toState;
         if (currentExpandState !== toExpandState && div) {
-          // 如果是展開且deep true，則展開自己的children
-          // 收缩必然是deep
-          if (toExpandState && options.deep) {
-            await toggleByDatas(children, {
-              toState: true,
-              duration: 0,
-              ease: options.ease,
-            });
-          }
           if (toExpandState) {
             // 如果是展开、则展开所有的 父节点。
             // 需要指定状态是因为 toggleParent调用的 toggleSubLoop
@@ -299,17 +344,13 @@ async function toggle(
           }
           if (
             !toExpandState &&
-            /*  因为设置v-if false有延迟，延迟时长为动画持续时长，所以动画未结束时，
-                如果又调用了toggle让状态从隐藏变为展开时，expand会在展开前触发
-                display true、但在展开后，收缩前的此处会触发让display false
-                导致expand展开，而display收缩的问题、、 */
-            !expands.value[key]
+            /* 因为设置v-if false有延迟，延迟时长为动画持续时长，所以动画未结束时，
+                            如果又调用了toggle让状态从隐藏变为展开时，expand会在展开前触发
+                            display true、但在展开后，收缩前的此处会触发让display false
+                            导致expand展开，而display收缩的问题、、 */
+            !getExpandState(key)
           ) {
             displays.value[key] = toExpandState;
-            // 清除所有子元素的expandsState，收缩默认deep
-            traverse(children, (d) => {
-              expands.value[d[props.dataKey]] = toExpandState;
-            });
           }
         } else {
           // already set
@@ -354,24 +395,7 @@ const toggleFirst = async (ds?: T[]) => {
     await toggleFirst(getChildren(ds[0]));
   }
 };
-async function toggleByDatas(datas: T[], options?: ToggleOptions) {
-  if (datas.length > 0) {
-    return traverseAsync(
-      datas,
-      async (d) => {
-        const key = getKey(d);
-        if (key) {
-          await new Promise<void>((r) => nextTick(r));
-          return toggle(key, options);
-        }
-      },
-      props.childrenKey
-    );
-  }
-}
-const toggleAll = async (
-  options: ToggleOptions & Required<Pick<ToggleOptions, "toState">>
-) => {
+const toggleAll = async (options: ToggleOptions) => {
   if (props.modelValue.length > 0) {
     return traverseAsync(
       props.modelValue,
@@ -386,43 +410,47 @@ const toggleAll = async (
     );
   }
 };
-// onMounted(() => {
-//   const unwatch = watch(
-//     () => props.modelValue,
-//     (val) => {
-//       if (val.length > 0) {
-//         setTimeout(() => unwatch())
-//         nextTick(async () => {
-//           if (props.defaultExpandAll) {
-//             // 只有第一层需要toggleAll
-//             if (props.layer === 0) {
-//               await toggleAll({ toState: true, duration: 0 })
-//             }
-//           } else if (!props.doNotExpandFirst) {
-//             await toggleFirst()
-//           }
-//           // 展开当前选中
-//           await Promise.all(
-//             props.defaultExpands?.map((e) =>
-//               toggleMix(e[0], e[1], {
-//                 toState: true,
-//               }),
-//             ) || [],
-//           )
-//         })
-//       }
-//     },
-//     {
-//       immediate: true,
-//     },
-//   )
-// })
+onMounted(() => {
+  const unwatch = watch(
+    () => props.modelValue,
+    (val) => {
+      if (val.length > 0) {
+        setTimeout(() => unwatch());
+        nextTick(async () => {
+          // apply displays
+          await refreshDisplays();
+          // if (props.expandStrategy === 'firstLayer') {
+          // }
+          // old code
+          // if (props.defaultExpandAll) {
+          //   // 只有第一层需要toggleAll
+          //   if (props.layer === 0) {
+          //     await toggleAll({ toState: true, duration: 0 });
+          //   }
+          // } else if (!props.doNotExpandFirst) {
+          //   await toggleFirst();
+          // }
+          // // 展开当前选中
+          // await Promise.all(
+          //   props.defaultExpands?.map((e) =>
+          //     toggleMix(e[0], e[1], {
+          //       toState: true,
+          //     })
+          //   ) || []
+          // );
+        });
+      }
+    },
+    {
+      immediate: true,
+    }
+  );
+});
 
 defineExpose({
   toggleFirst,
   toggle,
   toggleByData,
-  toggleByDatas,
   toggleMix,
   joinKeys,
   toggleAll,

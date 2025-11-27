@@ -1,3 +1,4 @@
 export function getWindow() {
-  return window
+  return window;
 }
+export type GlobalTypes = { MouseEvent: MouseEvent };
