@@ -26,8 +26,6 @@
               // 查找新的index
               const newIndex = newDatas.findIndex((d) => d.id === data.id);
               if (newIndex > -1) {
-                // 如果task 和d 不是一个groupid，需要更新groupid
-                // 如果task 和d 不是一个parentId，需要更新parentId
                 const toIndex = isTop ? newIndex : newIndex + 1;
                 newDatas.splice(toIndex, 0, ...ds);
                 $emit('order', newDatas, ds, data as D);
@@ -88,15 +86,23 @@
           :disabled="changeParentDisabled?.(t)"
           @drop="
             (channel, d) => {
-              if (channel === changeParentChannel?.(t)) {
-                const datas = d.datas as Data[];
+              let componentChannel = changeParentChannel?.(t) || [];
+              if (!(componentChannel instanceof Array)) {
+                componentChannel = [componentChannel];
+              }
+              if (componentChannel.includes(channel)) {
+                const datas = d.datas.map((d) =>
+                  changeParentChannelDataAdapter?.(channel, d)
+                ) as Data[];
                 datas.forEach(async (d) => {
                   // 如果t 是d的子孙item 或t和d一致，则不允许移动
                   if (d.id === t.id) {
                     console.warn('无法将item移动到其自身');
                     return;
                   }
-                  if (traverseSome(d.children.slice(), (d) => d.id === t.id)) {
+                  if (
+                    traverseSome(d?.children?.slice(), (d) => d.id === t.id)
+                  ) {
                     // return dialogs.MessageDialog({
                     //   content: $t('cannotMoveTaskToDescendant'),
                     // });
@@ -171,6 +177,10 @@ const props = withDefaults(
     orderDisabled?: (d: D) => ComponentProps<typeof BizDrop>["disabled"];
 
     changeParentChannel?: (d: D) => ComponentProps<typeof BizDrop>["channel"];
+    changeParentChannelDataAdapter?: (
+      channel: DragDataType,
+      d: any
+    ) => D | undefined;
     changeParentDisabled?: (d: D) => ComponentProps<typeof BizDrop>["disabled"];
 
     // tree relative

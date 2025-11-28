@@ -1,9 +1,9 @@
-import { dialogs } from "@/components/dialog"
-import { ReadOnlyTaskWithChildren } from "."
-import dayjs from "dayjs"
-import { useTaskStore } from "@/store/task"
-import { defaultTaskFactor, defaultTaskPriority } from "@/const"
-import { PieChartOutlined, ThunderboltOutlined } from "@ant-design/icons-vue"
+import { dialogs } from "@/components/dialog";
+import { ReadOnlyTaskWithChildren } from ".";
+import dayjs from "dayjs";
+import { useTaskStore } from "@/store/task";
+import { defaultTaskFactor, defaultTaskPriority } from "@/const";
+import { PieChartOutlined, ThunderboltOutlined } from "@ant-design/icons-vue";
 
 export function handleEditDateRange(task: ReadOnlyTaskWithChildren) {
   return dialogs
@@ -16,13 +16,13 @@ export function handleEditDateRange(task: ReadOnlyTaskWithChildren) {
     })
     .finishPromise((d) => {
       if (d) {
-        const taskStore = useTaskStore()
+        const taskStore = useTaskStore();
         return taskStore.updateTaskById(task.id, {
-          startAt: d[0]?.toDate() || null,
-          endAt: d[1]?.toDate() || null,
-        })
+          startAt: d[0]?.toDate().toISOString() || null,
+          endAt: d[1]?.toDate().toISOString() || null,
+        });
       }
-    })
+    });
 }
 export function handleEditNextTask(task: ReadOnlyTaskWithChildren) {
   return dialogs
@@ -31,10 +31,10 @@ export function handleEditNextTask(task: ReadOnlyTaskWithChildren) {
     })
     .finishPromise((d) => {
       if (d) {
-        const taskStore = useTaskStore()
-        return taskStore.upsertNextTask(task.id, d)
+        const taskStore = useTaskStore();
+        return taskStore.upsertNextTask(task.id, d);
       }
-    })
+    });
 }
 export function handleEditDescription(task: ReadOnlyTaskWithChildren) {
   return dialogs
@@ -43,18 +43,18 @@ export function handleEditDescription(task: ReadOnlyTaskWithChildren) {
       value: task.description,
     })
     .finishPromise((d) => {
-      const taskStore = useTaskStore()
-      return taskStore.updateTaskById(task.id, { description: d })
-    })
+      const taskStore = useTaskStore();
+      return taskStore.updateTaskById(task.id, { description: d });
+    });
 }
 export function updateFactor(
   task: ReadOnlyTaskWithChildren,
-  value: number | string,
+  value: number | string
 ) {
-  const taskStore = useTaskStore()
+  const taskStore = useTaskStore();
   return taskStore.updateTaskById(task.id, {
     factor: isNaN(+value) ? defaultTaskFactor : +value,
-  })
+  });
 }
 export function handleEditFactor(task: ReadOnlyTaskWithChildren) {
   return dialogs
@@ -66,19 +66,19 @@ export function handleEditFactor(task: ReadOnlyTaskWithChildren) {
     })
     .finishPromise((d) => {
       if (d != null) {
-        return updateFactor(task, d)
+        return updateFactor(task, d);
       }
-    })
+    });
 }
 
 export function updatePriority(
   task: ReadOnlyTaskWithChildren,
-  value: number | string,
+  value: number | string
 ) {
-  const taskStore = useTaskStore()
+  const taskStore = useTaskStore();
   return taskStore.updateTaskById(task.id, {
     priority: isNaN(+value) ? 0 : +value,
-  })
+  });
 }
 
 export function handleEditPriority(task: ReadOnlyTaskWithChildren) {
@@ -106,18 +106,18 @@ export function handleEditPriority(task: ReadOnlyTaskWithChildren) {
     })
     .finishPromise((d) => {
       if (d != null) {
-        return updatePriority(task, d)
+        return updatePriority(task, d);
       }
-    })
+    });
 }
 
 export function useTaskState(task: MaybeRef<ReadOnlyTaskWithChildren>) {
   return {
     isFinished: computed(() => unref(task).state === "DONE"),
     canEditFactor: computed(() => !unref(task).children.length),
-  }
+  };
 }
 
 export function handleEditTaskTarget(task: ReadOnlyTaskWithChildren) {
-  return dialogs.EditTaskTargetDialog({ taskId: task.id })
+  return dialogs.EditTaskTargetDialog({ taskId: task.id });
 }

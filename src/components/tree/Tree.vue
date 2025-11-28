@@ -58,7 +58,7 @@ import { useElementSize } from "@vueuse/core";
 import Loop from "../Loop.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
 import { CaretRightOutlined } from "@ant-design/icons-vue";
-import { traverse } from "@/utils/traverse";
+import { flatMapTree, traverse } from "@/utils/traverse";
 
 const props = withDefaults(
   defineProps<{
@@ -74,7 +74,7 @@ const props = withDefaults(
   }>(),
   {
     loopDatas: () => [],
-    childrenKey: undefined,
+    childrenKey: "children",
     dataKey: "id",
     modelValue: undefined,
     customExpandElement: undefined,
@@ -93,20 +93,38 @@ const datasLayerDict = computed(() => {
 });
 type ExpandsType = Partial<Record<string | number, boolean>>;
 
+const loopDatasDict = computed(
+  () =>
+    flatMapTree(props.loopDatas || [], (d) => d)?.reduce(
+      (acc, d) => {
+        acc[d[props.dataKey]] = d;
+        return acc;
+      },
+      {} as Partial<Record<string | number, T>>
+    ) || {}
+);
 function getFinalExpand(key: string | number) {
   const state = expands.value[key];
+  // 如果没有children，返回false
+  const data = loopDatasDict.value[key];
+  const hasChildren = !!data?.[props.childrenKey!]?.length;
   if (typeof state !== "boolean") {
-    // 如果没有记录，则根据props.expandStrategy来判断
-    switch (props.expandStrategy) {
-      case "none":
-        return false;
-      case "all":
-        return true;
-      case "firstLayer":
-        return datasLayerDict.value[key] < 1;
+    // 如果没有记录
+    if (hasChildren) {
+      // 则根据props.expandStrategy来判断
+      switch (props.expandStrategy) {
+        case "none":
+          return false;
+        case "all":
+          return true;
+        case "firstLayer":
+          return datasLayerDict.value[key] < 1;
+      }
+    } else {
+      return false;
     }
   } else {
-    return state;
+    return hasChildren ? state : false;
   }
 }
 const expands = props.expandsStorageKey
@@ -116,47 +134,47 @@ const expands = props.expandsStorageKey
 onMounted(() => {
   watch(
     () => props.loopDatas,
-    async (datas) => {
+    async (datas, _olds) => {
+      const newExpands: ExpandsType = {};
       traverse(datas, (d) => {
-        if (typeof expands.value[d[props.dataKey]] !== "boolean") {
-          expands.value[d[props.dataKey]] = getFinalExpand(d[props.dataKey]);
-        }
+        newExpands[d[props.dataKey]] = getFinalExpand(d[props.dataKey]);
       });
+      console.debug("final tree expands: ", { ...newExpands });
+      // 这里要赋予新对象是因为 后面expands的watch是根据new olds来判断的，如果不是新对象那么new和old是同一个对象，无法判断出更新了什么
+      expands.value = { ...newExpands };
     },
     {
       immediate: true,
       deep: true,
     }
   );
-  // setTimeout(
-  //   () =>
-  //     loopRef.value?.toggleAll({
-  //       toState: true,
-  //       duration: 0.3,
-  //     }),
-  //   1000
-  // );
+
+  let _isExpandsWatchCalledOnce = false;
   watch(
     expands,
     async (values, olds) => {
+      const duration = !_isExpandsWatchCalledOnce ? 0 : 0.3;
+      _isExpandsWatchCalledOnce = true;
       const openKeys = Object.keys(values).filter(
         (key) => values[key] && !olds?.[key]
       );
       const closeKeys = olds
         ? Object.keys(olds).filter((key) => !values[key] && olds[key])
         : [];
+      console.debug("openKeys", "closeKeys", openKeys, closeKeys);
+      // await new Promise((r) => setTimeout(r));
       await nextTick();
       await Promise.all([
         ...openKeys.map((key) =>
           loopRef.value?.toggle(key, {
             toState: true,
-            duration: 0,
+            duration,
           })
         ),
         ...closeKeys.map((key) => {
           loopRef.value?.toggle(key, {
             toState: false,
-            duration: 0,
+            duration,
           });
         }),
       ]);

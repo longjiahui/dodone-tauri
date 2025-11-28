@@ -1,5 +1,5 @@
 <template>
-  <div @click="modelValue = !modelValue">
+  <div @click="modelValue = !modelValue" class="h items-center">
     <!-- acheckbox 的点击区域很怪。。 -->
     <ACheckbox class="pointer-events-none" :checked="modelValue"></ACheckbox>
   </div>

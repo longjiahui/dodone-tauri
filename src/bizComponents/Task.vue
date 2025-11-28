@@ -56,6 +56,32 @@
                         taskStore.toggleTaskState(modelValue.id)
                       "
                     ></Checkbox>
+                    <Tooltip
+                      v-if="isTaskAnchorCreated"
+                      :content="$t('removeAnchor')"
+                    >
+                      <StarFilled
+                        v-motion
+                        :initial="{
+                          opacity: 0,
+                          scale: 0,
+                        }"
+                        :enter="{
+                          opacity: 1,
+                          scale: 1,
+                          transition: {
+                            type: 'spring',
+                            bounce: 0.4,
+                          },
+                        }"
+                        class="text-sm text-(--theme-dark)! cursor-pointer"
+                        @click.stop="
+                          taskAnchorStore.deleteTaskAnchorByTaskId(
+                            modelValue.id
+                          )
+                        "
+                      ></StarFilled>
+                    </Tooltip>
                     <div>
                       {{ modelValue.content }}
                     </div>
@@ -306,6 +332,7 @@ import { useTaskGroupStore } from "@/store/taskGroup";
 import { useTheme } from "@/utils/color";
 import { backend } from "@/utils/backend";
 import { backendEvent } from "@/store/events";
+import { useTaskAnchorStore } from "@/store/taskAnchor";
 
 const props = withDefaults(
   defineProps<{
@@ -348,7 +375,12 @@ const __ =
   "border-light-1 border-light-2 border-light-3 border-light-4 border-light-5 border-light-6 hover:border-light-1 hover:border-light-2 hover:border-light-3 hover:border-light-4 hover:border-light-5 hover:border-light-6";
 
 const taskViewStore = useTaskViewStore();
+const taskAnchorStore = useTaskAnchorStore();
 const { canEditFactor } = useTaskState(computed(() => props.modelValue));
+const isTaskAnchorCreated = computed(() =>
+  taskAnchorStore.isTaskAnchorCreated(props.modelValue.id)
+);
+
 const isFinished = computed(() => props.modelValue.state === "DONE");
 const realChildren = computed(
   () => taskStore.tasksDict[props.modelValue.id]?.children || []

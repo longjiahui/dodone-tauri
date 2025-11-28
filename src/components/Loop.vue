@@ -201,14 +201,25 @@ async function toggle(
     },
     options
   );
+  // console.debug(
+  //   "toggle called(key, toState, deep, hasContainer): ",
+  //   key,
+  //   options.toState,
+  //   options.deep
+  // );
   if (container.value) {
     const i = props.modelValue.findIndex((d) => getKey(d) === key);
+    // console.debug("   -- toggle index(index, layer): ", i, props.layer);
     if (i > -1) {
       const children = getChildren(props.modelValue[i]);
       if (children.length === 0) {
         // 如果没有children，且为打开 则toggle parent
         if (options.toState) {
-          await props.toggleParent?.(options);
+          // 这里的逻辑放到了 i <= -1,即 下面
+          // console.debug("toggle? parent?");
+          // await props.toggleParent?.(options);
+        } else {
+          expands.value[key] = false;
         }
       } else {
         let div = container.value.children[i];
@@ -316,17 +327,27 @@ async function toggle(
         }
       }
     } else {
-      // 如果能找到子元素有，则展开自己
+      // 如果能找到子元素有，则展开自己至子元素
       const parent = traverse(props.modelValue, (d, _, __, ps) => {
         if (getKey(d) === key) {
-          return ps?.[0];
+          return ps?.[ps.length - 1];
         }
       });
+      // console.debug(
+      //   "   -- toggle not found, try toggle parent(layer, key, parent): ",
+      //   props.layer,
+      //   key,
+      //   parent
+      // );
       if (parent) {
-        return toggleByData(parent, options).then(() => {
-          return subLoopRefs.value?.forEach((r) => r.toggle(key, options));
-        });
+        const toggleOptions = {
+          ...options,
+          toState: true,
+        } satisfies ToggleOptions as ToggleOptions;
+        await toggleByData(parent, toggleOptions);
+        // return toggleByData(ps?.[0], { ...options, toState: true }).then(() => {
       }
+      return subLoopRefs.value?.forEach((r) => r.toggle(key, options));
     }
   }
 }

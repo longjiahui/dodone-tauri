@@ -3,6 +3,8 @@
     tree-custom-expand-element
     @order="
       (datas, dragDatas, droppedData) => {
+        // 如果task 和d 不是一个groupid，需要更新groupid
+        // 如果task 和d 不是一个parentId，需要更新parentId
         return taskStore.changeOrders(
           datas,
           dragDatas.map((d) => ({

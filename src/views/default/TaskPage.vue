@@ -443,20 +443,87 @@
                     tree-expands-storage-key="taskpage-taskgrouporanchor-tree-expands"
                     #default="{ item: d, toggle, hasChildren, isExpand }"
                     :change-parent-channel="() => `move-tasks`"
+                    :drag-datas="
+                      (d) => () => [
+                        {
+                          type: 'order-taskgrouporanchor',
+                          datas: [d],
+                        },
+                      ]
+                    "
                     :order-channel="
-                      (d) => [
-                        ...(d.type === 'anchor' ? ['move-tasks' as const] : []),
+                      (_d) => [
+                        // 禁止这个移动
+                        // ...(d.type === 'anchor' ? ['move-tasks' as const] : []),
                         'order-taskgrouporanchor',
                       ]
+                    "
+                    :change-parent-channel-data-adapter="
+                      (channel, d) => {
+                        if (channel === 'move-tasks') {
+                          return {
+                            task: d as GetDragDataType<'move-tasks'>[number],
+                          } as TaskGroupOrAnchor;
+                        }
+                        return undefined;
+                      }
+                    "
+                    @change-parent="
+                      (dragData, droppedData) => {
+                        console.debug(dragData);
+                        if (dragData.task?.id) {
+                          if (
+                            droppedData.type === 'group' &&
+                            droppedData.group?.id
+                          ) {
+                            return taskStore.updateTaskParent(
+                              dragData.task.id,
+                              null,
+                              {
+                                groupId: droppedData.group.id,
+                              }
+                            );
+                          } else if (
+                            droppedData.type === 'anchor' &&
+                            droppedData.anchor?.taskId &&
+                            droppedData.anchor.taskGroupId
+                          ) {
+                            taskStore.updateTaskParent(
+                              dragData.task.id,
+                              droppedData.anchor.taskId,
+                              dragData.task.groupId !==
+                                droppedData.anchor.taskGroupId
+                                ? {
+                                    groupId: droppedData.anchor.taskGroupId,
+                                  }
+                                : {}
+                            );
+                          }
+                        }
+                      }
                     "
                     :order-channel-data-adapter="
                       (channel, d) => {
                         if (channel === 'move-tasks') {
                           const data =
                             d as GetDragDataType<'move-tasks'>[number];
-                          return {
-                            anchor: { taskId: d.id },
-                          } as unknown as TaskGroupOrAnchor;
+                          // 搜索anchor是否存在，如果有直接使用，没有则使用创建的数据结构
+                          return (
+                            traverse(taskGroupTree, (treeItem) => {
+                              if (
+                                treeItem.type === 'anchor' &&
+                                treeItem.anchor?.taskId === d.id
+                              ) {
+                                return treeItem;
+                              }
+                            }) ??
+                            ({
+                              type: 'anchor',
+                              anchor: {
+                                taskId: data.id,
+                              } satisfies Partial<TaskAnchor> as TaskGroupOrAnchor['anchor'],
+                            } satisfies Partial<TaskGroupOrAnchor> as unknown as TaskGroupOrAnchor)
+                          );
                         } else if (channel === 'order-taskgrouporanchor') {
                           return d as GetDragDataType<'order-taskgrouporanchor'>[number];
                         }
@@ -464,11 +531,18 @@
                     "
                     @order="
                       (newDatas) => {
-                        return taskAnchorStore.createAndChangeOrders(
-                          newDatas
-                            .filter((d) => !!d.anchor)
-                            .map((d) => d.anchor!)
-                        );
+                        console.debug('newDatas', newDatas);
+                        if (newDatas.every((d) => d.type === 'anchor')) {
+                          return taskAnchorStore.createAndChangeOrders(
+                            newDatas
+                              .filter((d) => !!d.anchor)
+                              .map((d) => d.anchor!)
+                          );
+                        } else if (newDatas.every((d) => d.type === 'group')) {
+                          return taskGroupStore.changeOrders(
+                            newDatas.map((d) => d.group!)
+                          );
+                        }
                       }
                     "
                   >
@@ -505,12 +579,16 @@
                               currentId = d.id;
                             }
                           "
-                          :icon="d.group?.icon ?? defaultTaskGroupIcon"
+                          :icon="
+                            d.type === 'group'
+                              ? (d.group?.icon ?? defaultTaskGroupIcon)
+                              : undefined
+                          "
                           :hue="d.group?.color"
                           :selected="isSelected"
                           :title="d.anchor?.task.content ?? d.group?.name"
                           :content="
-                            d.anchor?.task.description ?? d.group?.description
+                            d.type === 'group' ? d.group?.description : ''
                           "
                           :menus="
                             d.type === 'group' && d.group
@@ -599,7 +677,7 @@
                               :is-expand
                               @click.stop="
                                 (e: GlobalTypes['MouseEvent']) => {
-                                  if (e.ctrlKey) {
+                                  if (e.ctrlKey || e.metaKey) {
                                     toggle({
                                       deep: true,
                                     });
@@ -1051,6 +1129,9 @@ export type TaskGroupOrAnchor = {
   group?: ReadOnlyTaskGroupWithExtra;
   anchor?: TaskAnchorWithTaskGroupId;
   children: TaskGroupOrAnchor[];
+
+  // for drag into
+  task?: ReadOnlyTaskWithChildren;
 };
 </script>
 <script setup lang="ts">
@@ -1084,6 +1165,7 @@ import {
   calculateFinishLeaveTasksFactor,
   calculatePendingLeaveTasksFactor,
   calculateTotalLeaveTasksFactor,
+  sortTaskAnchors,
   sortTaskGroups,
   sortTaskViews,
   useTaskListToolsOptions,
@@ -1092,6 +1174,7 @@ import {
   ReadOnlyTaskGroupWithExtra,
   ReadOnlyTaskViewWithExtra,
   ReadOnlyTaskWithChildren,
+  TaskAnchor,
   TaskAnchorWithTaskGroupId,
   TaskGroupWithExtra,
 } from "@/types";
@@ -1108,7 +1191,7 @@ import {
 } from "@/const";
 import { backend } from "@/utils/backend";
 import { dayjs } from "@/utils/time";
-import { buildTree } from "@/utils/traverse";
+import { buildTree, mapTree, traverse } from "@/utils/traverse";
 import { title } from "process";
 import { GlobalTypes } from "@/utils/window";
 
@@ -1133,7 +1216,7 @@ const taskViews = computed(() => {
   return ds;
 });
 const taskViewTasksMap = computed(() => taskViewStore.taskViewTasksMap);
-const taskanchors = computed(() => taskAnchorStore.taskAnchors);
+const taskAnchors = computed(() => taskAnchorStore.taskAnchors);
 const taskAnchorsGroupByTaskGroupId = computed(
   () => taskAnchorStore.taskAnchorsGroupByTaskGroupId
 );
@@ -1154,30 +1237,46 @@ function _findParent(task: ReadOnlyTaskWithChildren) {
 
 const taskGroupTree = computed<TaskGroupOrAnchor[]>(() => {
   // taskAnchor可能隔了一代，所以需要从taskStore找到自己的roots
-  return buildTree(
-    taskGroups.value
-      .map(
-        (d) =>
-          ({
-            id: d.id,
-            type: "group",
-            group: d,
-            parentId: null,
-            children: [],
-          }) satisfies TaskGroupOrAnchor as TaskGroupOrAnchor
-      )
-      .concat(
-        ...taskanchors.value.map((d) => {
-          return {
-            id: d.id,
-            type: "anchor",
-            anchor: d,
-            group: taskGroupStore.taskGroupsDict[d.taskGroupId],
-            parentId: _findParent(d.task) || d.taskGroupId,
-            children: [],
-          } satisfies TaskGroupOrAnchor as TaskGroupOrAnchor;
-        })
-      )
+  return mapTree(
+    buildTree(
+      taskGroups.value
+        .map(
+          (d) =>
+            ({
+              id: d.id,
+              type: "group",
+              group: d,
+              parentId: null,
+              children: [],
+            }) satisfies TaskGroupOrAnchor as TaskGroupOrAnchor
+        )
+        .concat(
+          ...taskAnchors.value.map((d) => {
+            return {
+              id: d.id,
+              type: "anchor",
+              anchor: d,
+              group: taskGroupStore.taskGroupsDict[d.taskGroupId],
+              parentId: _findParent(d.task) || d.taskGroupId,
+              children: [],
+            } satisfies TaskGroupOrAnchor as TaskGroupOrAnchor;
+          })
+        )
+    ),
+    (d) => d,
+    {
+      sort: (a, b) => {
+        if (a.type === b.type) {
+          if (a.type === "group" && a.group && b.group) {
+            return sortTaskGroups(a.group, b.group);
+          }
+          if (a.type === "anchor" && a.anchor && b.anchor) {
+            return sortTaskAnchors(a.anchor, b.anchor);
+          }
+        }
+        return 0;
+      },
+    }
   );
 });
 
@@ -1227,7 +1326,7 @@ const pageDomain = (d: string) => `taskpage-${d}`;
 const currentId = useLocalStorage<string>(pageDomain("currentId"), "");
 const finalId = computed(() => {
   return (
-    [...taskGroups.value, ...taskanchors.value, ...taskViews.value].find(
+    [...taskGroups.value, ...taskAnchors.value, ...taskViews.value].find(
       (v) => v.id === currentId.value
     )?.id ?? [...taskGroups.value, ...taskViews.value]?.[0]?.id
   );
@@ -1235,7 +1334,7 @@ const finalId = computed(() => {
 const finalType = computed<"taskAnchor" | "taskGroup" | "taskView">(() => {
   return taskGroups.value.find((g) => g.id === finalId.value)
     ? "taskGroup"
-    : taskanchors.value.find((a) => a.id === finalId.value)
+    : taskAnchors.value.find((a) => a.id === finalId.value)
       ? "taskAnchor"
       : taskViews.value.find((tv) => tv.id === finalId.value)
         ? "taskView"
@@ -1256,12 +1355,12 @@ const finalGroupId = computed(() =>
 );
 // const finalTaskAnchorId = computed(() =>
 //   finalType.value === "taskAnchor"
-//     ? taskanchors.value.find((tv) => tv.id === finalId.value)?.id
+//     ? taskAnchors.value.find((tv) => tv.id === finalId.value)?.id
 //     : undefined
 // );
 const finalTaskAnchor = computed(() =>
   finalType.value === "taskAnchor"
-    ? taskanchors.value.find((tv) => tv.id === finalId.value)
+    ? taskAnchors.value.find((tv) => tv.id === finalId.value)
     : undefined
 );
 const taskAnchorTask = computed(() => {
