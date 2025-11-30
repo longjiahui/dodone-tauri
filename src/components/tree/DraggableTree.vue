@@ -1,66 +1,86 @@
 <template>
   <Define #default="{ isTop, datas, data, index, isBottom }">
     <div class="relative">
-      <BizDrop
-        :channel="orderChannel?.(data as D)"
-        :disabled="orderDisabled?.(data as D)"
-        @drop="
-          (channel, d) => {
-            // order
-            let componentChannel = orderChannel?.(data as D) || [];
-            if (!(componentChannel instanceof Array)) {
-              componentChannel = [componentChannel];
-            }
-            if (componentChannel.includes(channel)) {
-              const newDatas = [...datas] as D[];
-              const ds = d.datas.map(
-                (d) => orderChannelDataAdapter?.(channel, d) ?? d
-              ) as D[];
-              // 如果有旧数据先取出来
-              ds.forEach((d) => {
-                const ind = newDatas.findIndex((data) => data.id === d.id);
-                if (ind > -1) {
-                  newDatas.splice(ind, 1);
+      <Scope
+        :d="{ data: data as Data, datas: datas as Data[] }"
+        #default="{ data, datas }"
+      >
+        <BizDrop
+          :channel="orderChannel?.(data)"
+          :disabled="orderDisabled?.(data)"
+          @drop="
+            (channel, d) => {
+              // order
+              let componentChannel = orderChannel?.(data) || [];
+              if (!(componentChannel instanceof Array)) {
+                componentChannel = [componentChannel];
+              }
+              if (componentChannel.includes(channel)) {
+                const newDatas = [...datas];
+                const ds = d.datas.map(
+                  (d) => orderChannelDataAdapter?.(channel, d) ?? d
+                ) as Data[];
+                // 如果有旧数据先取出来
+                ds.forEach((d) => {
+                  const ind = newDatas.findIndex((data) => data.id === d.id);
+                  if (ind > -1) {
+                    newDatas.splice(ind, 1);
+                  }
+                });
+                // 查找新的index
+                const newIndex = newDatas.findIndex((d) => d.id === data.id);
+                if (newIndex > -1) {
+                  const toIndex = isTop ? newIndex : newIndex + 1;
+                  newDatas.splice(toIndex, 0, ...ds);
+                  $emit(
+                    'order',
+                    newDatas,
+                    ds,
+                    data,
+                    // find data's parents
+                    traverse(modelValue, (d, _, __, ps) => {
+                      if (d.id === data.id) {
+                        return ps;
+                      }
+                    }) || []
+                  );
+                } else {
+                  // return dialogs.MessageDialog({
+                  //   content: $t('cannotAdjustTaskOrderCausePositionNotExist'),
+                  // });
+                  console.warn('无法调整item顺序，目标位置不存在');
                 }
-              });
-              // 查找新的index
-              const newIndex = newDatas.findIndex((d) => d.id === data.id);
-              if (newIndex > -1) {
-                const toIndex = isTop ? newIndex : newIndex + 1;
-                newDatas.splice(toIndex, 0, ...ds);
-                $emit('order', newDatas, ds, data as D);
-              } else {
-                // return dialogs.MessageDialog({
-                //   content: $t('cannotAdjustTaskOrderCausePositionNotExist'),
-                // });
-                console.warn('无法调整item顺序，目标位置不存在');
               }
             }
-          }
-        "
-        #default="{ setRef, isDroppingActive, isDragging }"
-      >
-        <div class="relative">
-          <div
-            :ref="setRef"
-            :class="[
-              'h z-10',
-              // 'bg-primary-dark/20',
-              'absolute top-0 left-0 h-4 w-full',
-              isTop ? '' : isBottom ? '-translate-y-full' : '-translate-y-1/2',
-              isDragging ? 'pointer-events-auto' : 'pointer-events-none',
-            ]"
-          >
+          "
+          #default="{ setRef, isDroppingActive, isDragging }"
+        >
+          <div class="relative">
             <div
+              :ref="setRef"
               :class="[
-                'absolute z-20 h-1.5 w-full rounded',
-                isTop ? 'top-0' : isBottom ? 'bottom-0' : '',
-                isDroppingActive ? 'bg-primary-dark' : '',
+                'h z-10',
+                // 'bg-primary-dark/20',
+                'absolute top-0 left-0 h-4 w-full',
+                isTop
+                  ? ''
+                  : isBottom
+                    ? '-translate-y-full'
+                    : '-translate-y-1/2',
+                isDragging ? 'pointer-events-auto' : 'pointer-events-none',
               ]"
-            ></div>
+            >
+              <div
+                :class="[
+                  'absolute z-20 h-1.5 w-full rounded',
+                  isTop ? 'top-0' : isBottom ? 'bottom-0' : '',
+                  isDroppingActive ? 'bg-primary-dark' : '',
+                ]"
+              ></div>
+            </div>
           </div>
-        </div>
-      </BizDrop>
+        </BizDrop>
+      </Scope>
     </div>
   </Define>
   <Tree
@@ -92,26 +112,31 @@
               }
               if (componentChannel.includes(channel)) {
                 const datas = d.datas.map((d) =>
-                  changeParentChannelDataAdapter?.(channel, d)
-                ) as Data[];
-                datas.forEach(async (d) => {
-                  // 如果t 是d的子孙item 或t和d一致，则不允许移动
-                  if (d.id === t.id) {
-                    console.warn('无法将item移动到其自身');
-                    return;
-                  }
-                  if (
-                    traverseSome(d?.children?.slice(), (d) => d.id === t.id)
-                  ) {
-                    // return dialogs.MessageDialog({
-                    //   content: $t('cannotMoveTaskToDescendant'),
-                    // });
-                    console.warn('无法将item移动到其子孙节点');
-                    return;
-                  } else {
-                    $emit('change-parent', d as D, t as D);
-                  }
-                });
+                  changeParentChannelDataAdapter
+                    ? changeParentChannelDataAdapter(channel, d)
+                    : d
+                ) as (Data | undefined)[];
+                datas
+                  .filter((d) => !!d)
+                  .map((d) => d!)
+                  .forEach(async (d) => {
+                    // 如果t 是d的子孙item 或t和d一致，则不允许移动
+                    if (d.id === t.id) {
+                      console.warn('无法将item移动到其自身');
+                      return;
+                    }
+                    if (
+                      traverseSome(d?.children?.slice(), (d) => d.id === t.id)
+                    ) {
+                      // return dialogs.MessageDialog({
+                      //   content: $t('cannotMoveTaskToDescendant'),
+                      // });
+                      console.warn('无法将item移动到其子孙节点');
+                      return;
+                    } else {
+                      $emit('change-parent', d, t);
+                    }
+                  });
               }
             }
           "
@@ -151,37 +176,43 @@
   </Tree>
   <Empty v-else></Empty>
 </template>
-<script
-  setup
-  lang="ts"
-  generic="D extends Readonly<Partial<Record<string, any>> & { id: string }>"
->
-import { traverseSome } from "@/utils/traverse";
+<script lang="ts">
+export interface DraggableTreeData<D, T> extends LoopData<D> {
+  dragData?: T;
+}
+</script>
+<script setup lang="ts" generic="Data extends DraggableTreeData<any, any>">
+import { traverse, traverseSome } from "@/utils/traverse";
 import { ComponentProps } from "vue-component-type-helpers";
 import BizDrop from "@/bizComponents/drag/BizDrop.vue";
 import BizDrag from "@/bizComponents/drag/BizDrag.vue";
 import { TreeExpandStrategy } from "./Tree.vue";
 import { DragDataType } from "@/bizComponents/drag/drag";
+import { LoopData } from "../Loop.vue";
 
-type Data = Partial<Record<string, any>> & {
-  id: string;
-};
 const props = withDefaults(
   defineProps<{
-    modelValue: D[];
+    modelValue: Data[];
 
-    dragDatas?: (d: D) => ComponentProps<typeof BizDrag>["dragDatas"];
+    dragDatas?: (d: Data) => ComponentProps<typeof BizDrag>["dragDatas"];
 
-    orderChannel?: (d: D) => ComponentProps<typeof BizDrop>["channel"];
-    orderChannelDataAdapter?: (channel: DragDataType, d: any) => D | undefined;
-    orderDisabled?: (d: D) => ComponentProps<typeof BizDrop>["disabled"];
+    orderChannel?: (d: Data) => ComponentProps<typeof BizDrop>["channel"];
+    orderChannelDataAdapter?: (
+      channel: DragDataType,
+      d: any
+    ) => Data | undefined;
+    orderDisabled?: (d: Data) => ComponentProps<typeof BizDrop>["disabled"];
 
-    changeParentChannel?: (d: D) => ComponentProps<typeof BizDrop>["channel"];
+    changeParentChannel?: (
+      d: Data
+    ) => ComponentProps<typeof BizDrop>["channel"];
     changeParentChannelDataAdapter?: (
       channel: DragDataType,
       d: any
-    ) => D | undefined;
-    changeParentDisabled?: (d: D) => ComponentProps<typeof BizDrop>["disabled"];
+    ) => Data | Pick<Data, "dragData"> | undefined;
+    changeParentDisabled?: (
+      d: Data
+    ) => ComponentProps<typeof BizDrop>["disabled"];
 
     // tree relative
     treeExpandStrategy?: TreeExpandStrategy;
@@ -192,15 +223,21 @@ const props = withDefaults(
 );
 
 defineEmits<{
-  (e: "order", newDatasOrdered: D[], dragDatas: D[], droppedData?: D): void;
-  (e: "change-parent", dragData: D, droppaedData: D): void;
+  (
+    e: "order",
+    newDatasOrdered: Data[],
+    dragDatas: Data[],
+    droppedData: Data,
+    ps: Data[]
+  ): void;
+  (e: "change-parent", dragData: Data, droppaedData: Data): void;
 }>();
-
+type D = DraggableTreeData<any, any>;
 const [Define, Template] = createReusableTemplate<{
   isTop: boolean;
   isBottom: boolean;
-  datas: Data[];
-  data: Data;
+  data: D;
+  datas: D[];
   index: number;
 }>();
 </script>

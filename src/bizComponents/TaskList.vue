@@ -6,14 +6,15 @@
         // 如果task 和d 不是一个groupid，需要更新groupid
         // 如果task 和d 不是一个parentId，需要更新parentId
         return taskStore.changeOrders(
-          datas,
+          datas.map((d) => d.data),
           dragDatas.map((d) => ({
             id: d.id,
-            ...(d.groupId !== droppedData?.groupId && droppedData?.groupId
-              ? { groupId: droppedData.groupId }
+            ...(d.data.groupId !== droppedData?.data?.groupId &&
+            droppedData?.data?.groupId
+              ? { groupId: droppedData.data.groupId }
               : {}),
-            ...(d.parentId !== droppedData?.parentId
-              ? { parentId: droppedData?.parentId }
+            ...(d.data.parentId !== droppedData?.data.parentId
+              ? { parentId: droppedData?.data.parentId }
               : {}),
           }))
         );
@@ -22,15 +23,15 @@
     @change-parent="
       (d, to) => {
         return taskStore.updateTaskParent(d.id, to.id, {
-          ...(d.groupId !== to.groupId
+          ...(d.data.groupId !== to.data.groupId
             ? {
-                groupId: to.groupId,
+                groupId: to.data.groupId,
               }
             : {}),
         });
       }
     "
-    :model-value
+    :model-value="treeDatas"
     :change-parent-channel="() => 'move-tasks'"
     :order-channel="() => 'order-task'"
     :order-disabled="() => disableOrder"
@@ -39,11 +40,11 @@
         return () => [
           {
             type: 'move-tasks',
-            datas: [d],
+            datas: [d].map((d) => d.data),
           },
           {
-            type: `move-tasks-${d.groupId}`,
-            datas: [d],
+            type: `move-tasks-${d.data.groupId}`,
+            datas: [d].map((d) => d.data),
           },
           ...(disableOrder
             ? []
@@ -54,6 +55,30 @@
                 } satisfies DragData<any>,
               ]),
         ];
+      }
+    "
+    :change-parent-channel-data-adapter="
+      (channel, d) => {
+        if (channel.startsWith('move-tasks')) {
+          return mapTree([d as GetDragDataType<'move-tasks'>[number]], (t) => ({
+            id: t.id,
+            data: t,
+            children: [],
+          }))[0];
+        }
+        return undefined;
+      }
+    "
+    :order-channel-data-adapter="
+      (channel, d) => {
+        if (channel.startsWith('order-task')) {
+          return mapTree([d as GetDragDataType<'order-task'>[number]], (t) => ({
+            id: t.id,
+            data: t,
+            children: [],
+          }))[0];
+        }
+        return undefined;
       }
     "
     #default="{ item: t, index, hasChildren, toggle, isExpand }"
@@ -74,7 +99,7 @@
     >
       <Task
         :hide-group-name="taskHideGroupName"
-        :model-value="t"
+        :model-value="t.data"
         :background
         :dropdown-hide-delete="taskDropdownHideDelete"
       >
@@ -98,11 +123,14 @@
 <script setup lang="ts">
 import type { ReadOnlyTaskWithChildren } from "@/types";
 import { CaretRightOutlined } from "@ant-design/icons-vue";
-import { DragData } from "./drag/drag";
+import { DragData, GetDragDataType } from "./drag/drag";
 import { motionDelay, motionTranslateX } from "@/const";
 import { useTaskStore } from "@/store/task";
+import { mapTree } from "@/utils/traverse";
+import { DraggableTreeData } from "@/components/tree/DraggableTree.vue";
+import { channel } from "diagnostics_channel";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
     modelValue: ReadOnlyTaskWithChildren[];
     background?: number;
@@ -115,4 +143,17 @@ withDefaults(
 );
 
 const taskStore = useTaskStore();
+
+const treeDatas = computed(() =>
+  mapTree(props.modelValue, (d) => {
+    return {
+      id: d.id,
+      data: d,
+      children: [],
+    } satisfies DraggableTreeData<
+      ReadOnlyTaskWithChildren,
+      ReadOnlyTaskWithChildren
+    > as DraggableTreeData<ReadOnlyTaskWithChildren, ReadOnlyTaskWithChildren>;
+  })
+);
 </script>

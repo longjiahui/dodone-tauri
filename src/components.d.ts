@@ -11,6 +11,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    2: typeof import('./components/Loop copy 2.vue')['default']
     AButton: typeof import('ant-design-vue/es')['Button']
     ACheckbox: typeof import('ant-design-vue/es')['Checkbox']
     ADatePicker: typeof import('ant-design-vue/es')['DatePicker']
@@ -46,6 +47,7 @@ declare module 'vue' {
     ClockCircleOutlined: typeof import('@ant-design/icons-vue')['ClockCircleOutlined']
     ConfirmDialog: typeof import('./components/dialog/commonDialog/ConfirmDialog.vue')['default']
     copy: typeof import('./bizComponents/TaskList copy.vue')['default']
+    copy1: typeof import('./components/tree/Tree copy1.vue')['default']
     DatePicker: typeof import('./components/DatePicker.vue')['default']
     DatePickerDialog: typeof import('./components/dialog/commonDialog/DatePickerDialog.vue')['default']
     DateRangeDesc: typeof import('./bizComponents/DateRangeDesc.vue')['default']
@@ -92,6 +94,7 @@ declare module 'vue' {
     LoadingOutlined: typeof import('@ant-design/icons-vue')['LoadingOutlined']
     Loop: typeof import('./components/Loop.vue')['default']
     'Loop copy': typeof import('./components/Loop copy.vue')['default']
+    'Loop copy 2': typeof import('./components/Loop copy 2.vue')['default']
     MarkdownEditor: typeof import('./components/MarkdownEditor.vue')['default']
     MarkdownEditorDialog: typeof import('./components/dialog/commonDialog/MarkdownEditorDialog.vue')['default']
     MarkdownPreviewer: typeof import('./components/MarkdownPreviewer.vue')['default']
@@ -148,6 +151,7 @@ declare module 'vue' {
     Tools: typeof import('./bizComponents/Tools.vue')['default']
     Tooltip: typeof import('./components/Tooltip.vue')['default']
     Tree: typeof import('./components/tree/Tree.vue')['default']
+    'Tree copy1': typeof import('./components/tree/Tree copy1.vue')['default']
     UnorderedListOutlined: typeof import('@ant-design/icons-vue')['UnorderedListOutlined']
   }
 }

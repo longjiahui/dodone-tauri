@@ -30,20 +30,17 @@
                 </div>
               </template>
             </SelectableTag>
-            <Tree
-              :loop-datas="tasks"
-              expand-strategy="all"
-              custom-expand-element
-            >
+            <Tree :loop-datas="tasks" expand-strategy="all">
+              <!-- custom-expand-element -->
               <template #default="{ item }">
                 <div class="p-1">
                   <SelectableTag
                     :selected="selectedId === item.id"
-                    :title="item.content"
-                    :content="item.description"
+                    :title="item.data.content"
+                    :content="item.data.description"
                     @click="selectedId = item.id"
                   >
-                    <template #title-prefix v-if="item.state === 'DONE'">
+                    <template #title-prefix v-if="item.data.state === 'DONE'">
                       <CheckCircleOutlined></CheckCircleOutlined>
                     </template>
                   </SelectableTag>
@@ -76,6 +73,7 @@
 
 <script setup lang="ts">
 import { DialogType } from "@/components/dialog/dialog";
+import { LoopData } from "@/components/Loop.vue";
 import { useTaskStore } from "@/store/task";
 import { useTaskGroupStore } from "@/store/taskGroup";
 import { ReadOnlyTaskWithChildren } from "@/types";
@@ -106,9 +104,16 @@ const taskGroup = computed(() =>
 //   taskStore.treeTasks.filter((t) => t.groupId === props.self.groupId),
 // )
 const tasks = computed(() => {
-  return mapTree(
+  return mapTree<ReadOnlyTaskWithChildren, LoopData<ReadOnlyTaskWithChildren>>(
     taskStore.treeTasksGroupByTaskGroupId[finalGroupId.value]?.slice() || [],
-    (t) => ({ ...t }),
+    (t) => {
+      return {
+        id: t.id,
+        data: t,
+        children: [],
+      };
+    },
+    // satisfies LoopData<ReadOnlyTaskWithChildren>
     {
       ...(props.self?.id
         ? {
@@ -116,7 +121,7 @@ const tasks = computed(() => {
               t.id !== props.self!.id && t.groupId === props.self!.groupId,
           }
         : {}),
-      sort: sortTasks,
+      sort: (a, b) => sortTasks(a.data, b.data),
     }
   );
 });

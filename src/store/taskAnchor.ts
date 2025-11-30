@@ -103,9 +103,11 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
       )[]
     ) {
       anchors.forEach((d, i) => (d.sortOrder = i));
-      const creates = anchors
-        .filter((d) => !d.id)
-        .map((d) => ({ taskId: d.taskId, sortOrder: d.sortOrder! }));
+      const creates: any[] = [];
+      // ||
+      // anchors
+      //   .filter((d) => !d.id)
+      //   .map((d) => ({ taskId: d.taskId, sortOrder: d.sortOrder! }));
       const updates = anchors
         .filter((d) => !!d.id)
         .map((d) => ({ id: d.id!, sortOrder: d.sortOrder! }));

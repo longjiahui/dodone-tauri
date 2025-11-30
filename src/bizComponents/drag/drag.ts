@@ -1,3 +1,4 @@
+import { DraggableTreeData } from "@/components/tree/DraggableTree.vue";
 import { ReadOnlyTaskViewWithExtra, ReadOnlyTaskWithChildren } from "@/types";
 import { Emitter } from "@/utils/emitter";
 import type { TaskGroupOrAnchor } from "@/views/default/TaskPage.vue";
@@ -19,11 +20,15 @@ export type GetDragDataType<T extends DragDataType> = T extends
   | "order-task"
   | `move-tasks-${infer _}`
   ? ReadOnlyTaskWithChildren[]
-  : T extends `order-taskgrouporanchor`
-    ? TaskGroupOrAnchor[]
-    : T extends "order-taskview"
-      ? ReadOnlyTaskViewWithExtra[]
-      : never;
+  : T extends `order-taskgroup`
+    ? DraggableTreeData<TaskGroupOrAnchor, ReadOnlyTaskWithChildren>[]
+    : T extends `order-taskanchor`
+      ? DraggableTreeData<TaskGroupOrAnchor, ReadOnlyTaskWithChildren>[]
+      : T extends `order-taskgrouporanchor`
+        ? DraggableTreeData<TaskGroupOrAnchor, ReadOnlyTaskWithChildren>[]
+        : T extends "order-taskview"
+          ? ReadOnlyTaskViewWithExtra[]
+          : never;
 
 export interface DragData<T = any> {
   type: DragDataType;

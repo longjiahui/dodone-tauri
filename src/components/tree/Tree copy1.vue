@@ -11,22 +11,15 @@
           }"
         ></div>
         <!-- v-if="hasChildren" -->
-        <ExpandIcon
+        <CaretRightOutlined
           v-if="!customExpandElement"
-          @click.stop="
-            (e: GlobalTypes['MouseEvent']) => {
-              if (e.metaKey || e.ctrlKey) {
-                toggle({
-                  deep: true,
-                });
-              } else {
-                toggle();
-              }
-            }
-          "
-          :is-expand
-          :no-children="!hasChildren"
-        ></ExpandIcon>
+          @click.stop="toggle()"
+          :class="[
+            'transition-transform duration-300',
+            isExpand ? 'rotate-90' : '',
+            hasChildren ? 'opacity-100' : 'opacity-0',
+          ]"
+        ></CaretRightOutlined>
         <div class="stretch self-stretch">
           <slot
             v-bind="{
@@ -48,10 +41,10 @@ export type TreeExpandStrategy = "firstLayer" | "all" | "none";
 </script>
 <script setup lang="ts" generic="T extends LoopData<any>">
 import { useElementSize } from "@vueuse/core";
-import Loop, { ExpandOption, LoopData } from "../Loop.vue";
+import Loop, { LoopData } from "../Loop.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
+import { CaretRightOutlined } from "@ant-design/icons-vue";
 import { flatMapTree, traverse } from "@/utils/traverse";
-import { GlobalTypes } from "@/utils/window";
 
 const props = withDefaults(
   defineProps<{
@@ -80,7 +73,7 @@ const datasLayerDict = computed(() => {
   });
   return result;
 });
-type ExpandsType = Partial<Record<string, ExpandOption>>;
+type ExpandsType = Partial<Record<string | number, boolean>>;
 
 const loopDatasDict = computed(
   () =>
@@ -94,8 +87,7 @@ const loopDatasDict = computed(
 );
 
 function getFinalExpand(key: string | number) {
-  const state = expands.value[key]?.isExpand;
-  const finalState = !!state;
+  const state = expands.value[key];
   // 如果没有children，返回false
   const data = loopDatasDict.value[key];
   const hasChildren = !!data?.children?.length;
@@ -115,33 +107,60 @@ function getFinalExpand(key: string | number) {
       return false;
     }
   } else {
-    return hasChildren ? finalState : false;
+    return hasChildren ? state : false;
   }
 }
-
 const expands = props.expandsStorageKey
   ? useLocalStorage<ExpandsType>(props.expandsStorageKey, {})
   : ref<ExpandsType>({});
 
-onMounted(() => {
-  watch(
-    () => props.loopDatas,
-    async (datas, _olds) => {
-      const newExpands: Record<string, boolean> = {};
-      traverse(datas, (d) => {
-        newExpands[d.id] = getFinalExpand(d.id);
-      });
-      expands.value = Object.keys(newExpands).reduce(
-        (acc, k) => {
-          acc[k] = { isExpand: newExpands[k] };
-          return acc;
-        },
-        {} as Partial<Record<string, ExpandOption>>
-      );
-    },
-    {
-      immediate: true,
-    }
-  );
-});
+// onMounted(() => {
+//   watch(
+//     () => props.loopDatas,
+//     async (datas, _olds) => {
+//       const newExpands: ExpandsType = {};
+//       traverse(datas, (d) => {
+//         newExpands[d.id] = getFinalExpand(d.id);
+//       });
+//       // 这里要赋予新对象是因为 后面expands的watch是根据new olds来判断的，如果不是新对象那么new和old是同一个对象，无法判断出更新了什么
+//       expands.value = { ...newExpands };
+//     },
+//     {
+//       immediate: true,
+//       deep: true,
+//     }
+//   );
+
+//   let _isExpandsWatchCalledOnce = false;
+//   watch(
+//     expands,
+//     async (values, olds) => {
+//       const duration = !_isExpandsWatchCalledOnce ? 0 : 0.3;
+//       _isExpandsWatchCalledOnce = true;
+//       const openKeys = Object.keys(values).filter(
+//         (key) => values[key] && !olds?.[key]
+//       );
+//       const closeKeys = olds
+//         ? Object.keys(olds).filter((key) => !values[key] && olds[key])
+//         : [];
+//       // await new Promise((r) => setTimeout(r));
+//       await nextTick();
+//       await Promise.all([
+//         ...openKeys.map((key) =>
+//           loopRef.value?.toggle(key, {
+//             toState: true,
+//             duration,
+//           })
+//         ),
+//         ...closeKeys.map((key) => {
+//           loopRef.value?.toggle(key, {
+//             toState: false,
+//             duration,
+//           });
+//         }),
+//       ]);
+//     },
+//     { immediate: true, deep: true }
+//   );
+// });
 </script>
