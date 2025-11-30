@@ -104,14 +104,19 @@
         :dropdown-hide-delete="taskDropdownHideDelete"
       >
         <template #beforeContent v-if="hasChildren">
-          <CaretRightOutlined
-            @click.stop="toggle()"
-            :class="[
-              'transition-transform duration-300',
-              isExpand ? 'rotate-90' : '',
-              hasChildren ? 'opacity-100' : 'opacity-0',
-            ]"
-          ></CaretRightOutlined>
+          <ExpandIcon
+            @click.stop="
+              (e: GlobalTypes['MouseEvent']) => {
+                if (e.metaKey || e.ctrlKey) {
+                  toggle({ deep: true });
+                } else {
+                  toggle();
+                }
+              }
+            "
+            :is-expand
+            :no-children="!hasChildren"
+          ></ExpandIcon>
         </template>
         <template #task-tools-before-delete="d">
           <slot name="task-tools-before-delete" v-bind="d"></slot>
@@ -129,6 +134,7 @@ import { useTaskStore } from "@/store/task";
 import { mapTree } from "@/utils/traverse";
 import { DraggableTreeData } from "@/components/tree/DraggableTree.vue";
 import { channel } from "diagnostics_channel";
+import { GlobalTypes } from "@/utils/window";
 
 const props = withDefaults(
   defineProps<{
