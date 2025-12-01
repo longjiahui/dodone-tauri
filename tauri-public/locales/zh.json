@@ -142,6 +142,7 @@
   "hideFinishedTasks": "隐藏已完成任务",
   "showFinishedTasks": "显示已完成任务",
   "sortByPriority": "根据优先级设置排序",
+  "sortByPriorityDeep": "根据优先级设置排序（包含所有子节点）",
   "finishedFactor": "已完成工作量",
   "totalFactor": "总工作量",
   "finishedTaskList": "已完成任务列表",
@@ -170,6 +171,7 @@
   "sun": "周日",
   "general": "常规",
   "database": "数据库",
+  "pickDate": "选择日期",
   "pickDateRange": "选择日期范围",
   "followSystem": "跟随系统",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "{n}分钟前",
   "halfHourAgo": "半小时前",
   "nHoursAgo": "{n}小时前",
-  "nDaysAgo": "{n}天前"
+  "nDaysAgo": "{n}天前",
+  "filter": "过滤",
+  "batchSetProperties": "批量设置属性",
+  "batchSetPropertiesConfirm": "确认批量设置当前列表显示的所有任务的属性吗，修改后不可恢复。",
+  "batchUnsetTarget": "批量取消目标",
+  "batchDeleteTasks": "批量删除任务"
 }

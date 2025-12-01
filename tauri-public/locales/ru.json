@@ -142,6 +142,7 @@
   "hideFinishedTasks": "Скрыть завершенные задачи",
   "showFinishedTasks": "Показать завершенные задачи",
   "sortByPriority": "Сортировать по приоритету",
+  "sortByPriorityDeep": "Сортировать по приоритету (включая все дочерние узлы)",
   "finishedFactor": "Завершенный объем работы",
   "totalFactor": "Общий объем работы",
   "finishedTaskList": "Список завершенных задач",
@@ -170,6 +171,7 @@
   "sun": "Вс",
   "general": "Общие",
   "database": "База данных",
+  "pickDate": "Выбрать дату",
   "pickDateRange": "Выбрать диапазон дат",
   "followSystem": "Следовать системе",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "{n} минут назад",
   "halfHourAgo": "полчаса назад",
   "nHoursAgo": "{n} часов назад",
-  "nDaysAgo": "{n} дней назад"
+  "nDaysAgo": "{n} дней назад",
+  "filter": "Фильтр",
+  "batchSetProperties": "Массовая установка свойств",
+  "batchSetPropertiesConfirm": "Вы уверены, что хотите массово установить свойства для всех задач, отображаемых в текущем списке? Это действие нельзя отменить.",
+  "batchUnsetTarget": "Массово удалить цель",
+  "batchDeleteTasks": "Массово удалить задачи"
 }

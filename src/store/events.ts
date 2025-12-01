@@ -1,5 +1,5 @@
 import { GetAPIParams, webProtocols } from "@/protocol";
-import { ReadOnlyTaskWithChildren, TaskInDay, TaskTargetRecord } from "@/types";
+import { ReadOnlyTaskWithChildren } from "@/types";
 import { backend } from "@/utils/backend";
 import { Emitter } from "@/utils/emitter";
 
@@ -31,11 +31,16 @@ export const backendEvent = new Emitter<{
 }>();
 Object.keys(backend).forEach((k) => {
   if (k.startsWith("on_")) {
-    backend[k as keyof typeof backend](((...rest: any[]) =>
-      (backendEvent as any).emit(
+    backend[k as keyof typeof backend](((...rest: any[]) => {
+      console.debug(
+        `backend event received[${k.replace(/^on_/, "") as keyof typeof webProtocols}]: `,
+        ...rest
+      );
+      return (backendEvent as any).emit(
         k.replace(/^on_/, "") as keyof typeof webProtocols,
         ...rest
-      )) as any);
+      );
+    }) as any);
   }
 });
 // export const backendEvent = new Emitter<{

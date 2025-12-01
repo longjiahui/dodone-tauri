@@ -65,11 +65,11 @@ pub async fn delete_task_anchor_by_id(
 }
 
 #[tauri::command]
-pub async fn create_and_change_task_anchor_orders(
+pub async fn change_task_anchor_orders(
     db_manage: tauri::State<'_, DbState>,
-    creates: Vec<task_anchor::CreateModel>,
+    // creates: Vec<task_anchor::CreateModel>,
     datas: Vec<OrderModel>,
-) -> Result<Value, String> {
+) -> Result<(), String> {
     let db_guard = get_db_manage(db_manage).await?;
     // use transaction
     let txn = db_guard
@@ -79,26 +79,26 @@ pub async fn create_and_change_task_anchor_orders(
         .map_err(|e| e.to_string())?;
 
     // create
-    let mut created: Vec<task_anchor::Model> = Vec::new();
-    for create in creates {
-        let active_model: task_anchor::ActiveModel = task_anchor::ActiveModel {
-            sort_order: ActiveValue::Set(if let Some(order) = create.sort_order {
-                order
-            } else {
-                0
-            }),
-            id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
-            task_id: ActiveValue::Set(create.task_id),
-            created_at: ActiveValue::Set(Utc::now()),
-            updated_at: ActiveValue::Set(Utc::now()),
-            ..Default::default()
-        };
-        let res = task_anchor::Entity::insert(active_model)
-            .exec_with_returning(&txn)
-            .await
-            .map_err(|e| e.to_string())?;
-        created.push(res);
-    }
+    // let mut created: Vec<task_anchor::Model> = Vec::new();
+    // for create in creates {
+    //     let active_model: task_anchor::ActiveModel = task_anchor::ActiveModel {
+    //         sort_order: ActiveValue::Set(if let Some(order) = create.sort_order {
+    //             order
+    //         } else {
+    //             0
+    //         }),
+    //         id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
+    //         task_id: ActiveValue::Set(create.task_id),
+    //         created_at: ActiveValue::Set(Utc::now()),
+    //         updated_at: ActiveValue::Set(Utc::now()),
+    //         ..Default::default()
+    //     };
+    //     let res = task_anchor::Entity::insert(active_model)
+    //         .exec_with_returning(&txn)
+    //         .await
+    //         .map_err(|e| e.to_string())?;
+    //     created.push(res);
+    // }
     for (_i, data) in datas.into_iter().enumerate() {
         let pk = task_anchor::Entity::find_by_id(data.id);
 
@@ -116,7 +116,5 @@ pub async fn create_and_change_task_anchor_orders(
             .map_err(|e| e.to_string())?;
     }
     txn.commit().await.map_err(|e| e.to_string())?;
-    Ok(serde_json::json!({
-        "created": created
-    }))
+    Ok(())
 }

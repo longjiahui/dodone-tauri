@@ -84,7 +84,7 @@
     </div>
   </Define>
   <Tree
-    class="overflow-x-hidden"
+    class="overflow-hidden"
     :loop-datas="props.modelValue"
     v-if="props.modelValue.length > 0"
     :custom-expand-element="treeCustomExpandElement"
@@ -200,7 +200,7 @@ const props = withDefaults(
     orderChannelDataAdapter?: (
       channel: DragDataType,
       d: any
-    ) => Data | undefined;
+    ) => Data | Pick<Data, "dragData"> | undefined;
     orderDisabled?: (d: Data) => ComponentProps<typeof BizDrop>["disabled"];
 
     changeParentChannel?: (

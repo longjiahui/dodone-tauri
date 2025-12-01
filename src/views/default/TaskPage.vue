@@ -544,15 +544,15 @@
                               ) {
                                 return treeItem;
                               }
-                            }) ??
-                            ({
-                              data: {
-                                type: 'anchor',
-                                anchor: {
-                                  taskId: data.id,
-                                } satisfies Partial<TaskAnchor> as TaskGroupOrAnchor['anchor'],
-                              } satisfies Partial<TaskGroupOrAnchor> as unknown as TaskGroupOrAnchor,
-                            } as DraggableTreeData<any, any>)
+                            }) ?? {
+                              dragData: data,
+                              // data: {
+                              //   type: 'anchor',
+                              //   anchor: {
+                              //     taskId: data.id,
+                              //   } satisfies Partial<TaskAnchor> as TaskGroupOrAnchor['anchor'],
+                              // } satisfies Partial<TaskGroupOrAnchor> as unknown as TaskGroupOrAnchor,
+                            }
                           );
                         } else if (
                           ['order-taskgroup', 'order-taskanchor'].includes(
@@ -574,20 +574,23 @@
                         if (ps.length) {
                           // anchors
                           await getWindow().Promise.all([
-                            dragDatas.map(async (d) => {
-                              const myMeta = getParentFromTree(
-                                d.id,
-                                taskGroupTree
-                              );
+                            ...dragDatas.map(async (d) => {
+                              // 如果有dragData，说明是任务拖拽过来的，类型是ReadOnlyTaskWithChildren
+                              const dragTask =
+                                d.dragData ?? d.data.anchor?.task;
+                              const dragTaskId = dragTask?.id;
+                              const myMeta = d.id
+                                ? getParentFromTree(d.id, taskGroupTree)
+                                : null;
                               // 没有myParent，说明还没添加anchor
                               let myParent = myMeta?.ps[myMeta?.ps.length - 1];
                               if (!myParent) {
-                                const task =
-                                  taskStore.tasksDict[d.data.anchor?.taskId!];
-                                if (task && d.data?.anchor?.taskId) {
-                                  await taskAnchorStore.createTaskAnchor(
-                                    d.data?.anchor?.taskId
-                                  );
+                                const task = taskStore.tasksDict[dragTaskId!];
+                                if (task && dragTaskId) {
+                                  const newAnchor =
+                                    await taskAnchorStore.createTaskAnchor(
+                                      dragTaskId
+                                    );
                                   const parent = _findParent(task);
                                   const group = taskGroupTree.find(
                                     (d) => d.id === task.groupId
@@ -599,6 +602,23 @@
                                       group?.children || [],
                                       (d) => (d.id === parent ? d : undefined)
                                     );
+                                  }
+                                  // 将newDatas中的自己修改成anchor
+                                  const d = newDatas.find(
+                                    (d) => d.dragData?.id === dragTaskId
+                                  );
+                                  if (d) {
+                                    Object.assign(d, {
+                                      id: newAnchor.id,
+                                      data: {
+                                        id: newAnchor.id,
+                                        parentId: myParent?.data.id || null,
+                                        group: myParent?.data.group,
+                                        children: [],
+                                        type: 'anchor',
+                                        anchor: newAnchor,
+                                      },
+                                    });
                                   }
                                 } else {
                                   throw new Error(
@@ -642,10 +662,13 @@
                           ]);
                           if (newDatas.every((d) => d.data.type === 'anchor')) {
                             // 检查所有anchor是否位于一个parentId下
-                            await taskAnchorStore.createAndChangeOrders(
+                            await taskAnchorStore.changeOrders(
                               newDatas
-                                .filter((d) => !!d.data.anchor)
-                                .map((d) => d.data.anchor!)
+                                .filter((d) => !!d.data.anchor?.id)
+                                .map((d, i) => ({
+                                  id: d.data.anchor!.id!,
+                                  sortOrder: i,
+                                }))
                             );
                           }
                         } else {
@@ -672,15 +695,26 @@
                                   d.data.anchor.task.children.slice()
                                 ),
                             }
-                          : {}),
+                          : d.data.group
+                            ? {
+                                pendingLeaveTasksFactor:
+                                  d.data.group!.totalFactor -
+                                  d.data.group!.finishedFactor,
+                              }
+                            : {}),
                         data: d.data,
                       }"
                       #default="{ isSelected, pendingLeaveTasksFactor, data }"
                     >
                       <Scope
                         :d="{
-                          isShowGroupBadge: data.type === 'group',
+                          isShowGroupBadge: !!(
+                            data.type === 'group' &&
+                            pendingLeaveTasksFactor &&
+                            pendingLeaveTasksFactor > 0
+                          ),
                           isShowAnchorBadge: !!(
+                            data.type === 'anchor' &&
                             pendingLeaveTasksFactor &&
                             pendingLeaveTasksFactor > 0
                           ),
@@ -771,21 +805,11 @@
                             v-if="isShowAnchorBadge || isShowGroupBadge"
                           >
                             <Badge
-                              v-if="isShowGroupBadge"
-                              :invert="isSelected"
-                              :value="
-                                data.group!.totalFactor -
-                                data.group!.finishedFactor
-                              "
-                              :hue="data.group?.color"
-                            >
-                            </Badge>
-                            <Badge
-                              v-if="isShowAnchorBadge"
                               :invert="isSelected"
                               :value="pendingLeaveTasksFactor!"
                               :hue="data.group?.color"
-                            ></Badge>
+                            >
+                            </Badge>
                           </template>
                           <template #title-prefix v-if="hasChildren">
                             <ExpandIcon

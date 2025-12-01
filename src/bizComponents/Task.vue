@@ -9,8 +9,9 @@
         :class="[
           'group relative rounded border p-2 pr-1 pl-3',
           modelValue.priority >= highTaskPriority
-            ? 'outline-urgent outline-2 -outline-offset-2 outline-dashed'
+            ? `outline-urgent outline-2 -outline-offset-2 outline-dashed ${bgColor3}!`
             : '',
+          modelValue.priority <= lowTaskPriority ? 'opacity-55' : '',
           modelValue.state === 'DONE'
             ? `border-light-${background + 2} bg-bg rounded hover:${bgColor1}`
             : `${bgColor1} hover:${bgColor2} border-light-${background + 1}`,
@@ -105,7 +106,7 @@
               </div>
               <!-- modelValue.description || -->
               <div
-                class="v items-stretch gap-0.5"
+                class="v items-stretch gap-0.5 leading-none!"
                 v-if="
                   modelValue.taskViewTasks.length ||
                   modelValue.target ||
@@ -178,17 +179,13 @@
                   @click.stop="handleEditPriority(modelValue)"
                   :class="[
                     '_default-attr',
-                    modelValue.priority >= highTaskPriority
-                      ? '!text-urgent'
-                      : '',
+                    isTaskHighPriority ? 'text-urgent! font-semibold' : '',
                   ]"
                 >
                   <Button
                     type="text"
                     :class="[
-                      modelValue.priority >= highTaskPriority
-                        ? '!text-urgent'
-                        : '',
+                      isTaskHighPriority ? 'text-urgent! font-semibold' : '',
                     ]"
                   >
                     <ThunderboltOutlined></ThunderboltOutlined>
@@ -224,7 +221,7 @@
                   @click.stop="handleEditDateRange(modelValue)"
                 >
                   <Button type="text">
-                    <ClockCircleOutlined></ClockCircleOutlined>
+                    <TableOutlined></TableOutlined>
                   </Button>
                   <DateRangeDesc
                     :start-at="modelValue.startAt"
@@ -295,6 +292,7 @@ import {
   defaultTaskPriority,
   defaultTaskViewIcon,
   highTaskPriority,
+  lowTaskPriority,
   themeHSColorL,
   themeHSColorS,
 } from "@/const";
@@ -311,10 +309,12 @@ import {
 import {
   AimOutlined,
   BookOutlined,
+  CalendarOutlined,
   ClockCircleOutlined,
   MoreOutlined,
   PieChartOutlined,
   ReloadOutlined,
+  TableOutlined,
   TagOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons-vue";
@@ -364,6 +364,9 @@ const taskGroup = computed(
   () => taskGroupStore.taskGroupsDict[props.modelValue.groupId]
 );
 
+const isTaskHighPriority = computed(
+  () => props.modelValue.priority >= highTaskPriority
+);
 const bgColor1 = computed(() => `bg-light-${props.background}`);
 const bgColor2 = computed(() => `bg-light-${props.background + 1}`);
 const bgColor3 = computed(() => `bg-light-${props.background + 2}`);
@@ -456,6 +459,6 @@ const targetFinished = computed(() => {
 @reference "../styles/index.css";
 
 ._default-attr {
-  @apply text-light flex cursor-pointer items-center gap-2 self-start text-sm;
+  @apply text-light flex cursor-pointer items-center gap-2 self-start text-sm leading-none!;
 }
 </style>

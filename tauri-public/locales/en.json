@@ -138,6 +138,7 @@
   "hideFinishedTasks": "Hide Finished Tasks",
   "showFinishedTasks": "Show Finished Tasks",
   "sortByPriority": "Sort by Priority",
+  "sortByPriorityDeep": "Sort by Priority (Including All Child Nodes)",
   "finishedFactor": "Completed Workload",
   "totalFactor": "Total Workload",
   "finishedTaskList": "Completed Task List",
@@ -166,6 +167,7 @@
   "sun": "Sunday",
   "general": "General",
   "database": "Database",
+  "pickDate": "Pick Date",
   "pickDateRange": "Pick Date Range",
   "followSystem": "Follow System",
 
@@ -185,5 +187,10 @@
   "nMinutesAgo": "{n} minutes ago",
   "halfHourAgo": "half an hour ago",
   "nHoursAgo": "{n} hours ago",
-  "nDaysAgo": "{n} days ago"
+  "nDaysAgo": "{n} days ago",
+  "filter": "Filter",
+  "batchSetProperties": "Batch Set Properties",
+  "batchSetPropertiesConfirm": "Are you sure you want to batch set properties for all tasks displayed in the current list? This action cannot be undone.",
+  "batchUnsetTarget": "Batch Unset Target",
+  "batchDeleteTasks": "Batch Delete Tasks"
 }

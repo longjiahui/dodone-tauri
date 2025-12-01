@@ -56,19 +56,27 @@ export function updateFactor(
     factor: isNaN(+value) ? defaultTaskFactor : +value,
   });
 }
-export function handleEditFactor(task: ReadOnlyTaskWithChildren) {
+
+export function getFactorInput(currentFactor?: number | string) {
   return dialogs
     .InputDialog({
       type: "number",
       content: "请输入工作量",
-      value: (task.factor ?? defaultTaskFactor).toString(),
+      value: (currentFactor ?? defaultTaskFactor).toString(),
       prefix: PieChartOutlined,
     })
     .finishPromise((d) => {
-      if (d != null) {
-        return updateFactor(task, d);
+      if (d != null && !isNaN(+d)) {
+        return +d;
+      } else {
+        throw new Error(`无效的工作量类型：${d} (typeof d)${typeof d}`);
       }
     });
+}
+export function handleEditFactor(task: ReadOnlyTaskWithChildren) {
+  return getFactorInput(task.factor).then((d) => {
+    return updateFactor(task, d);
+  });
 }
 
 export function updatePriority(
@@ -81,12 +89,12 @@ export function updatePriority(
   });
 }
 
-export function handleEditPriority(task: ReadOnlyTaskWithChildren) {
+export function getPriorityInput(currentPriority?: number | string) {
   return dialogs
     .InputDialog({
       type: "number",
       content: "请输入优先级",
-      value: (task.priority ?? 0).toString(),
+      value: (currentPriority ?? defaultTaskPriority).toString(),
       prefix: ThunderboltOutlined,
       quickOptions: [
         {
@@ -105,10 +113,18 @@ export function handleEditPriority(task: ReadOnlyTaskWithChildren) {
       ],
     })
     .finishPromise((d) => {
-      if (d != null) {
-        return updatePriority(task, d);
+      if (d != null && !isNaN(+d)) {
+        return +d;
+      } else {
+        throw new Error(`无效的优先级类型：${d} (typeof d)${typeof d}`);
       }
     });
+}
+
+export function handleEditPriority(task: ReadOnlyTaskWithChildren) {
+  return getPriorityInput(task.priority).then((d) => {
+    return updatePriority(task, d);
+  });
 }
 
 export function useTaskState(task: MaybeRef<ReadOnlyTaskWithChildren>) {

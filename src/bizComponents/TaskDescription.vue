@@ -2,7 +2,7 @@
   <MarkdownPreviewer
     :title="modelValue"
     :model-value="modelValue || ''"
-    class="_task-description line-clamp-6 pr-1 pb-1"
+    class="_task-description line-clamp-6 leading-multi pr-1 pb-1"
     :no-image
   >
   </MarkdownPreviewer>

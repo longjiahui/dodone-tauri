@@ -3,75 +3,91 @@
 @import "tailwindcss";
 @source inline("{hover:,group-hover:}border-light-{1,2,3,4,5},bg-primary-light-{1,2,3,4,5,6}");
 
-@layer utilities{
+@layer utilities {
+  body,
+  html,
+  #app {
+    @apply size-full overflow-hidden;
+    letter-spacing: 0.02em;
+  }
 
-	body, html, #app{
-		@apply size-full overflow-hidden;
-		letter-spacing: .02em;
-	}
+  html {
+    font-size: 14px;
+    /* line-height: 1.25!important; */
+    /* line-height: 1!important; */
+    /* font-family: -apple-system, "Microsoft YaHei", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; */
+    /* apple web font */
+    font-family:
+      "SF Pro SC", "SF Pro Text", "SF Pro Icons", "PingFang SC",
+      "Helvetica Neue", "Helvetica", "Arial", sans-serif !important;
+    /* font-family: "LXGW WenKai", -apple-system, "Microsoft YaHei", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; */
+    user-select: none;
+    -webkit-user-select: none;
+  }
 
-	html{
-		font-size: 14px;
-		/* line-height: 1.25!important; */
-		/* line-height: 1!important; */
-		/* font-family: -apple-system, "Microsoft YaHei", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; */
-		/* apple web font */
-		font-family: "SF Pro SC","SF Pro Text","SF Pro Icons","PingFang SC","Helvetica Neue","Helvetica","Arial",sans-serif!important;
-		/* font-family: "LXGW WenKai", -apple-system, "Microsoft YaHei", BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important; */
-		user-select: none;
-		-webkit-user-select: none;
-	}
+  * {
+    box-sizing: border-box;
+  }
 
-	*{
-		box-sizing: border-box
-	}
-	
-	pre, h1, h2, h3, h4, h5, h6, p, ul, li, ol {
-		margin: 0!important;
-	}
+  pre,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  ul,
+  li,
+  ol {
+    margin: 0 !important;
+  }
 
-	ul, ol, menu{
-		list-style: inside!important;
-	}
+  /* 否则datepicker的 三列数字会出现li的小黑点 */
+  ul:not(.ant-picker-time-panel-column),
+  ol,
+  menu {
+    list-style: inside !important;
+  }
 }
 
 .stretch {
-	@apply flex-1 min-h-0 min-w-0;
+  @apply flex-1 min-h-0 min-w-0;
 }
 
-.v{
-	@apply flex flex-col;
+.v {
+  @apply flex flex-col;
 }
-.h{
-	@apply flex;
+.h {
+  @apply flex;
 }
 .inline-h {
-	@apply inline-flex;
+  @apply inline-flex;
 }
-.inline-v{
-	@apply inline-flex flex-col;
+.inline-v {
+  @apply inline-flex flex-col;
 }
 
 .drop-area {
-	@apply relative;
-	&::after{
-		content: "";
-		@apply pointer-events-none absolute inset-0 z-[999] outline-2 outline-transparent duration-300 outline-dashed;
-	}
-	/* @apply outline-2 outline-transparent duration-300 outline-dashed; */
+  @apply relative;
+  &::after {
+    content: "";
+    @apply pointer-events-none absolute inset-0 z-[999] outline-2 outline-transparent duration-300 outline-dashed;
+  }
+  /* @apply outline-2 outline-transparent duration-300 outline-dashed; */
 }
-.dropping-active{
-	&::after{
-		@apply !outline-primary outline-dashed -outline-offset-3 bg-primary-a20;
-	}
+.dropping-active {
+  &::after {
+    @apply !outline-primary outline-dashed -outline-offset-3 bg-primary-a20;
+  }
 }
 
 @import "./theme.css";
 @import "./transition.css";
 @import "./antdOverride.css";
 
-.bg-blur{
-	@apply backdrop-blur-xs bg-[rgba(255,255,255,.25)];
+.bg-blur {
+  @apply backdrop-blur-xs bg-[rgba(255,255,255,.25)];
 }
 
 /* electron drag */
@@ -84,6 +100,6 @@
 } */
 
 /* 如果使用gap、space-y（flex gap/ margin），那会导致中间有一小段距离是检测不到事件的，是ordercontainer的设计问题 */
-.order-container-gap-2{
-	@apply [&>div]:pb-2 [&>div:last-child]:pb-0
+.order-container-gap-2 {
+  @apply [&>div]:pb-2 [&>div:last-child]:pb-0;
 }

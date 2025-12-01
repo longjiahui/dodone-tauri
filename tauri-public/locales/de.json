@@ -142,6 +142,7 @@
   "hideFinishedTasks": "Abgeschlossene Aufgaben ausblenden",
   "showFinishedTasks": "Abgeschlossene Aufgaben anzeigen",
   "sortByPriority": "Nach Priorität sortieren",
+  "sortByPriorityDeep": "Nach Priorität sortieren (einschließlich aller Unterknoten)",
   "finishedFactor": "Abgeschlossene Arbeitslast",
   "totalFactor": "Gesamte Arbeitslast",
   "finishedTaskList": "Liste abgeschlossener Aufgaben",
@@ -170,6 +171,7 @@
   "sun": "So",
   "general": "Allgemein",
   "database": "Datenbank",
+  "pickDate": "Datum auswählen",
   "pickDateRange": "Datumsbereich auswählen",
   "followSystem": "System folgen",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "vor {n} Minuten",
   "halfHourAgo": "vor einer halben Stunde",
   "nHoursAgo": "vor {n} Stunden",
-  "nDaysAgo": "vor {n} Tagen"
+  "nDaysAgo": "vor {n} Tagen",
+  "filter": "Filter",
+  "batchSetProperties": "Eigenschaften stapelweise festlegen",
+  "batchSetPropertiesConfirm": "Möchten Sie die Eigenschaften aller in der aktuellen Liste angezeigten Aufgaben stapelweise festlegen? Diese Änderung kann nicht rückgängig gemacht werden.",
+  "batchUnsetTarget": "Ziel stapelweise entfernen",
+  "batchDeleteTasks": "Aufgaben stapelweise löschen"
 }

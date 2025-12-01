@@ -142,6 +142,7 @@
   "hideFinishedTasks": "完了済みタスクを非表示",
   "showFinishedTasks": "完了済みタスクを表示",
   "sortByPriority": "優先度設定による並び替え",
+  "sortByPriorityDeep": "優先度で並び替え（すべての子ノードを含む）",
   "finishedFactor": "完了済み作業量",
   "totalFactor": "総作業量",
   "finishedTaskList": "完了済みタスクリスト",
@@ -170,6 +171,7 @@
   "sun": "日曜日",
   "general": "一般",
   "database": "データベース",
+  "pickDate": "日付を選択",
   "pickDateRange": "日付範囲を選択",
   "followSystem": "システムに従う",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "{n}分前",
   "halfHourAgo": "30分前",
   "nHoursAgo": "{n}時間前",
-  "nDaysAgo": "{n}日前"
+  "nDaysAgo": "{n}日前",
+  "filter": "フィルタ",
+  "batchSetProperties": "プロパティを一括設定",
+  "batchSetPropertiesConfirm": "現在のリストに表示されているすべてのタスクのプロパティを一括設定しますか？変更後は復元できません。",
+  "batchUnsetTarget": "目標を一括解除",
+  "batchDeleteTasks": "タスクを一括削除"
 }

@@ -15,9 +15,9 @@
           :disabled-date="
             (d) => {
               if (pickerValue[1]) {
-                return d.isAfter(pickerValue[1])
+                return d.isAfter(pickerValue[1]);
               }
-              return false
+              return false;
             }
           "
         ></DatePicker>
@@ -33,9 +33,9 @@
           :disabled-date="
             (d) => {
               if (pickerValue[0]) {
-                return d.isBefore(pickerValue[0])
+                return d.isBefore(pickerValue[0]);
               }
-              return false
+              return false;
             }
           "
         ></DatePicker>
@@ -49,7 +49,7 @@
             pickerValue && [
               pickerValue[0] ? dayjs(pickerValue[0]) : undefined,
               pickerValue[1] ? dayjs(pickerValue[1]) : undefined,
-            ],
+            ]
           )
         "
         type="primary"
@@ -60,24 +60,22 @@
 </template>
 
 <script lang="ts" setup>
-import { dayjs, Dayjs } from "@/utils/time"
-import { DialogType } from "../dialog"
+import { dayjs, Dayjs } from "@/utils/time";
+import { DialogType } from "../dialog";
 
 const props = withDefaults(
   defineProps<{
-    dialog: DialogType<any, [Dayjs | undefined, Dayjs | undefined]>
-    title?: string | null
-    content?: string
-    value?: [string | Dayjs | undefined, string | Dayjs | undefined]
+    dialog: DialogType<any, [Dayjs | undefined, Dayjs | undefined]>;
+    title?: string | null;
+    content?: string;
+    // value?: [string | Dayjs | undefined, string | Dayjs | undefined]
+    value?: [Dayjs | null, Dayjs | null];
   }>(),
   {
     title: "Pick a date range",
-  },
-)
-const pickerValue = ref<[string, string] | [Dayjs, Dayjs]>(
-  (props.value?.map((d) => d ?? "") as [string, string] | [Dayjs, Dayjs]) || [
-    "",
-    "",
-  ],
-)
+  }
+);
+const pickerValue = ref<[Dayjs | null, Dayjs | null]>(
+  props.value || [null, null]
+);
 </script>

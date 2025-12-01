@@ -8,28 +8,28 @@
     </template>
     <template #footer>
       <Button @click="dialog.close()">{{ $t("cancel") }}</Button>
-      <Button @click="dialog.finish(dayjs(pickerValue))" type="primary">{{
-        $t("resolve")
-      }}</Button>
+      <Button
+        @click="dialog.finish(pickerValue ? dayjs(pickerValue) : null)"
+        type="primary"
+        >{{ $t("resolve") }}</Button
+      >
     </template>
   </Dialog>
 </template>
 
 <script lang="ts" setup>
-import { dayjs, Dayjs } from "@/utils/time"
-import { DialogType } from "../dialog"
-import { useI18n } from "vue-i18n"
+import { dayjs, Dayjs } from "@/utils/time";
+import { DialogType } from "../dialog";
+import { useI18n } from "vue-i18n";
 const props = defineProps<{
-  dialog: DialogType<any, Dayjs>
-  title?: string | null
-  content?: string
-  value?: Dayjs
-}>()
+  dialog: DialogType<any, Dayjs | null>;
+  title?: string | null;
+  content?: string;
+  value?: Dayjs | null;
+}>();
 
-const { t } = useI18n()
-const finalTitle = computed(
-  () => props.title ?? t("datePickerDialog.defaultTitle"),
-)
+const { t } = useI18n();
+const finalTitle = computed(() => props.title ?? t("pickDate"));
 
-const pickerValue = ref<Dayjs>(props.value || dayjs())
+const pickerValue = ref<Dayjs | null>(props.value || dayjs());
 </script>

@@ -17,7 +17,7 @@
               title: $t('setEndDate'),
               value: entity.endDate ? dayjs(entity.endDate) : undefined,
             }).finishPromise((d) => {
-              entity.endDate = d?.toDate();
+              entity.endDate = d?.toDate().toISOString();
             })
           "
         >

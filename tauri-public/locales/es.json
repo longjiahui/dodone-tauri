@@ -140,11 +140,12 @@
   "onlyShowLeaves": "Mostrar solo tareas de nivel inferior",
   "showTreeStructure": "Mostrar estructura de árbol",
   "hideFinishedTasks": "Ocultar tareas completadas",
-  "showFinishedTasks": "Mostrar tareas completadas",
+  "showFinishedTasks": "Mostrar tareas finalizadas",
   "sortByPriority": "Ordenar por prioridad",
+  "sortByPriorityDeep": "Ordenar por prioridad (incluidos todos los nodos secundarios)",
   "finishedFactor": "Trabajo completado",
   "totalFactor": "Trabajo total",
-  "finishedTaskList": "Lista de tareas completadas",
+  "finishedTaskList": "Lista de tareas finalizadas",
   "currentTaskCount": "Número de tareas actuales",
   "autoSortDescription": "Debido a que el filtro está activado en la lista de tareas actual, las tareas se ordenarán automáticamente y no se puede ajustar manualmente el orden.",
   "autoSort": "Ordenar automáticamente",
@@ -170,6 +171,7 @@
   "sun": "Dom",
   "general": "General",
   "database": "Base de datos",
+  "pickDate": "Seleccionar fecha",
   "pickDateRange": "Seleccionar rango de fechas",
   "followSystem": "Seguir sistema",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "hace {n} minutos",
   "halfHourAgo": "hace media hora",
   "nHoursAgo": "hace {n} horas",
-  "nDaysAgo": "hace {n} días"
+  "nDaysAgo": "hace {n} días",
+  "filter": "Filtrar",
+  "batchSetProperties": "Establecer propiedades por lotes",
+  "batchSetPropertiesConfirm": "¿Está seguro de que desea establecer las propiedades por lotes de todas las tareas mostradas en la lista actual? Esta acción no se puede deshacer.",
+  "batchUnsetTarget": "Eliminar objetivo por lotes",
+  "batchDeleteTasks": "Eliminar tareas por lotes"
 }

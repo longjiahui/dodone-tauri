@@ -82,6 +82,7 @@
             :parent="item"
             :toggle-parent="
               async (options?: ToggleOptions) => {
+                console.debug('in toggle parent: ', item, options);
                 await toggleByData(item, options);
                 await toggleParent?.(options);
               }
@@ -227,6 +228,21 @@ async function toggle(key: string, options: ToggleOptions = {}): Promise<void> {
     expands.value[key] = {
       isExpand: toState,
     };
+    // 一定是顶层
+    if (options.toState && props.layer === 0) {
+      // 查找一路、toggle
+      const ps =
+        traverse(props.modelValue, (d, _, __, ps) => {
+          if (d.id === key) {
+            return ps;
+          }
+        }) || [];
+      ps.forEach((p) => {
+        expands.value[p.id] = {
+          isExpand: true,
+        };
+      });
+    }
   }
 }
 

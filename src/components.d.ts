@@ -46,7 +46,7 @@ declare module 'vue' {
     ClickableIcon: typeof import('./bizComponents/ClickableIcon.vue')['default']
     ClockCircleOutlined: typeof import('@ant-design/icons-vue')['ClockCircleOutlined']
     ConfirmDialog: typeof import('./components/dialog/commonDialog/ConfirmDialog.vue')['default']
-    copy: typeof import('./bizComponents/TaskList copy.vue')['default']
+    copy: typeof import('./components/Loop copy.vue')['default']
     copy1: typeof import('./components/tree/Tree copy1.vue')['default']
     DatePicker: typeof import('./components/DatePicker.vue')['default']
     DatePickerDialog: typeof import('./components/dialog/commonDialog/DatePickerDialog.vue')['default']
@@ -93,8 +93,6 @@ declare module 'vue' {
     Loading: typeof import('./components/Loading.vue')['default']
     LoadingOutlined: typeof import('@ant-design/icons-vue')['LoadingOutlined']
     Loop: typeof import('./components/Loop.vue')['default']
-    'Loop copy': typeof import('./components/Loop copy.vue')['default']
-    'Loop copy 2': typeof import('./components/Loop copy 2.vue')['default']
     MarkdownEditor: typeof import('./components/MarkdownEditor.vue')['default']
     MarkdownEditorDialog: typeof import('./components/dialog/commonDialog/MarkdownEditorDialog.vue')['default']
     MarkdownPreviewer: typeof import('./components/MarkdownPreviewer.vue')['default']
@@ -134,7 +132,6 @@ declare module 'vue' {
     TaskDescription: typeof import('./bizComponents/TaskDescription.vue')['default']
     TaskFilter: typeof import('./bizComponents/filter/TaskFilter.vue')['default']
     TaskList: typeof import('./bizComponents/TaskList.vue')['default']
-    'TaskList copy': typeof import('./bizComponents/TaskList copy.vue')['default']
     TaskListDrawer: typeof import('./bizComponents/dialog/TaskListDrawer.vue')['default']
     TaskListWithTools: typeof import('./bizComponents/TaskListWithTools.vue')['default']
     TaskPageFooter: typeof import('./bizComponents/TaskPageFooter.vue')['default']
@@ -151,7 +148,6 @@ declare module 'vue' {
     Tools: typeof import('./bizComponents/Tools.vue')['default']
     Tooltip: typeof import('./components/Tooltip.vue')['default']
     Tree: typeof import('./components/tree/Tree.vue')['default']
-    'Tree copy1': typeof import('./components/tree/Tree copy1.vue')['default']
     UnorderedListOutlined: typeof import('@ant-design/icons-vue')['UnorderedListOutlined']
   }
 }

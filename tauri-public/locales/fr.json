@@ -142,6 +142,7 @@
   "hideFinishedTasks": "Masquer les tâches terminées",
   "showFinishedTasks": "Afficher les tâches terminées",
   "sortByPriority": "Trier par priorité",
+  "sortByPriorityDeep": "Trier par priorité (incluant tous les nœuds enfants)",
   "finishedFactor": "Charge de travail terminée",
   "totalFactor": "Charge de travail totale",
   "finishedTaskList": "Liste des tâches terminées",
@@ -170,6 +171,7 @@
   "sun": "Dim",
   "general": "Général",
   "database": "Base de données",
+  "pickDate": "Sélectionner une date",
   "pickDateRange": "Sélectionner une plage de dates",
   "followSystem": "Suivre le système",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "il y a {n} minutes",
   "halfHourAgo": "il y a une demi-heure",
   "nHoursAgo": "il y a {n} heures",
-  "nDaysAgo": "il y a {n} jours"
+  "nDaysAgo": "il y a {n} jours",
+  "filter": "Filtrer",
+  "batchSetProperties": "Définir les propriétés par lot",
+  "batchSetPropertiesConfirm": "Voulez-vous vraiment définir les propriétés par lot pour toutes les tâches affichées dans la liste actuelle ? Cette action ne peut pas être annulée.",
+  "batchUnsetTarget": "Supprimer l'objectif par lot",
+  "batchDeleteTasks": "Supprimer les tâches par lot"
 }

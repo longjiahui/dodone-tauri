@@ -164,6 +164,7 @@ pub fn run() {
             commands::task::update_task_by_id,
             commands::task::delete_task_by_id,
             commands::task::batch_edit_tasks,
+            commands::task::batch_delete_tasks,
             // next task commands
             commands::next_task::get_next_tasks,
             commands::next_task::create_next_task,
@@ -184,7 +185,7 @@ pub fn run() {
             commands::task_anchor::get_task_anchors,
             commands::task_anchor::create_task_anchor,
             commands::task_anchor::delete_task_anchor_by_id,
-            commands::task_anchor::create_and_change_task_anchor_orders,
+            commands::task_anchor::change_task_anchor_orders,
             // task view task commands
             commands::task_view_task::get_task_view_tasks,
             commands::task_view_task::create_task_view_task,

@@ -929,9 +929,17 @@ watch(
 const datasInDate = computed(() => {
   const dict: Partial<Record<string, ChartData[]>> = {};
   finalDatas.value.forEach((d) => {
+    const startDayjs = dayjs(d.start);
+    const endDayjs = dayjs(d.end);
+    const minDayTimeDayjs = startDayjs
+      .startOf("day")
+      .add(minDayTime.value, "hour");
+    const maxDayTimeDayjs = startDayjs
+      .startOf("day")
+      .add(maxDayTime.value, "hour");
     if (
-      d.start.getHours() < maxDayTime.value &&
-      d.end.getHours() > minDayTime.value
+      startDayjs.isBetween(minDayTimeDayjs, maxDayTimeDayjs, null, "[]") &&
+      endDayjs.isBetween(minDayTimeDayjs, maxDayTimeDayjs, null, "[]")
     ) {
       const dateString = dayjs(d.date).format(dataDateFormat);
       if (!dict[dateString]) {
@@ -1253,14 +1261,13 @@ function handleBizDrop(
               .toDate()
               .toISOString(),
           }),
-          // 取消自动设置日历
-          // ...(data.startAt
-          //   ? []
-          //   : [
-          //       taskStore.updateTaskById(data.id, {
-          //         startAt: m.date(d).toDate().toISOString(),
-          //       }),
-          //     ]),
+          ...(data.startAt
+            ? []
+            : [
+                taskStore.updateTaskById(data.id, {
+                  startAt: m.date(d).toDate().toISOString(),
+                }),
+              ]),
         ])
       )
     ).then((ds) => {

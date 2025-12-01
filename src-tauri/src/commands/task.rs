@@ -19,8 +19,8 @@ use crate::{
     utils::{
         datetime::parse_datetime_string,
         event::{
-            broadcast_batch_upsert_tasks, broadcast_delete_task,
-            broadcast_delete_task_target_records, broadcast_delete_task_view_tasks,
+            broadcast_batch_upsert_tasks, broadcast_delete_task_target_records,
+            broadcast_delete_task_view_tasks, broadcast_delete_tasks,
         },
         option3::Option3,
     },
@@ -298,25 +298,26 @@ pub async fn update_task_by_id(
 ) -> Result<Value, String> {
     let db_guard = get_db_manage(db_manage).await?;
     let db = db_guard.get_connection();
+    let txn = db.begin().await.map_err(|e| e.to_string())?;
     let pk = task::Entity::find_by_id(id.clone());
     let mut active_model = pk
-        .one(db)
+        .one(&txn)
         .await
         .map_err(|e| e.to_string())?
         .ok_or_else(|| "Task not found".to_string())?
         .into_active_model();
 
     let update_result =
-        update_task_by_active_model(db, id.as_str(), &mut active_model, &data).await?;
+        update_task_by_active_model(&txn, id.as_str(), &mut active_model, &data).await?;
     let res = task::Entity::update(active_model)
-        .exec(db)
+        .exec(&txn)
         .await
         .map_err(|e| e.to_string())?;
 
     // search for taskviewtasks
     let task_view_tasks = task_view_task::Entity::find()
         .filter(task_view_task::Column::TaskId.eq(res.id.clone()))
-        .all(db)
+        .all(&txn)
         .await
         .map_err(|e| e.to_string())?;
 
@@ -341,6 +342,7 @@ pub async fn update_task_by_id(
             update_result.deleted_task_target_records,
         )?;
     }
+    txn.commit().await.map_err(|e| e.to_string())?;
     Ok(task_json)
 }
 
@@ -379,7 +381,58 @@ pub async fn delete_task_by_id(
         .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
-    let _ = broadcast_delete_task(&app_handle, deleted_task_json);
+    let _ = broadcast_delete_tasks(&app_handle, vec![deleted_task_json]);
+    let _ = broadcast_delete_task_view_tasks(&app_handle, deleted_task_view_tasks);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn batch_delete_tasks(
+    app_handle: tauri::AppHandle,
+    db_manage: tauri::State<'_, DbState>,
+    ids: Vec<String>,
+) -> Result<(), String> {
+    println!("Deleting tasks: {:?}", ids);
+    let db_guard = get_db_manage(db_manage).await?;
+    let txn = db_guard
+        .get_connection()
+        .begin()
+        .await
+        .map_err(|e| e.to_string())?;
+    let mut deleted_tasks: Vec<serde_json::Value> = Vec::new();
+    let mut deleted_task_view_tasks: Vec<task_view_task::Model> = Vec::new();
+    for id in ids {
+        let pk = task::Entity::find_by_id(id.clone());
+        let deleted_task = pk
+            .one(&txn)
+            .await
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| "Task not found".to_string())?;
+
+        let deleted_task_view_tasks_in_task = task_view_task::Entity::find()
+            .filter(task_view_task::Column::TaskId.eq(deleted_task.id.clone()))
+            .all(&txn)
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let mut deleted_task_json =
+            serde_json::to_value(&deleted_task).map_err(|e| e.to_string())?;
+        if let serde_json::Value::Object(ref mut map) = deleted_task_json {
+            map.insert(
+                "task_view_tasks".to_string(),
+                serde_json::to_value(&deleted_task_view_tasks_in_task)
+                    .map_err(|e| e.to_string())?,
+            );
+        }
+        task::Entity::delete(deleted_task.into_active_model())
+            .exec(&txn)
+            .await
+            .map_err(|e| e.to_string())?;
+        deleted_tasks.push(deleted_task_json);
+        deleted_task_view_tasks.extend(deleted_task_view_tasks_in_task);
+    }
+    txn.commit().await.map_err(|e| e.to_string())?;
+    let _ = broadcast_delete_tasks(&app_handle, deleted_tasks);
     let _ = broadcast_delete_task_view_tasks(&app_handle, deleted_task_view_tasks);
     Ok(())
 }

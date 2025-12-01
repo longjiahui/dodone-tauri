@@ -52,6 +52,7 @@
             click: () =>
               taskStore.updateTaskById(realTask!.id, {
                 startAt: dayjs().startOf('day').toDate().toISOString(),
+                endAt: realTask?.endAt ? null : undefined,
               }),
           },
           {

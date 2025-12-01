@@ -141,7 +141,8 @@
   "showTreeStructure": "트리 구조 표시",
   "hideFinishedTasks": "완료된 작업 숨기기",
   "showFinishedTasks": "완료된 작업 표시",
-  "sortByPriority": "우선순위에 따라 정렬",
+  "sortByPriority": "우선순위별 정렬",
+  "sortByPriorityDeep": "우선순위별 정렬(모든 하위 노드 포함)",
   "finishedFactor": "완료된 작업량",
   "totalFactor": "총 작업량",
   "finishedTaskList": "완료된 작업 목록",
@@ -170,6 +171,7 @@
   "sun": "일",
   "general": "일반",
   "database": "데이터베이스",
+  "pickDate": "날짜 선택",
   "pickDateRange": "날짜 범위 선택",
   "followSystem": "시스템 따라가기",
 
@@ -189,5 +191,10 @@
   "nMinutesAgo": "{n}분 전",
   "halfHourAgo": "30분 전",
   "nHoursAgo": "{n}시간 전",
-  "nDaysAgo": "{n}일 전"
+  "nDaysAgo": "{n}일 전",
+  "filter": "필터",
+  "batchSetProperties": "속성 일괄 설정",
+  "batchSetPropertiesConfirm": "현재 목록에 표시된 모든 작업의 속성을 일괄 설정하시겠습니까? 수정 후에는 복구할 수 없습니다.",
+  "batchUnsetTarget": "목표 일괄 취소",
+  "batchDeleteTasks": "작업 일괄 삭제"
 }

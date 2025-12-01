@@ -22,6 +22,9 @@ import {
   GetTaskFilterModelValueType,
 } from "@/bizComponents/filter/conditions";
 import { useNotificationStore } from "@/store/notification";
+import { dialogs } from "@/components/dialog";
+import { cachePromiseWithTimeout } from "./promise";
+import { useI18n } from "vue-i18n";
 
 export function calculateTotalLeaveTasksFactor(
   tasks: ReadOnlyTaskWithChildren[]
@@ -250,4 +253,21 @@ export function updateTaskInDayById(
     }
     return d;
   });
+}
+
+const { call: _confirmBatchOperation } = cachePromiseWithTimeout(
+  async (t: ReturnType<typeof useI18n>["t"]) => {
+    return dialogs
+      .ConfirmDialog({
+        content: t("batchSetPropertiesConfirm"),
+      })
+      .finishPromise();
+  },
+  60000
+);
+
+export function confirmBatchOperation(
+  ...rest: Parameters<typeof _confirmBatchOperation>
+) {
+  return _confirmBatchOperation(...rest);
 }

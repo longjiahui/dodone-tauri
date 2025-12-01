@@ -226,9 +226,9 @@ export const useTaskViewStore = defineStore("taskView", () => {
       }
     });
   });
-  // localTaskEvent.on("deleteTask", async (t) => {
+  // localTaskEvent.on("deleteTasks", async (ts) => {
   //   await Promise.all(
-  //     t.taskViewTasks.map((d) => {
+  //     ts.flatMap(t=>t.taskViewTasks).map((d) => {
   //       taskViewEvent.emit("deleteTaskViewTask", d)
   //     }),
   //   )

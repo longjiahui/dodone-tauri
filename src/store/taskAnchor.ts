@@ -70,7 +70,9 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
           data: { taskId },
         })
         .then((v) => {
-          taskAnchors.value.push(taskAnchor2TaskAnchorWithTaskGroupId(v));
+          const ret = taskAnchor2TaskAnchorWithTaskGroupId(v);
+          taskAnchors.value.push(ret);
+          return ret;
         });
     },
     deleteTaskAnchorByTaskId(taskId: string) {
@@ -96,34 +98,29 @@ export const useTaskAnchorStore = defineStore("taskAnchor", () => {
     isTaskAnchorCreated(taskId: string) {
       return !!taskAnchorsDictByTaskId.value[taskId];
     },
-    createAndChangeOrders(
-      anchors: (
-        | TaskAnchorWithTaskGroupId
-        | EntityWithRequiredKey<TaskAnchor, "taskId">
-      )[]
+    changeOrders(
+      anchors: Pick<TaskAnchorWithTaskGroupId, "id" | "sortOrder">[]
+      // | EntityWithRequiredKey<TaskAnchor, "taskId">
     ) {
-      anchors.forEach((d, i) => (d.sortOrder = i));
-      const creates: any[] = [];
+      // anchors.forEach((d, i) => (d.sortOrder = i));
       // ||
       // anchors
       //   .filter((d) => !d.id)
       //   .map((d) => ({ taskId: d.taskId, sortOrder: d.sortOrder! }));
-      const updates = anchors
-        .filter((d) => !!d.id)
-        .map((d) => ({ id: d.id!, sortOrder: d.sortOrder! }));
-      return backend
-        .createAndChangeTaskAnchorOrders({ creates, datas: updates })
-        .then((d) => {
-          const created = d?.created || [];
-          created.forEach((d) => {
-            taskAnchors.value.push(taskAnchor2TaskAnchorWithTaskGroupId(d));
-          });
-          updates.forEach((p) => {
-            if (taskAnchorsDict.value[p.id]) {
-              Object.assign(taskAnchorsDict.value[p.id]!, p);
-            }
-          });
+      // const updates = anchors
+      //   .filter((d) => !!d.id)
+      //   .map((d) => ({ id: d.id!, sortOrder: d.sortOrder! }));
+      return backend.changeTaskAnchorOrders({ datas: anchors }).then((d) => {
+        // const created = d?.created || [];
+        // created.forEach((d) => {
+        //   taskAnchors.value.push(taskAnchor2TaskAnchorWithTaskGroupId(d));
+        // });
+        anchors.forEach((p) => {
+          if (taskAnchorsDict.value[p.id]) {
+            Object.assign(taskAnchorsDict.value[p.id]!, p);
+          }
         });
+      });
     },
   };
 });

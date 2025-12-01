@@ -253,6 +253,10 @@ export const protocols = {
   //   // params [taskId, newParentId]
   //   defineAPIFunction<[string, string], ProtocolReturnTask | undefined>(),
   // ),
+  batchDeleteTasks: defineAPI(
+    "batchDeleteTasks",
+    defineAPIFunction<[{ ids: string[] }], void>()
+  ),
   batchEditTasks: defineAPI(
     "batchEditTasks",
     defineAPIFunction<
@@ -284,16 +288,17 @@ export const protocols = {
     "changeTaskGroupOrders",
     defineAPIFunction<[{ datas: { id: string; sortOrder: number }[] }], void>()
   ),
-  createAndChangeTaskAnchorOrders: defineAPI(
-    "createAndChangeTaskAnchorOrders",
+  changeTaskAnchorOrders: defineAPI(
+    "changeTaskAnchorOrders",
     defineAPIFunction<
       [
         {
-          creates: EntityWithRequiredKey<TaskAnchor, "taskId">[];
+          // creates: EntityWithRequiredKey<TaskAnchor, "taskId">[];
           datas: { id: string; sortOrder: number }[];
         },
       ],
-      { created: TaskAnchor[] }
+      void
+      // { created: TaskAnchor[] }
     >()
   ),
 
@@ -452,9 +457,9 @@ export const webProtocols = {
   //   "updateTask",
   //   defineAPIFunction<[ProtocolReturnTask], void>(),
   // ),
-  deleteTask: defineAPI(
-    "deleteTask",
-    defineAPIFunction<[ProtocolReturnTask], void>()
+  deleteTasks: defineAPI(
+    "deleteTasks",
+    defineAPIFunction<[ProtocolReturnTask[]], void>()
   ),
   batchUpsertTasks: defineAPI(
     "batchUpsertTasks",

@@ -36,8 +36,103 @@
             :icon="CheckCircleOutlined"
             :selected="isShowFinishedTasks"
           ></ClickableIcon>
+          <!-- 批量设置属性 -->
+          <ClickableIcon
+            :icon="RocketOutlined"
+            :dropdown-title="$t('batchSetProperties')"
+            :menus="[
+              ...batchSetProperties.map((d) => {
+                return {
+                  name: d.name,
+                  async click() {
+                    await confirmBatchOperation($t);
+                    return d.getInput().then((v) => {
+                      taskStore.batchEditTasks({
+                        update: finalShowedTasks.map((t) => ({
+                          id: t.id,
+                          [d.key]: v,
+                        })),
+                      });
+                    });
+                  },
+                };
+              }),
+              {
+                name: $t('autoSetTargetByContent'),
+                async click() {
+                  await confirmBatchOperation($t);
+                  taskStore.batchEditTasks({
+                    update: finalShowedTasks
+                      .map((t) => {
+                        let ret = /\d+/.exec(t?.content || '')?.[0];
+                        let finalRet = !isNaN(+ret!) ? +ret! : undefined;
+                        return {
+                          pass: !!finalRet,
+                          task: t,
+                          target: finalRet,
+                        };
+                      })
+                      .filter((d) => !!d.pass)
+                      .map((d) => ({
+                        id: d.task.id,
+                        target: d.target!.toString(),
+                      })),
+                  });
+                },
+              },
+              {
+                name: $t('batchUnsetTarget'),
+                danger: true,
+                async click() {
+                  await confirmBatchOperation($t);
+                  taskStore.batchEditTasks({
+                    update: finalShowedTasks.map((t) => ({
+                      id: t.id,
+                      target: null,
+                    })),
+                  });
+                },
+              },
+              {
+                name: $t('batchDeleteTasks'),
+                danger: true,
+                async click() {
+                  await confirmBatchOperation($t);
+                  return taskStore.batchDeleteTasks(
+                    finalShowedTasks.map((t) => t.id)
+                  );
+                },
+              },
+            ]"
+          ></ClickableIcon>
           <ClickableIcon
             v-if="!finalDisableOrder"
+            :menus="[
+              {
+                name: $t('sortByPriorityDeep'),
+                click: () => {
+                  const newOrders = mapTree(
+                    finalShowedTasks,
+                    (d) => ({ ...d }),
+                    {
+                      sort: (a, b) => {
+                        //优先 优先级
+                        if (a.priority !== b.priority) {
+                          return b.priority - a.priority;
+                        } else {
+                          return sortTasks(a, b, undefined);
+                        }
+                      },
+                    }
+                  );
+                  const finalOrders = flatMapTree(newOrders, (d, i) => ({
+                    ...d,
+                    sortOrder: i,
+                  }));
+                  return taskStore.changeOrders(finalOrders);
+                },
+              },
+            ]"
             @click="
               () => {
                 const newOrders = [...finalShowedTasks];
@@ -49,7 +144,12 @@
                     return sortTasks(a, b, undefined);
                   }
                 });
-                return taskStore.changeOrders(newOrders);
+                return taskStore.changeOrders(
+                  newOrders.map((d, i) => ({
+                    sortOrder: i,
+                    id: d.id,
+                  }))
+                );
               }
             "
             :tooltip="$t('sortByPriority')"
@@ -169,6 +269,7 @@ import {
   calculateFinishLeaveTasksFactor,
   calculatePendingLeaveTasksFactor,
   calculateTotalLeaveTasksFactor,
+  confirmBatchOperation,
   filterEntityKeysInTaskListWithTools,
   sortTasks,
   useTaskListToolsOptions,
@@ -181,12 +282,25 @@ import {
 } from "@/utils/traverse";
 import {
   ApartmentOutlined,
+  BehanceOutlined,
+  BorderlessTableOutlined,
   CheckCircleOutlined,
+  CiOutlined,
+  CloudDownloadOutlined,
+  ExpandAltOutlined,
+  FileExclamationOutlined,
   FileOutlined,
+  FileZipOutlined,
+  FundProjectionScreenOutlined,
+  IeOutlined,
   InfoCircleOutlined,
   InfoOutlined,
+  OrderedListOutlined,
+  RocketOutlined,
+  SlackSquareOutlined,
   ThunderboltOutlined,
   UnorderedListOutlined,
+  VerticalAlignBottomOutlined,
   WarningOutlined,
 } from "@ant-design/icons-vue";
 import {
@@ -196,8 +310,10 @@ import {
 } from "./filter/conditions";
 import { backend } from "@/utils/backend";
 import { type TaskSort } from "./sort";
-import { queueAsyncCall } from "@/utils/promise";
+import { cachePromiseWithTimeout, queueAsyncCall } from "@/utils/promise";
 import { backendEvent } from "@/store/events";
+import { getFactorInput, getPriorityInput } from "@/types/biz/task";
+import { useI18n } from "vue-i18n";
 
 const props = defineProps<{
   modelValue: ReadOnlyTaskWithChildren[];
@@ -323,4 +439,57 @@ const finalDisableOrder = computed(() => {
     !!Object.keys(filterEntity.value).length
   );
 });
+
+interface BatchSetProperty<Data> {
+  name: string;
+  key: keyof ReadOnlyTaskWithChildren | (() => keyof ReadOnlyTaskWithChildren);
+  getInput: () => Promise<Data>;
+}
+function createBatchSetProperty<D extends BatchSetProperty<any>>(value: D) {
+  return value;
+}
+
+const { t } = useI18n();
+const batchSetProperties = computed(() => [
+  createBatchSetProperty({
+    name: t("startDate"),
+    key: "startAt",
+    getInput: async () => {
+      return dialogs.DatePickerDialog().finishPromise((d) => {
+        if (d !== undefined) {
+          return d ? d.toISOString() : null;
+        } else {
+          throw new Error("Invalid date picked by DatePickerDialog");
+        }
+      });
+    },
+  }),
+  createBatchSetProperty({
+    name: t("endDate"),
+    key: "endAt",
+    getInput: async () => {
+      return dialogs.DatePickerDialog().finishPromise((d) => {
+        if (d !== undefined) {
+          return d ? d.toISOString() : null;
+        } else {
+          throw new Error("Invalid date picked by DatePickerDialog");
+        }
+      });
+    },
+  }),
+  createBatchSetProperty({
+    name: t("priority"),
+    key: "priority",
+    getInput: async () => {
+      return getPriorityInput();
+    },
+  }),
+  createBatchSetProperty({
+    name: t("factor"),
+    key: "factor",
+    getInput: async () => {
+      return getFactorInput();
+    },
+  }),
+]);
 </script>

@@ -15,6 +15,7 @@ export const defaultSortOrder = 0;
 export const defaultTaskFactor = 1;
 export const defaultTaskPriority = 25;
 export const highTaskPriority = 50;
+export const lowTaskPriority = 0;
 export const defaultTaskTargetType: TaskTargetType = "DEFAULT";
 export const defaultTaskGroupIcon = "FolderOutlined";
 export const defaultTaskViewIcon = (type: TaskViewType) =>

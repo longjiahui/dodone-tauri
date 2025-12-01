@@ -56,11 +56,11 @@ pub fn broadcast_delete_task_target_records(
     Ok(())
 }
 
-pub fn broadcast_delete_task(
+pub fn broadcast_delete_tasks(
     app_handle: &tauri::AppHandle,
-    deleted_task: impl Serialize + Clone,
+    deleted_tasks: impl Serialize + Clone,
 ) -> Result<(), String> {
-    broadcast(app_handle, "delete_task", deleted_task)?;
+    broadcast(app_handle, "delete_tasks", deleted_tasks)?;
     Ok(())
 }
 

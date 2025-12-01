@@ -6,7 +6,10 @@
         // 如果task 和d 不是一个groupid，需要更新groupid
         // 如果task 和d 不是一个parentId，需要更新parentId
         return taskStore.changeOrders(
-          datas.map((d) => d.data),
+          datas.map((d, i) => ({
+            sortOrder: i,
+            id: d.id,
+          })),
           dragDatas.map((d) => ({
             id: d.id,
             ...(d.data.groupId !== droppedData?.data?.groupId &&

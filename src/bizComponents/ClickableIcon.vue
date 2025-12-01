@@ -5,7 +5,7 @@
     "
     :placement
   >
-    <DefaultDropdownMenu :menus="menus || []">
+    <DefaultDropdownMenu :title="dropdownTitle" :menus="menus || []">
       <div
         :class="[
           'h-[24px] cursor-pointer items-center justify-center gap-1 rounded shadow duration-300',
@@ -24,28 +24,29 @@
   </Tooltip>
 </template>
 <script setup lang="ts">
-import { Menu } from "@/components/dropdown/DefaultDropdownMenu.vue"
-import { TooltipPlacement } from "@/types"
-import type { Component } from "vue"
+import { Menu } from "@/components/dropdown/DefaultDropdownMenu.vue";
+import { TooltipPlacement } from "@/types";
+import type { Component } from "vue";
 
-const bg = 1
-const bgLight1 = `bg-light-${bg}`
-const bgLight2 = `bg-light-${bg + 1}`
+const bg = 1;
+const bgLight1 = `bg-light-${bg}`;
+const bgLight2 = `bg-light-${bg + 1}`;
 
 withDefaults(
   defineProps<{
-    selectedIcon?: Component
-    icon: Component
-    tooltip?: string
-    selectedTooltip?: string
-    selected?: boolean
-    placement?: TooltipPlacement
-    menus?: Menu[]
-    label?: string | number
-    labelPosition?: "right" | "bottom"
+    dropdownTitle?: string;
+    selectedIcon?: Component;
+    icon: Component;
+    tooltip?: string;
+    selectedTooltip?: string;
+    selected?: boolean;
+    placement?: TooltipPlacement;
+    menus?: Menu[];
+    label?: string | number;
+    labelPosition?: "right" | "bottom";
   }>(),
   {
     labelPosition: "right",
-  },
-)
+  }
+);
 </script>

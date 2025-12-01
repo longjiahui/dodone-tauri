@@ -253,8 +253,8 @@ export const useTaskStore = defineStore("task", () => {
     );
   });
 
-  backendEvent.on("deleteTask", async (task) => {
-    return _deleteTask2Tree(task.id);
+  backendEvent.on("deleteTasks", async (ts) => {
+    Promise.all(ts.map((t) => _deleteTask2Tree(t.id)));
   });
   backendEvent.on("deleteTaskGroup", async (group) => {
     const needDeletes = flatTasks.value.filter((t) => t.groupId === group.id);
@@ -392,6 +392,9 @@ export const useTaskStore = defineStore("task", () => {
     },
     deleteTaskById(id: string) {
       return backend.deleteTaskById({ id });
+    },
+    batchDeleteTasks(ids: string[]) {
+      return backend.batchDeleteTasks({ ids });
     },
 
     async finishTask(taskId: string) {
@@ -539,7 +542,7 @@ export const useTaskStore = defineStore("task", () => {
       }
     },
     changeOrders(
-      tasks: ReadOnlyTaskWithChildren[],
+      tasks: Pick<ReadOnlyTaskWithChildren, "sortOrder" | "id">[],
       extraUpdates: Parameters<typeof backend.batchEditTasks>[0]["update"] = []
     ) {
       // const extraUpdatesDict = Object.fromEntries(extraUpdates.map(u => [u.id, u]))
@@ -553,9 +556,9 @@ export const useTaskStore = defineStore("task", () => {
         })
       );
       const pendingUpdates = [
-        ...tasks.map((t, ind) => ({
+        ...tasks.map((t) => ({
           id: t.id,
-          sortOrder: ind,
+          sortOrder: t.sortOrder,
         })),
         ...extraUpdates,
       ];
