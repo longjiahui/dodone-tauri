@@ -53,6 +53,10 @@ pub async fn switch_database(app: &AppHandle, file: &str) -> Result<DatabaseMana
     }
     set_const_current_db_name(app, file)?;
     broadcast_switch_database(app, file)?;
+    // try migrate
+    let db_manager = connect_current_db(app).await.map_err(|e| e.to_string())?;
+    migrate_db(app, &db_manager).await?;
+
     Ok(DatabaseManager::new(db))
 }
 

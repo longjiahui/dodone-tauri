@@ -1,10 +1,15 @@
-import type Scrollbar from "./Scrollbar.vue"
-import { buildProps, definePropType } from "./props"
-import type { ExtractPropTypes, StyleValue } from "vue"
+import type Scrollbar from "./Scrollbar.vue";
+import { buildProps, definePropType } from "./props";
+import type { ExtractPropTypes, StyleValue } from "vue";
 
 export const scrollbarProps = buildProps({
   // switch to horizontal scroll mode
   horizontalScroll: {
+    type: Boolean,
+    default: false,
+  },
+  // auto stretch
+  autoStretch: {
     type: Boolean,
     default: false,
   },
@@ -98,19 +103,19 @@ export const scrollbarProps = buildProps({
     type: String,
     values: ["horizontal", "vertical"],
   },
-} as const)
-export type ScrollbarProps = ExtractPropTypes<typeof scrollbarProps>
+} as const);
+export type ScrollbarProps = ExtractPropTypes<typeof scrollbarProps>;
 
-const isNumber = (val: any): val is number => typeof val === "number"
+const isNumber = (val: any): val is number => typeof val === "number";
 export const scrollbarEmits = {
   scroll: ({
     scrollTop,
     scrollLeft,
   }: {
-    scrollTop: number
-    scrollLeft: number
+    scrollTop: number;
+    scrollLeft: number;
   }) => [scrollTop, scrollLeft].every(isNumber),
-}
-export type ScrollbarEmits = typeof scrollbarEmits
+};
+export type ScrollbarEmits = typeof scrollbarEmits;
 
-export type ScrollbarInstance = InstanceType<typeof Scrollbar>
+export type ScrollbarInstance = InstanceType<typeof Scrollbar>;

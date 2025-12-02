@@ -27,10 +27,18 @@ pub async fn create_next_task(
     let db_guard = get_db_manage(db_manage).await?;
     let active_model: next_task::ActiveModel = next_task::ActiveModel {
         id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
-        mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
+        mode: ActiveValue::Set(data.mode),
         a: ActiveValue::Set(data.a),
         b: ActiveValue::Set(data.b),
         task_id: ActiveValue::Set(data.task_id),
+        end_date: ActiveValue::Set(if let Some(end_date) = data.end_date {
+            Some(parse_datetime_string(&end_date)?)
+        } else {
+            None
+        }),
+        repeat_times: ActiveValue::Set(data.repeat_times),
+        repeat_content: ActiveValue::Set(data.repeat_content),
+        repeat_description: ActiveValue::Set(data.repeat_description),
 
         created_at: ActiveValue::Set(Utc::now()),
         updated_at: ActiveValue::Set(Utc::now()),
@@ -63,6 +71,16 @@ fn update_next_task_by_active_model(
             None
         });
     }
+    if data.repeat_times != Option3::Undefined {
+        model.repeat_times = ActiveValue::Set(data.repeat_times.as_option());
+    }
+    if data.repeat_content != Option3::Undefined {
+        model.repeat_content = ActiveValue::Set(data.repeat_content.as_option());
+    }
+    if data.repeat_description != Option3::Undefined {
+        model.repeat_description = ActiveValue::Set(data.repeat_description.as_option());
+    }
+
     model.updated_at = ActiveValue::Set(Utc::now());
     Ok(())
 }

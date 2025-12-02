@@ -10,8 +10,8 @@ export function handleEditDateRange(task: ReadOnlyTaskWithChildren) {
     .OptionalDateRangePickerDialog({
       title: "编辑时间",
       value: [
-        task.startAt ? dayjs(task.startAt) : undefined,
-        task.endAt ? dayjs(task.endAt) : undefined,
+        task.startAt ? dayjs(task.startAt) : null,
+        task.endAt ? dayjs(task.endAt) : null,
       ],
     })
     .finishPromise((d) => {
@@ -27,6 +27,7 @@ export function handleEditDateRange(task: ReadOnlyTaskWithChildren) {
 export function handleEditNextTask(task: ReadOnlyTaskWithChildren) {
   return dialogs
     .EditNextTaskDialog({
+      task: task,
       nextTask: task.nextTask,
     })
     .finishPromise((d) => {

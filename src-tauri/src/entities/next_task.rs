@@ -10,8 +10,8 @@ use crate::utils::option3::{de_option3, Option3};
 pub enum NextTaskMode {
     #[sea_orm(string_value = "SIMPLE")]
     SIMPLE,
-    #[sea_orm(string_value = "COMPLEX")]
-    COMPLEX,
+    #[sea_orm(string_value = "NOTIME")]
+    NOTIME,
 }
 
 #[sea_orm::model]
@@ -20,18 +20,34 @@ pub enum NextTaskMode {
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false, column_type = "Text")]
     pub id: String,
-    #[sea_orm(column_type = "Text", nullable)]
-    pub mode: NextTaskMode,
-    pub a: i32,
-    pub b: i32,
-    #[sea_orm(column_name = "endDate")]
-    pub end_date: Option<DateTimeUtc>,
+
     #[sea_orm(column_name = "taskId", column_type = "Text", unique, indexed)]
     pub task_id: String,
+
+    #[sea_orm(column_type = "Text", nullable)]
+    pub mode: NextTaskMode,
+
+    pub a: i32,
+
+    pub b: i32,
+
+    #[sea_orm(column_name = "endDate")]
+    pub end_date: Option<DateTimeUtc>,
+
+    pub repeat_times: Option<i32>,
+
+    #[sea_orm(column_type = "Text")]
+    pub repeat_content: Option<String>,
+
+    #[sea_orm(column_type = "Text")]
+    pub repeat_description: Option<String>,
+
     #[sea_orm(column_name = "createdAt")]
     pub created_at: DateTimeUtc,
+
     #[sea_orm(column_name = "updatedAt")]
     pub updated_at: DateTimeUtc,
+
     #[sea_orm(
         belongs_to,
         from = "task_id",
@@ -46,11 +62,15 @@ impl ActiveModelBehavior for ActiveModel {}
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateModel {
-    // pub mode: NextTaskMode,
+    pub mode: NextTaskMode,
     pub a: i32,
     pub b: i32,
     pub task_id: String,
     pub end_date: Option<String>,
+    pub repeat_times: Option<i32>,
+
+    pub repeat_content: Option<String>,
+    pub repeat_description: Option<String>,
 }
 #[derive(Deserialize, Serialize, Debug)]
 pub struct CreateModelForBatchCreateTask {
@@ -59,6 +79,9 @@ pub struct CreateModelForBatchCreateTask {
     pub b: i32,
     // pub task_id: String,
     pub end_date: Option<String>,
+    pub repeat_times: Option<i32>,
+    pub repeat_content: Option<String>,
+    pub repeat_description: Option<String>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -68,4 +91,10 @@ pub struct UpdateModel {
     pub b: Option<i32>,
     #[serde(default, deserialize_with = "de_option3")]
     pub end_date: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub repeat_times: Option3<i32>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub repeat_content: Option3<String>,
+    #[serde(default, deserialize_with = "de_option3")]
+    pub repeat_description: Option3<String>,
 }

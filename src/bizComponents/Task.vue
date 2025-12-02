@@ -245,17 +245,19 @@
                   </Tooltip>
                 </div>
                 <div
-                  v-if="modelValue.nextTask"
+                  v-if="realTask?.nextTask && modelValue.nextTask"
                   class="_default-attr"
-                  @click.stop="handleEditNextTask(modelValue)"
+                  @click.stop="handleEditNextTask(realTask)"
                 >
                   <Button type="text">
                     <ReloadOutlined></ReloadOutlined>
                   </Button>
                   <div>
-                    每{{ modelValue.nextTask.a }}天
-                    <template v-if="modelValue.nextTask.b > 1">
-                      （休息间隔 {{ modelValue.nextTask.b }}）
+                    <template v-if="modelValue.nextTask.mode === 'SIMPLE'">
+                      每{{ modelValue.nextTask.a }}天
+                      <template v-if="modelValue.nextTask.b > 1">
+                        （休息间隔 {{ modelValue.nextTask.b }}）
+                      </template>
                     </template>
                     <span class="text-sm">
                       已循环 {{ modelValue.createIndex }} 次
@@ -385,9 +387,8 @@ const isTaskAnchorCreated = computed(() =>
 );
 
 const isFinished = computed(() => props.modelValue.state === "DONE");
-const realChildren = computed(
-  () => taskStore.tasksDict[props.modelValue.id]?.children || []
-);
+const realTask = computed(() => taskStore.tasksDict[props.modelValue.id]);
+const realChildren = computed(() => realTask.value?.children || []);
 const hasRealChildren = computed(() => !!realChildren.value.length);
 
 const theme = useTheme(

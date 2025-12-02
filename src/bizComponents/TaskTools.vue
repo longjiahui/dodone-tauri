@@ -324,7 +324,7 @@
       :content="$t('setNextTask')"
       :visible-disable-controller="tooltipVisibleDisabledController"
     >
-      <Button type="text" @click="handleEditNextTask(task)">
+      <Button type="text" @click="handleEditNextTask(realTask)">
         <ReloadOutlined></ReloadOutlined>
       </Button>
     </Tooltip>

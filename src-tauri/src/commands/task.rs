@@ -512,6 +512,14 @@ fn batch_create_tasks<'a>(
                     mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
                     a: ActiveValue::Set(nt.a),
                     b: ActiveValue::Set(nt.b),
+                    end_date: ActiveValue::Set(if let Some(end_date) = nt.end_date {
+                        Some(parse_datetime_string(&end_date)?)
+                    } else {
+                        None
+                    }),
+                    repeat_times: ActiveValue::Set(nt.repeat_times),
+                    repeat_content: ActiveValue::Set(nt.repeat_content),
+                    repeat_description: ActiveValue::Set(nt.repeat_description),
                     task_id: ActiveValue::Set(task_id.clone()),
                     created_at: ActiveValue::Set(Utc::now()),
                     updated_at: ActiveValue::Set(Utc::now()),

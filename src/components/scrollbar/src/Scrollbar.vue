@@ -1,5 +1,8 @@
 <template>
-  <div ref="scrollbarRef" :class="ns.b()">
+  <div
+    ref="scrollbarRef"
+    :class="[ns.b(), props.autoStretch ? 'v stretch' : '']"
+  >
     <div
       ref="wrapRef"
       :class="wrapKls"
@@ -131,6 +134,7 @@ const wrapKls = computed(() => {
     {
       [ns.em("wrap", "hidden-default")]: !props.native,
     },
+    props.autoStretch ? "v stretch" : "",
   ];
 });
 

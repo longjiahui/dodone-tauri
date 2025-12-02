@@ -23,6 +23,7 @@ import { dialogs } from "@/components/dialog";
 import { cloneTasks, sortTasks } from "@/utils/biz";
 import { useFetchDataStore } from "./fetchData";
 import { backendEvent, localTaskEvent } from "./events";
+import { getNextTaskDate } from "@/bizComponents/dialog/EditNextTaskDialog.vue";
 
 export const useTaskStore = defineStore("task", () => {
   const flatTasks = ref<TaskWithChildren[]>([]);
@@ -407,20 +408,32 @@ export const useTaskStore = defineStore("task", () => {
           GetAPIParams<typeof protocols.batchEditTasks>[0]["create"]
         > = [];
         // 如果有nextTask 设置，则弹窗获取nextTask时间
-        if (
-          task.nextTask &&
-          (!task.nextTask.endDate ||
-            dayjs(task.nextTask.endDate).endOf("day").isAfter(dayjs()))
-        ) {
-          await dialogs
-            .EditNextTaskBeforeFinishDialog({
-              finishTaskId: taskId,
-            })
-            .finishPromise((d) => {
-              if (d) {
-                extraCreates.push(...cloneTasks([d], task));
-              }
-            });
+        if (task.nextTask) {
+          let needEditNextTask =
+            task.nextTask.repeatTimes == null ||
+            task.createIndex < task.nextTask.repeatTimes;
+          if (task.nextTask.endDate) {
+            const nextTaskDate =
+              task.nextTask.mode === "SIMPLE"
+                ? getNextTaskDate(task)
+                : dayjs().startOf("day");
+            if (
+              !dayjs(task.nextTask.endDate).endOf("day").isAfter(nextTaskDate)
+            ) {
+              needEditNextTask = false;
+            }
+          }
+          if (needEditNextTask) {
+            await dialogs
+              .EditNextTaskBeforeFinishDialog({
+                finishTaskId: taskId,
+              })
+              .finishPromise((d) => {
+                if (d) {
+                  extraCreates.push(...cloneTasks([d], task));
+                }
+              });
+          }
         }
         if (
           task.children.length &&
