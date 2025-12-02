@@ -9,6 +9,7 @@
 <script setup lang="ts">
 import Markdown from "markdown-it";
 import { backend } from "@/utils/backend";
+import highlightjs from "markdown-it-highlightjs";
 import {
   imageProtocolName,
   useDefaultModifiedMarkdownContent,
@@ -20,7 +21,7 @@ const props = defineProps<{
   noImage?: boolean;
 }>();
 
-const md = Markdown();
+const md = Markdown().use(highlightjs, {});
 const modelValue = defineModel<string>("modelValue", {
   default: "",
 });

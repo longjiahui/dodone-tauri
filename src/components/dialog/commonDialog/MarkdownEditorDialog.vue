@@ -1,5 +1,5 @@
 <template>
-  <Dialog :dialog :title size="large">
+  <Dialog :dialog :title size="large" :disable-escape-key>
     <template #autoPadding>
       <div v-if="content" class="text-light">
         {{ content }}
@@ -19,6 +19,8 @@
       <!-- class="text-md size-full resize-none bg-transparent outline-none" -->
       <!-- :rows="8" -->
       <MarkdownEditor
+        @focusin="disableEscapeKey = true"
+        @focusout="disableEscapeKey = false"
         ref="markdownEditorRef"
         auto-focus
         v-model="textareaValue"
@@ -35,11 +37,7 @@
 </template>
 
 <script lang="ts" setup>
-import {
-  FileImageOutlined,
-  InfoCircleOutlined,
-  UploadOutlined,
-} from "@ant-design/icons-vue";
+import { FileImageOutlined, InfoCircleOutlined } from "@ant-design/icons-vue";
 import { DialogType } from "../dialog";
 import MarkdownEditor from "@/components/MarkdownEditor.vue";
 
@@ -57,4 +55,6 @@ const markdownEditorRef = ref<InstanceType<typeof MarkdownEditor>>();
 function handleUploadImage() {
   markdownEditorRef.value?.uploadImage();
 }
+
+const disableEscapeKey = ref(false);
 </script>

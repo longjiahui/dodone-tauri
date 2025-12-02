@@ -1,0 +1,3 @@
+html body .hljs {
+  @apply bg-light rounded-md p-2 px-4 my-2;
+}

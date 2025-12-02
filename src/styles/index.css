@@ -85,6 +85,7 @@
 @import "./theme.css";
 @import "./transition.css";
 @import "./antdOverride.css";
+@import "./hljsOverride.css";
 
 .bg-blur {
   @apply backdrop-blur-xs bg-[rgba(255,255,255,.25)];

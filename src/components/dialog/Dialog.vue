@@ -7,6 +7,7 @@
     :width="finalWidth"
     :title="null"
     :closable="false"
+    :keyboard="!disableEscapeKey"
     :mask-closable="!disableMaskClosable"
   >
     <!-- v-loading="dialog.isLoading" -->
@@ -35,41 +36,42 @@
   </AModal>
 </template>
 <script lang="ts" setup>
-import { AnyDialogType } from "./dialog"
+import { AnyDialogType } from "./dialog";
 
-export type Size = "small" | "medium" | "large"
+export type Size = "small" | "medium" | "large";
 
 const props = withDefaults(
   defineProps<{
-    dialog: AnyDialogType
-    title?: string | null
-    size?: Size
-    width?: string
-    disableMaskClosable?: boolean
+    dialog: AnyDialogType;
+    title?: string | null;
+    size?: Size;
+    width?: string;
+    disableEscapeKey?: boolean;
+    disableMaskClosable?: boolean;
   }>(),
   {
     size: "medium",
     title: null,
     width: undefined,
-  },
-)
+  }
+);
 
 const finalWidth = computed(() => {
   if (props.width) {
-    return props.width
+    return props.width;
   } else if (props.size) {
     switch (props.size) {
       case "small":
-        return "320px"
+        return "320px";
       case "medium":
-        return "520px"
+        return "520px";
       case "large":
-        return "1024px"
+        return "1024px";
     }
   } else {
-    return undefined
+    return undefined;
   }
-})
+});
 </script>
 
 <style lang="scss">

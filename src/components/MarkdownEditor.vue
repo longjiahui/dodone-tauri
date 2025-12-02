@@ -25,6 +25,97 @@ const props = withDefaults(
   {}
 );
 
+// tab 缩进（支持选择多行，Shift+Tab 反向减少缩进）
+const tabHandler = EditorView.domEventHandlers({
+  keydown(event, view) {
+    if (event.key !== "Tab") return false;
+    event.preventDefault();
+    const tab = "  ";
+    const sel = view.state.selection.main;
+    const { from, to } = sel;
+    if (from === to) {
+      const line = view.state.doc.lineAt(from);
+      if (event.shiftKey) {
+        const ahead = view.state.doc.sliceString(
+          line.from,
+          line.from + tab.length
+        );
+        if (ahead === tab) {
+          view.dispatch({
+            changes: {
+              from: line.from,
+              to: line.from + tab.length,
+              insert: "",
+            },
+            selection: { anchor: from - tab.length },
+          });
+          return true;
+        }
+        if (ahead.startsWith("\t")) {
+          view.dispatch({
+            changes: { from: line.from, to: line.from + 1, insert: "" },
+            selection: { anchor: Math.max(line.from, from - 1) },
+          });
+          return true;
+        }
+        return true;
+      } else {
+        view.dispatch({
+          changes: { from, to, insert: tab },
+          selection: { anchor: from + tab.length },
+        });
+        return true;
+      }
+    }
+    const startLine = view.state.doc.lineAt(from).number;
+    const endLineObj = view.state.doc.lineAt(to);
+    let endLine = endLineObj.number;
+    if (to === endLineObj.from && to > from) endLine -= 1;
+    const changes: { from: number; to: number; insert: string }[] = [];
+    let newFrom = from;
+    let newTo = to;
+    if (event.shiftKey) {
+      for (let ln = startLine; ln <= endLine; ln++) {
+        const lineObj = view.state.doc.line(ln);
+        const text = lineObj.text;
+        if (text.startsWith(tab)) {
+          changes.push({
+            from: lineObj.from,
+            to: lineObj.from + tab.length,
+            insert: "",
+          });
+          if (lineObj.from < from) newFrom -= tab.length;
+          newTo -= tab.length;
+        } else if (text.startsWith("\t")) {
+          changes.push({
+            from: lineObj.from,
+            to: lineObj.from + 1,
+            insert: "",
+          });
+          if (lineObj.from < from) newFrom -= 1;
+          newTo -= 1;
+        }
+      }
+    } else {
+      let lineCount = 0;
+      for (let ln = startLine; ln <= endLine; ln++) {
+        const lineObj = view.state.doc.line(ln);
+        changes.push({ from: lineObj.from, to: lineObj.from, insert: tab });
+        lineCount++;
+        if (lineObj.from <= from) newFrom += tab.length;
+        newTo += tab.length;
+      }
+    }
+    if (changes.length) {
+      view.dispatch({
+        changes,
+        selection: { anchor: newFrom, head: newTo },
+      });
+    }
+    return true;
+  },
+});
+
 // handle paste
 const pasteHandler = EditorView.domEventHandlers({
   paste(event, _view) {
@@ -59,7 +150,13 @@ onMounted(() => {
   editor = new EditorView({
     parent: container.value!,
     doc: modelValue.value,
-    extensions: [basicSetup, EditorView.lineWrapping, markdown(), pasteHandler],
+    extensions: [
+      basicSetup,
+      EditorView.lineWrapping,
+      markdown(),
+      pasteHandler,
+      tabHandler,
+    ],
     dispatch: (tr) => {
       editor?.update([tr]);
       if (tr.docChanged) {
