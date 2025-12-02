@@ -77,6 +77,7 @@ pub struct CreateModelForBatchCreateTask {
     // pub mode: NextTaskMode,
     pub a: i32,
     pub b: i32,
+    pub mode: NextTaskMode,
     // pub task_id: String,
     pub end_date: Option<String>,
     pub repeat_times: Option<i32>,

@@ -74,7 +74,11 @@ watch(
   ul,
   ol,
   menu {
-    list-style: inside;
+    list-style: revert;
+  }
+  ul,
+  ol {
+    padding-left: 16px;
   }
 }
 </style>

@@ -701,7 +701,7 @@
                                   d.data.group!.totalFactor -
                                   d.data.group!.finishedFactor,
                               }
-                            : {}),
+                            : { pendingLeaveTasksFactor: 0 }),
                         data: d.data,
                       }"
                       #default="{ isSelected, pendingLeaveTasksFactor, data }"
@@ -709,13 +709,10 @@
                       <Scope
                         :d="{
                           isShowGroupBadge: !!(
-                            data.type === 'group' &&
-                            pendingLeaveTasksFactor &&
-                            pendingLeaveTasksFactor > 0
+                            data.type === 'group' && pendingLeaveTasksFactor > 0
                           ),
                           isShowAnchorBadge: !!(
                             data.type === 'anchor' &&
-                            pendingLeaveTasksFactor &&
                             pendingLeaveTasksFactor > 0
                           ),
                         }"
@@ -726,6 +723,21 @@
                             () => {
                               currentId = d.id;
                             }
+                          "
+                          :progress="
+                            data.type === 'group' && data.group
+                              ? (data.group.finishedFactor /
+                                  data.group.totalFactor) *
+                                100
+                              : data.type === 'anchor' && data.anchor
+                                ? (calculateFinishLeaveTasksFactor(
+                                    data.anchor.task.children.slice()
+                                  ) /
+                                    calculateTotalLeaveTasksFactor(
+                                      data.anchor.task.children.slice()
+                                    )) *
+                                  100
+                                : undefined
                           "
                           :icon="
                             data.type === 'group'
@@ -1063,6 +1075,7 @@ import { getWindow, GlobalTypes } from "@/utils/window";
 import { DraggableTreeData } from "@/components/tree/DraggableTree.vue";
 import { getParentFromTree } from "@/components/Loop.vue";
 import { parentPort } from "worker_threads";
+import { pending } from "@tauri-apps/plugin-notification";
 
 const inputTaskContent = ref("");
 

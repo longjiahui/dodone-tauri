@@ -17,12 +17,14 @@
         "width": 800,
         "height": 600,
         "dragDropEnabled": false
-      }, {
+      },
+      {
         "label": "doing",
         "visible": false,
         "alwaysOnTop": true,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
+        "maximizable": false,
         "url": "src/src-doing/index.html"
       }
     ],
@@ -38,9 +40,7 @@
     "category": "Utility",
     "active": true,
     "targets": "all",
-    "resources": [
-      "../tauri-public/**/*"
-    ],
+    "resources": ["../tauri-public/**/*"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

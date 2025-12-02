@@ -509,7 +509,7 @@ fn batch_create_tasks<'a>(
             if let Some(nt) = data.next_task {
                 let active_model: next_task::ActiveModel = next_task::ActiveModel {
                     id: ActiveValue::Set(uuid::Uuid::new_v4().to_string()),
-                    mode: ActiveValue::Set(next_task::NextTaskMode::SIMPLE),
+                    mode: ActiveValue::Set(nt.mode),
                     a: ActiveValue::Set(nt.a),
                     b: ActiveValue::Set(nt.b),
                     end_date: ActiveValue::Set(if let Some(end_date) = nt.end_date {

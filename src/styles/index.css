@@ -36,19 +36,16 @@
   h4,
   h5,
   h6,
-  p,
-  ul,
-  li,
-  ol {
+  p {
     margin: 0 !important;
   }
 
   /* 否则datepicker的 三列数字会出现li的小黑点 */
-  ul:not(.ant-picker-time-panel-column),
+  /* ul:not(.ant-picker-time-panel-column),
   ol,
   menu {
     list-style: inside !important;
-  }
+  } */
 }
 
 .stretch {

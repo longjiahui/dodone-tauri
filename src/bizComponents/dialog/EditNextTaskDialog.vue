@@ -159,7 +159,7 @@
               :texts="['使用当前任务内容', '自定义下一个任务的内容']"
               v-model="isUsingRepeatContent"
             ></Switch>
-            <Input
+            <JSEditor
               v-if="isUsingRepeatContent"
               v-model="entity.repeatContent"
               placeholder="请输入自定义内容"
@@ -174,7 +174,7 @@
                   </span>
                 </Tooltip>
               </template>
-            </Input>
+            </JSEditor>
             <div class="h items-center gap-2">
               <div>下一个任务内容：</div>
               <div v-if="nextTaskContent">
