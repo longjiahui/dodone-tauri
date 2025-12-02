@@ -71,7 +71,13 @@
             <div v-for="(r, i) in records" :key="r.id" class="v gap-1">
               <Tooltip :title="formatDateTime(r.recordAt)">
                 <div class="text-light text-sm self-start">
-                  {{ formatDateTimeDescripable($t, new Date(r.recordAt)) }}
+                  {{
+                    formatDateTimeDescripable(
+                      systemStore,
+                      $t,
+                      new Date(r.recordAt)
+                    )
+                  }}
                 </div>
               </Tooltip>
               <SelectableTag
@@ -154,6 +160,7 @@ import { dialogs } from "@/components/dialog";
 import { getOptions } from "@/utils/tab";
 import { TaskTargetRecord, TaskTargetType } from "@/types";
 import { defaultTaskTargetType } from "@/const";
+import { useSystemStore } from "@/store/system";
 
 use([
   LineChart,
@@ -170,6 +177,7 @@ const props = defineProps<{
   taskId: string;
 }>();
 
+const systemStore = useSystemStore();
 const taskStore = useTaskStore();
 const task = computed(() => taskStore.tasksDict[props.taskId]);
 const records = ref<TaskTargetRecord[]>([]);

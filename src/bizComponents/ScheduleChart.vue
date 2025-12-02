@@ -761,6 +761,7 @@ import { calculateTheme } from "@/utils/color";
 import { useI18n } from "vue-i18n";
 import { useNotificationStore } from "@/store/notification";
 import { backendEvent } from "@/store/events";
+import { useSystemStore } from "@/store/system";
 
 const props = withDefaults(
   defineProps<{
@@ -838,12 +839,9 @@ const dayTimeBarUnitHeight = computed(
 );
 const minHeight = 8;
 
-const today = ref(dayjs().startOf("day"));
-const now = ref(dayjs());
-const inst = setInterval(() => {
-  now.value = dayjs();
-}, 5000);
-onBeforeUnmount(() => clearInterval(inst));
+const systemStore = useSystemStore();
+const today = computed(() => systemStore.today);
+const now = computed(() => systemStore.now);
 const currentMonth = ref(today.value.startOf("month"));
 const currentWindow = ref<[Dayjs, Dayjs]>([dayjs(), dayjs()]);
 const monthShouldRender = ref([currentMonth.value]);

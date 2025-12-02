@@ -13,6 +13,7 @@ import { calculateTheme } from "@/utils/color";
 import { themeHSColorL, themeHSColorS } from "@/const";
 import { ForwardOutlined } from "@ant-design/icons-vue";
 import { backendEvent } from "@/store/events";
+import { useSystemStore } from "@/store/system";
 
 backendEvent.on("switchDatabase", (_databaseName) => {
   window.location.reload();
@@ -67,8 +68,8 @@ backendEvent.on("updateTaskInDays", refreshTasks);
 backendEvent.on("deleteTaskInDay", refreshTasks);
 backendEvent.on("batchUpsertTasks", handleBatchUpsertTasks);
 
-const now = ref(dayjs());
-const inst = setInterval(() => (now.value = dayjs()), 1000);
+const systemStore = useSystemStore();
+const now = computed(() => systemStore.now);
 const currentTaskInDay = computed(() => {
   if (params.type === "auto-task-in-day") {
     return taskInDays.value.find((d) => {
@@ -218,7 +219,6 @@ watch(
   },
   { immediate: true }
 );
-onBeforeUnmount(() => clearInterval(inst));
 onMounted(() => {
   watch(
     [params, finalTask],

@@ -9,6 +9,7 @@ import isToday from "dayjs/plugin/isToday";
 import isoWeek from "dayjs/plugin/isoWeek";
 import isBetween from "dayjs/plugin/isBetween";
 import { useI18n } from "vue-i18n";
+import { useSystemStore } from "@/store/system";
 localDayjs.extend(relativeTime);
 localDayjs.extend(isLeapYear);
 localDayjs.extend(weekOfYear);
@@ -35,13 +36,14 @@ export function formatDateTime(d: any) {
 }
 
 export function formatDateTimeDescripable(
+  systemStore: ReturnType<typeof useSystemStore>,
   t: ReturnType<typeof useI18n>["t"],
   d: any
 ) {
   const val = localDayjs(d);
   if (val.isValid()) {
     // 小于1分钟，显示多少秒前
-    const now = localDayjs();
+    const now = systemStore.now;
     const diffSeconds = now.diff(val, "second");
     if (diffSeconds < 0) {
       return formatDateTime(d);

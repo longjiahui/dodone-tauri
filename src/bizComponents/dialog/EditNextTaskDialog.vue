@@ -2,6 +2,36 @@
   <Dialog :dialog width="400px" :title="$t('setNextTask')">
     <template #default>
       <Scrollbar auto-stretch class="px-3" view-class="v gap-4">
+        <div v-if="task.nextTask" class="_block">
+          <div class="h items-center gap-2">
+            <span>
+              当前已循环
+              <span class="font-semibold">
+                <Button
+                  type="text"
+                  @click="
+                    () =>
+                      dialogs
+                        .InputDialog({
+                          content: '请输入修正后的循环次数',
+                          value: task.createIndex.toString(),
+                        })
+                        .finishPromise((d) => {
+                          if (d != null && d !== '' && !isNaN(+d)) {
+                            taskStore.updateTaskById(task.id, {
+                              createIndex: +d,
+                            });
+                          }
+                        })
+                  "
+                >
+                  {{ task.createIndex }}<EditOutlined></EditOutlined>
+                </Button>
+              </span>
+              次
+            </span>
+          </div>
+        </div>
         <div class="_block">
           <div class="flex items-center justify-between font-semibold">
             <div>
@@ -32,34 +62,12 @@
                 <Input v-model="entity.b" placeholder="b" type="number"></Input>
               </div>
             </div>
-            <div class="space-x-3">
-              <span>当前已循环 {{ task.createIndex }} 次</span>
-              <Button
-                type="text"
-                @click="
-                  () =>
-                    dialogs
-                      .InputDialog({
-                        content: '请输入修正后的循环次数',
-                        value: task.createIndex.toString(),
-                      })
-                      .finishPromise((d) => {
-                        if (d != null && d !== '' && !isNaN(+d)) {
-                          taskStore.updateTaskById(task.id, {
-                            createIndex: +d,
-                          });
-                        }
-                      })
-                "
-                >修正循环次数</Button
-              >
-              <span
-                >下一次任务日期：{{
-                  formatDate(
-                    getNextTaskDate(task, { ...task.nextTask!, ...entity })
-                  )
-                }}</span
-              >
+            <div>
+              下一次任务日期：{{
+                formatDate(
+                  getNextTaskDate(task, { ...task.nextTask!, ...entity })
+                )
+              }}
             </div>
             <div v-for="(_, i) in abs" :key="i" class="flex w-[200px] gap-4">
               <Input v-model="abs[i][0]" placeholder="a" type="number"></Input>
