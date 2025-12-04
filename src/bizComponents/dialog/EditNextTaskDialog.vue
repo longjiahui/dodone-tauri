@@ -256,13 +256,17 @@ export function getNextTaskDate(
   task: ReadOnlyTaskWithChildren,
   nextTask?: NextTask | null
 ) {
-  let { a, b } = nextTask || task.nextTask || {};
-  a = toNumber(a);
-  b = toNumber(b) || 1;
-  const counter = toNumber(task.createIndex);
-  return dayjs()
-    .add(a + (counter % b), "day")
-    .startOf("day");
+  if (nextTask?.mode === "SIMPLE") {
+    let { a, b } = nextTask || task.nextTask || {};
+    a = toNumber(a);
+    b = toNumber(b) || 1;
+    const counter = toNumber(task.createIndex);
+    return dayjs()
+      .add(a + (counter % b), "day")
+      .startOf("day");
+  } else {
+    return null;
+  }
 }
 </script>
 
