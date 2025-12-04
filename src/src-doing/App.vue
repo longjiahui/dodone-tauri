@@ -227,8 +227,8 @@ onMounted(() => {
         nextTick(() => {
           setTimeout(() => {
             return backend.resizeDoingWindow({
-              width: taskContentRefSize.width.value + 64,
-              height: taskContentRefSize.height.value + 48,
+              width: taskContentRefSize.width.value + 144,
+              height: taskContentRefSize.height.value + 56,
             });
           }, 200);
         });

@@ -1,5 +1,5 @@
 <template>
-  <Dialog :dialog :title size="small">
+  <Dialog :dialog :title="finalTitle" size="small">
     <template #autoPadding>
       <div v-if="content" class="text-light">
         {{ content }}
@@ -40,6 +40,39 @@
           "
         ></DatePicker>
       </div>
+      <!-- 快速设置选项 -->
+      <div class="h items-center gap-2">
+        <div>快速设置</div>
+        <Button
+          v-for="d in [
+            {
+              name: '今天',
+              offsetToToday: 0,
+            },
+            {
+              name: '明天',
+              offsetToToday: 1,
+            },
+            {
+              name: '后天',
+              offsetToToday: 2,
+            },
+          ]"
+          :key="d.name"
+          type="text"
+          @click="
+            () => {
+              const targetDate = today.add(d.offsetToToday, 'day');
+              pickerValue[0] = targetDate;
+              pickerValue[1] = null;
+            }
+          "
+          >{{ d.name }}</Button
+        >
+        <Button type="text" danger @click="pickerValue = [null, null]"
+          >清空</Button
+        >
+      </div>
     </template>
     <template #footer>
       <Button @click="dialog.close()">{{ $t("cancel") }}</Button>
@@ -62,6 +95,8 @@
 <script lang="ts" setup>
 import { dayjs, Dayjs } from "@/utils/time";
 import { DialogType } from "../dialog";
+import { useSystemStore } from "@/store/system";
+import { useI18n } from "vue-i18n";
 
 const props = withDefaults(
   defineProps<{
@@ -71,10 +106,12 @@ const props = withDefaults(
     // value?: [string | Dayjs | undefined, string | Dayjs | undefined]
     value?: [Dayjs | null, Dayjs | null];
   }>(),
-  {
-    title: "Pick a date range",
-  }
+  {}
 );
+const { t } = useI18n();
+const finalTitle = computed(() => props.title || t("pickDateRange"));
+const systemStore = useSystemStore();
+const today = computed(() => systemStore.today);
 const pickerValue = ref<[Dayjs | null, Dayjs | null]>(
   props.value || [null, null]
 );

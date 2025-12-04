@@ -217,7 +217,7 @@
         @click="
           dialog.finish({
             mode: entity.mode || 'NOTIME',
-            a: toNumber(entity.a) || 1,
+            a: toNumber(entity.a),
             b: toNumber(entity.b) || 1,
             endDate: entity.endDate,
             repeatTimes: entity.repeatTimes,
@@ -257,7 +257,7 @@ export function getNextTaskDate(
   nextTask?: NextTask | null
 ) {
   let { a, b } = nextTask || task.nextTask || {};
-  a = toNumber(a) || 1;
+  a = toNumber(a);
   b = toNumber(b) || 1;
   const counter = toNumber(task.createIndex);
   return dayjs()

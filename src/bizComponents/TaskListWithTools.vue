@@ -274,43 +274,23 @@ import {
   sortTasks,
   useTaskListToolsOptions,
 } from "@/utils/biz";
-import {
-  flatMapTree,
-  mapTree,
-  searchTreeAsync,
-  traverse,
-} from "@/utils/traverse";
+import { flatMapTree, mapTree, searchTreeAsync } from "@/utils/traverse";
 import {
   ApartmentOutlined,
-  BehanceOutlined,
-  BorderlessTableOutlined,
   CheckCircleOutlined,
-  CiOutlined,
-  CloudDownloadOutlined,
-  ExpandAltOutlined,
-  FileExclamationOutlined,
   FileOutlined,
-  FileZipOutlined,
-  FundProjectionScreenOutlined,
-  IeOutlined,
   InfoCircleOutlined,
-  InfoOutlined,
-  OrderedListOutlined,
   RocketOutlined,
-  SlackSquareOutlined,
   ThunderboltOutlined,
   UnorderedListOutlined,
-  VerticalAlignBottomOutlined,
-  WarningOutlined,
 } from "@ant-design/icons-vue";
 import {
   DefinedConditionKey,
   GetTaskFilterModelValueType,
   useValidateTaskByFilterEntity,
 } from "./filter/conditions";
-import { backend } from "@/utils/backend";
 import { type TaskSort } from "./sort";
-import { cachePromiseWithTimeout, queueAsyncCall } from "@/utils/promise";
+import { queueAsyncCall } from "@/utils/promise";
 import { backendEvent } from "@/store/events";
 import { getFactorInput, getPriorityInput } from "@/types/biz/task";
 import { useI18n } from "vue-i18n";
@@ -387,7 +367,10 @@ const refreshShowedTasks = queueAsyncCall(async function () {
 
 const finalShowedTasks = computed(() => {
   const tasks = showedTasks.value.slice();
-  return mapTree(tasks, (t) => ({ ...t }), { sort: sortTasks });
+  return mapTree(tasks, (t) => ({ ...t }), {
+    sort: (a, b) =>
+      sortTasks(a, b, finalDisableOrder.value ? taskSort.value : undefined),
+  });
   // tasks.sort((a, b) =>
   //   sortTasks(a, b, finalDisableOrder.value ? taskSort.value : undefined)
   // );
