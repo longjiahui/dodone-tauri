@@ -940,6 +940,7 @@
                     :key="finalType"
                   >
                     <TaskListTemplate
+                      hide-group-name
                       :tasks="taskAnchorTask!.children.slice()"
                     ></TaskListTemplate>
                   </div>
