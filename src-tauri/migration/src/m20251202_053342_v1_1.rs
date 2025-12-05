@@ -1,4 +1,4 @@
-use sea_orm_migration::{prelude::*, schema::*};
+use sea_orm_migration::prelude::*;
 
 use crate::constant::{
     NTC_REPEAT_CONTENT, NTC_REPEAT_DESCRIPTION, NTC_REPEAT_TIMES, NT_TABLE_NAME,

@@ -130,13 +130,11 @@
 </template>
 <script setup lang="ts">
 import type { ReadOnlyTaskWithChildren } from "@/types";
-import { CaretRightOutlined } from "@ant-design/icons-vue";
 import { DragData, GetDragDataType } from "./drag/drag";
 import { motionDelay, motionTranslateX } from "@/const";
 import { useTaskStore } from "@/store/task";
 import { mapTree } from "@/utils/traverse";
 import { DraggableTreeData } from "@/components/tree/DraggableTree.vue";
-import { channel } from "diagnostics_channel";
 import { GlobalTypes } from "@/utils/window";
 
 const props = withDefaults(

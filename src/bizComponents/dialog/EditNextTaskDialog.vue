@@ -256,8 +256,9 @@ export function getNextTaskDate(
   task: ReadOnlyTaskWithChildren,
   nextTask?: NextTask | null
 ) {
-  if (nextTask?.mode === "SIMPLE") {
-    let { a, b } = nextTask || task.nextTask || {};
+  const finalNextTask = nextTask || task.nextTask;
+  if (finalNextTask?.mode === "SIMPLE") {
+    let { a, b } = finalNextTask || {};
     a = toNumber(a);
     b = toNumber(b) || 1;
     const counter = toNumber(task.createIndex);

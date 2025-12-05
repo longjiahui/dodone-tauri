@@ -80,19 +80,21 @@ const nextStartDate = nextTask.mode === "SIMPLE" ? getNextTaskDate(t) : null;
 // }
 const duration =
   !t.endAt || !t.startAt ? 0 : dayjs(t.endAt).diff(t.startAt, "day");
+console.debug(duration, nextStartDate);
 const task = ref({
   ...t,
   // 如果原来任务都没设置startAt和endAt 则设置一个startAt
-  startAt: nextStartDate
-    ? t.startAt || (!t.startAt && !t.endAt)
-      ? nextStartDate.toDate()
-      : null
-    : null,
-  endAt: nextStartDate
-    ? t.endAt
-      ? nextStartDate.add(duration, "day").toDate()
-      : null
-    : null,
+  startAt: nextStartDate?.toDate() || null,
+  // ? t.startAt || (!t.startAt && !t.endAt)
+  //   ? nextStartDate.toDate()
+  //   : null
+  // : null,
+  endAt:
+    // nextStartDate,
+    // ? t.endAt ?
+    nextStartDate?.add(duration, "day").toDate() || null,
+  //   : null
+  // : null,
   content:
     (nextTask.repeatContent
       ? getNextTaskCustomContent(t, nextTask.repeatContent)
