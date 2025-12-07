@@ -130,5 +130,6 @@ pub async fn delete_next_task_by_id(
         .exec(db_guard.get_connection())
         .await
         .map_err(|e| e.to_string())?;
+
     Ok(next_task_for_broadcast)
 }

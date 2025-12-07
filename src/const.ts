@@ -13,6 +13,8 @@ export enum StorageKey {
 }
 export const defaultSortOrder = 0;
 export const defaultTaskFactor = 1;
+// export const maxTaskFactor = 999;
+export const maxTaskRepeatTimes = 999;
 export const defaultTaskPriority = 25;
 export const highTaskPriority = 50;
 export const lowTaskPriority = 0;

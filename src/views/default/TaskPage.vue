@@ -733,8 +733,8 @@
                                 ? (calculateFinishLeaveTasksFactor(
                                     data.anchor.task.children.slice()
                                   ) /
-                                    calculateTotalLeaveTasksFactor(
-                                      data.anchor.task.children.slice()
+                                    calculateTotalLeaveTasksFactorByTask(
+                                      data.anchor.task
                                     )) *
                                   100
                                 : undefined
@@ -1045,6 +1045,7 @@ import {
   calculateFinishLeaveTasksFactor,
   calculatePendingLeaveTasksFactor,
   calculateTotalLeaveTasksFactor,
+  calculateTotalLeaveTasksFactorByTask,
   sortTaskAnchors,
   sortTaskGroups,
   sortTaskViews,

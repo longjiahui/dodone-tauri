@@ -196,13 +196,14 @@
                 </div>
                 <!-- 子任务factor完成进度 -->
                 <Scope
-                  v-if="hasRealChildren"
+                  v-if="hasRealChildren && realTask"
                   :d="{
                     finish: calculateFinishLeaveTasksFactor(
                       // 如果使用modelValue.children可能数据不正确、因为modelValue不一定是原始数据，可能有不一样的children值
                       realChildren.slice()
                     ),
-                    total: calculateTotalLeaveTasksFactor(realChildren.slice()),
+                    // total: calculateTotalLeaveTasksFactor(realChildren),
+                    total: calculateTotalLeaveTasksFactorByTask(realTask),
                   }"
                   #default="{ finish, total }"
                 >
@@ -244,26 +245,32 @@
                     </Button>
                   </Tooltip>
                 </div>
-                <div
-                  v-if="realTask?.nextTask && modelValue.nextTask"
-                  class="_default-attr"
-                  @click.stop="handleEditNextTask(realTask)"
-                >
-                  <Button type="text">
-                    <ReloadOutlined></ReloadOutlined>
-                  </Button>
-                  <div>
-                    <template v-if="modelValue.nextTask.mode === 'SIMPLE'">
-                      每{{ modelValue.nextTask.a }}天
-                      <template v-if="modelValue.nextTask.b > 1">
-                        （休息间隔 {{ modelValue.nextTask.b }}）
+                <template v-if="realTask?.nextTask && modelValue.nextTask">
+                  <div
+                    class="_default-attr"
+                    @click.stop="handleEditNextTask(realTask)"
+                  >
+                    <Button type="text">
+                      <ReloadOutlined></ReloadOutlined>
+                    </Button>
+                    <div>
+                      <template v-if="modelValue.nextTask.mode === 'SIMPLE'">
+                        每{{ modelValue.nextTask.a }}天
+                        <template v-if="modelValue.nextTask.b > 1">
+                          （休息间隔 {{ modelValue.nextTask.b }}）
+                        </template>
                       </template>
-                    </template>
-                    <span class="text-sm">
-                      已循环 {{ modelValue.createIndex }} 次
-                    </span>
+                      <span class="text-sm">
+                        循环 {{ modelValue.createIndex }} 次
+                      </span>
+                    </div>
                   </div>
-                </div>
+                  <FactorProgressBar
+                    v-if="modelValue.isNextTaskCanFinish && !isFinished"
+                    :finish="modelValue.createIndex"
+                    :total="modelValue.restRepeatTimes + modelValue.createIndex"
+                  ></FactorProgressBar>
+                </template>
               </div>
             </div>
             <div class="relative top-0.5">
@@ -307,6 +314,7 @@ import {
 import {
   calculateFinishLeaveTasksFactor,
   calculateTotalLeaveTasksFactor,
+  calculateTotalLeaveTasksFactorByTask,
 } from "@/utils/biz";
 import {
   AimOutlined,

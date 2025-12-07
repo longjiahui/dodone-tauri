@@ -81,7 +81,7 @@
             <HitBlockRaid
               :length="
                 entity.endDate
-                  ? dayjs(entity.endDate).diff(dayjs(), 'day') + 1
+                  ? dayjs(entity.endDate).diff(systemStore.today, 'day')
                   : 40
               "
               :abs="
@@ -219,7 +219,7 @@
             mode: entity.mode || 'NOTIME',
             a: toNumber(entity.a),
             b: toNumber(entity.b) || 1,
-            endDate: entity.endDate,
+            endDate: entity.endDate ?? null,
             repeatTimes: entity.repeatTimes,
             repeatContent: entity.repeatContent,
             repeatDescription: entity.repeatDescription,
@@ -251,23 +251,35 @@ export function getNextTaskCustomContent(
     callback?.(err as Error, task.content);
   }
 }
-
-export function getNextTaskDate(
-  task: ReadOnlyTaskWithChildren,
-  nextTask?: NextTask | null
+export function getNextTaskDateByProtocolReturnTask(
+  task: DeepReadonly<ProtocolReturnTask>,
+  nextTask = task.nextTask,
+  now = dayjs().startOf("day"),
+  createIndex = task.createIndex
 ) {
   const finalNextTask = nextTask || task.nextTask;
   if (finalNextTask?.mode === "SIMPLE") {
     let { a, b } = finalNextTask || {};
     a = toNumber(a);
     b = toNumber(b) || 1;
-    const counter = toNumber(task.createIndex);
-    return dayjs()
-      .add(a + (counter % b), "day")
-      .startOf("day");
+    const counter = toNumber(createIndex);
+    return now.add(a + (counter % b), "day").startOf("day");
   } else {
     return null;
   }
+}
+export function getNextTaskDate(
+  task: ReadOnlyTaskWithChildren,
+  nextTask?: NextTask | null,
+  now = dayjs().startOf("day"),
+  createIndex = task.createIndex
+) {
+  return getNextTaskDateByProtocolReturnTask(
+    taskWithChildren2ProtocolReturnTask(task),
+    nextTask,
+    now,
+    createIndex
+  );
 }
 </script>
 
@@ -276,12 +288,19 @@ import { DialogType } from "@/components/dialog/dialog";
 import { useTaskStore } from "@/store/task";
 import { toNumber } from "@/utils/number";
 import { formatDate } from "@/utils/time";
-import { NextTask, ReadOnlyTaskWithChildren } from "@/types";
+import {
+  NextTask,
+  ProtocolReturnTask,
+  ReadOnlyTaskWithChildren,
+  taskWithChildren2ProtocolReturnTask,
+} from "@/types";
 import { dayjs } from "@/utils/time";
 import { openDialog } from "@/components/dialog/helper";
 import DatePickerDialog from "@/components/dialog/commonDialog/DatePickerDialog.vue";
 import { dialogs } from "@/components/dialog";
 import { WarningOutlined } from "@ant-design/icons-vue";
+import { DeepReadonly } from "vue";
+import { useSystemStore } from "@/store/system";
 
 const props = defineProps<{
   dialog: DialogType<any, Partial<NextTask>>;
@@ -292,6 +311,7 @@ const props = defineProps<{
 
 const entity = ref<Partial<NextTask>>({ ...props.nextTask });
 const taskStore = useTaskStore();
+const systemStore = useSystemStore();
 // const daysAmount = 39
 // const hits = computed(() => {
 // 	const hits: number[] = []

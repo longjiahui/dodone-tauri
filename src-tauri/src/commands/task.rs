@@ -320,6 +320,12 @@ pub async fn update_task_by_id(
         .all(&txn)
         .await
         .map_err(|e| e.to_string())?;
+    // search for nexttask
+    let next_task = next_task::Entity::find()
+        .filter(next_task::Column::TaskId.eq(res.id.clone()))
+        .one(&txn)
+        .await
+        .map_err(|e| e.to_string())?;
 
     // 拼接数据并返回
     // serde_json::to_value(res).map_err(|e| e.to_string())
@@ -329,13 +335,11 @@ pub async fn update_task_by_id(
             "task_view_tasks".to_string(),
             serde_json::to_value(&task_view_tasks).map_err(|e| e.to_string())?,
         );
+        map.insert(
+            "next_task".to_string(),
+            serde_json::to_value(&next_task).map_err(|e| e.to_string())?,
+        );
     }
-
-    let _ = broadcast_batch_upsert_tasks(
-        &app_handle,
-        Vec::<task::Model>::new(),
-        Value::Array(vec![task_json.clone()]),
-    );
     if data.target == Option3::Null && update_result.deleted_task_target_records.len() > 0 {
         let _ = broadcast_delete_task_target_records(
             &app_handle,
@@ -343,6 +347,11 @@ pub async fn update_task_by_id(
         )?;
     }
     txn.commit().await.map_err(|e| e.to_string())?;
+    let _ = broadcast_batch_upsert_tasks(
+        &app_handle,
+        Vec::<task::Model>::new(),
+        Value::Array(vec![task_json.clone()]),
+    );
     Ok(task_json)
 }
 

@@ -14,15 +14,22 @@ import { useTaskStore } from "@/store/task";
 import type { DeepReadonly } from "vue";
 import {
   calculateFinishLeaveTasksFactor,
+  calculateTaskRestRepeatTimes,
+  calculateTaskRestRepeatTimesByProtocolReturnTask,
   calculateTotalLeaveTasksFactor,
+  getIsNextTaskCanFinish,
 } from "@/utils/biz";
 import type { Dayjs } from "@/utils/time";
 import { defaultTaskTargetType } from "@/const";
+import { copy } from "fast-copy";
+import { omit } from "@/utils/field";
 export * from "./entities";
 
 export type TaskWithChildren = ProtocolReturnTask & {
   children: TaskWithChildren[];
   targetType: TaskTargetType;
+  restRepeatTimes: number;
+  isNextTaskCanFinish: boolean;
 };
 
 export type ReadOnlyTaskWithChildren = DeepReadonly<TaskWithChildren>;
@@ -43,10 +50,43 @@ export function taskLocal2TaskWithChildren(t: TaskLocal): TaskWithChildren {
 }
 type TaskLocal = Omit<TaskWithChildren, "children">;
 export function task2TaskLocal(t: ProtocolReturnTask): TaskLocal {
+  const isNextTaskCanFinish = getIsNextTaskCanFinish(t);
   return {
     ...t,
     targetType: t.targetType ?? defaultTaskTargetType,
+    isNextTaskCanFinish,
+    restRepeatTimes: calculateTaskRestRepeatTimesByProtocolReturnTask(
+      t,
+      isNextTaskCanFinish
+    ),
   };
+}
+
+// export function refreshTaskWithChildrenNextTaskInfo(
+//   task: ReadOnlyTaskWithChildren,
+//   newNextTask: NextTask | null
+// ) {
+//   const taskStore = useTaskStore();
+//   const newIsNextTaskCanFinish = getIsNextTaskCanFinish(task, newNextTask);
+//   taskStore.updateLocalTask(task.id, {
+//     nextTask: newNextTask,
+//     isNextTaskCanFinish: newIsNextTaskCanFinish,
+//     restRepeatTimes: calculateTaskRestRepeatTimes(
+//       task,
+//       newIsNextTaskCanFinish,
+//       newNextTask
+//     ),
+//   } satisfies Pick<
+//     ReadOnlyTaskWithChildren,
+//     "nextTask" | "isNextTaskCanFinish" | "restRepeatTimes"
+//   >);
+// }
+
+export function taskWithChildren2ProtocolReturnTask(
+  task: ReadOnlyTaskWithChildren
+): DeepReadonly<ProtocolReturnTask> {
+  const d = copy({ ...omit(task, "children") });
+  return readonly(d);
 }
 
 export type TaskAnchorWithTaskGroupId = GetAPIReturnType<

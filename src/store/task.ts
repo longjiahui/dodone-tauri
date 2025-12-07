@@ -14,16 +14,23 @@ import {
   task2TaskLocal,
   taskLocal2TaskWithChildren,
   DateType,
+  taskWithChildren2ProtocolReturnTask,
 } from "@/types";
 import { flatMapTree, traverse, traverseSome } from "@/utils/traverse";
 import { groupBy } from "@/utils/groupBy";
 import { backend } from "@/utils/backend";
 import { dayjs } from "@/utils/time";
 import { dialogs } from "@/components/dialog";
-import { cloneTasks, sortTasks } from "@/utils/biz";
+import {
+  calculateTaskRestRepeatTimesByProtocolReturnTask,
+  cloneTasks,
+  getIsNextTaskCanFinish,
+  sortTasks,
+} from "@/utils/biz";
 import { useFetchDataStore } from "./fetchData";
 import { backendEvent, localTaskEvent } from "./events";
 import { getNextTaskDate } from "@/bizComponents/dialog/EditNextTaskDialog.vue";
+import { copy } from "fast-copy";
 
 export const useTaskStore = defineStore("task", () => {
   const flatTasks = ref<TaskWithChildren[]>([]);
@@ -88,14 +95,32 @@ export const useTaskStore = defineStore("task", () => {
     creates: ProtocolReturnTask[],
     updates: ProtocolReturnTask[] = []
   ) {
-    const updateTaskLocals = updates.map((t) => task2TaskLocal(t));
+    const updateTaskLocals = updates.map((t) => {
+      // 更新TaskInfo
+      const newIsNextTaskCanFinish = getIsNextTaskCanFinish(t, t.nextTask);
+      return {
+        local: task2TaskLocal(t),
+        nextTaskInfo: {
+          nextTask: t.nextTask,
+          isNextTaskCanFinish: newIsNextTaskCanFinish,
+          restRepeatTimes: calculateTaskRestRepeatTimesByProtocolReturnTask(
+            t,
+            newIsNextTaskCanFinish,
+            t.nextTask
+          ),
+        } satisfies Pick<
+          ReadOnlyTaskWithChildren,
+          "nextTask" | "isNextTaskCanFinish" | "restRepeatTimes"
+        >,
+      };
+    });
     // update
-    updateTaskLocals.forEach((t) => {
-      if (tasksDict.value[t.id]) {
-        Object.assign(tasksDict.value[t.id]!, t);
+    updateTaskLocals.forEach((d) => {
+      if (tasksDict.value[d.local.id]) {
+        Object.assign(tasksDict.value[d.local.id]!, d.local);
+        Object.assign(tasksDict.value[d.local.id]!, d.nextTaskInfo);
       }
     });
-
     const createTasks = creates.map((t) => task2TaskWithChildren(t));
     // create
     // 先把tasks中存在的tree build好，再push
@@ -115,7 +140,7 @@ export const useTaskStore = defineStore("task", () => {
     });
     const promises: Promise<any>[] = [];
     const updateTasks = updateTaskLocals.map((d) =>
-      taskLocal2TaskWithChildren(d)
+      taskLocal2TaskWithChildren(d.local)
     );
     promises.push(
       ...createTasks.map((t) => localTaskEvent.emit("createTask", t))
@@ -228,8 +253,18 @@ export const useTaskStore = defineStore("task", () => {
   ) {
     const existingTask = tasksDict.value[taskId];
     if (existingTask) {
-      Object.assign(existingTask, task);
-      await localTaskEvent.emit("updateTask", existingTask);
+      const t = taskWithChildren2ProtocolReturnTask({
+        ...existingTask,
+        ...task,
+      });
+      await _upsertTasks2Tree(
+        [],
+        [
+          copy(t) satisfies ReturnType<
+            typeof taskWithChildren2ProtocolReturnTask
+          > as ProtocolReturnTask,
+        ]
+      );
     } else {
       console.warn(`Task with id ${taskId} not found for updateTask.`);
     }
@@ -530,11 +565,7 @@ export const useTaskStore = defineStore("task", () => {
         }
         return ret.then((nt) => {
           if (nt) {
-            if (task.nextTask) {
-              Object.assign(task.nextTask, nt);
-            } else {
-              task.nextTask = nt || null;
-            }
+            this.updateLocalTask(task.id, { nextTask: nt });
           } else {
             console.warn("nextTask not found for task" + taskId);
           }
@@ -547,7 +578,7 @@ export const useTaskStore = defineStore("task", () => {
       const task = tasksDict.value[taskId];
       if (task && task.nextTask) {
         return backend.deleteNextTaskById({ id: task.nextTask.id }).then(() => {
-          task.nextTask = null;
+          this.updateLocalTask(task.id, { nextTask: null });
           localTaskEvent.emit("updateTask", task);
         });
       } else {
