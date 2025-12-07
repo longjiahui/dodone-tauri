@@ -41,12 +41,12 @@
   </span>
 </template>
 <script setup lang="ts">
-import { formatDate } from "@/utils/time"
-import { dayjs } from "@/utils/time"
+import { formatDate } from "@/utils/time";
+import { dayjs } from "@/utils/time";
 
 defineProps<{
-  startAt?: Date | string | null
-  endAt?: Date | string | null
-  hideCountdown?: boolean
-}>()
+  startAt?: Date | string | null;
+  endAt?: Date | string | null;
+  hideCountdown?: boolean;
+}>();
 </script>

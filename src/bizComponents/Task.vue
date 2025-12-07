@@ -7,7 +7,7 @@
     <template #default>
       <div
         :class="[
-          'group relative rounded border p-2 pr-1 pl-3',
+          'group relative rounded border p-2 pr-1 pl-3 break-all',
           modelValue.priority >= highTaskPriority
             ? `outline-urgent outline-2 -outline-offset-2 outline-dashed ${bgColor3}!`
             : '',
@@ -17,7 +17,11 @@
             : `${bgColor1} hover:${bgColor2} border-light-${background + 1}`,
           isFinished ? 'opacity-60' : '',
         ]"
-        :style="theme.cssVariables"
+        :style="{
+          ...theme.cssVariables,
+          '--attr-background': `var(--color-light-${background + 1})`,
+          '--attr-hover-background': `var(--color-light-${background + 2})`,
+        }"
       >
         <div class="v gap-1">
           <div
@@ -245,32 +249,40 @@
                     </Button>
                   </Tooltip>
                 </div>
-                <template v-if="realTask?.nextTask && modelValue.nextTask">
+                <template
+                  v-if="
+                    realTask?.nextTask && modelValue.nextTask && !isFinished
+                  "
+                >
                   <div
-                    class="_default-attr"
+                    :class="[
+                      '_default-attr',
+                      modelValue.isNextTaskCanFinish ? 'w-full' : '',
+                    ]"
                     @click.stop="handleEditNextTask(realTask)"
                   >
                     <Button type="text">
                       <ReloadOutlined></ReloadOutlined>
                     </Button>
-                    <div>
+                    <!-- <div>
                       <template v-if="modelValue.nextTask.mode === 'SIMPLE'">
                         每{{ modelValue.nextTask.a }}天
                         <template v-if="modelValue.nextTask.b > 1">
                           （休息间隔 {{ modelValue.nextTask.b }}）
                         </template>
                       </template>
-                      <span class="text-sm">
-                        循环 {{ modelValue.createIndex }} 次
-                      </span>
-                    </div>
+                    </div> -->
+                    <FactorProgressBar
+                      class="stretch"
+                      v-if="modelValue.isNextTaskCanFinish"
+                      :finish="modelValue.createIndex"
+                      :total="
+                        modelValue.restRepeatTimes + modelValue.createIndex
+                      "
+                      :hue="taskGroup?.color"
+                    ></FactorProgressBar>
+                    <div v-else>已循环 {{ modelValue.createIndex + 1 }} 次</div>
                   </div>
-                  <FactorProgressBar
-                    v-if="modelValue.isNextTaskCanFinish && !isFinished"
-                    :finish="modelValue.createIndex"
-                    :total="modelValue.restRepeatTimes + modelValue.createIndex"
-                    :hue="taskGroup?.color"
-                  ></FactorProgressBar>
                 </template>
               </div>
             </div>
@@ -469,6 +481,6 @@ const targetFinished = computed(() => {
 @reference "../styles/index.css";
 
 ._default-attr {
-  @apply text-light flex cursor-pointer items-center gap-2 self-start text-sm leading-none!;
+  @apply bg-(--attr-background) group-hover:bg-(--attr-hover-background) rounded p-1.5 px-2 text-light flex cursor-pointer items-center gap-2 self-start text-sm leading-none!;
 }
 </style>
