@@ -31,6 +31,7 @@ import { useSystemStore } from "./store/system";
 import { browserLocale } from "./i18n";
 import { useNotificationStore } from "./store/notification";
 import { backendEvent } from "./store/events";
+import { invoke } from "@tauri-apps/api/core";
 
 const i18n = useI18n();
 const systemStore = useSystemStore();

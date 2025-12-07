@@ -41,6 +41,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_eventkit::init())
         .setup(|app: &mut tauri::App| {
             let open_primary_window_i = MenuItem::with_id(
                 app,

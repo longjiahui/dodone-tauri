@@ -15,5 +15,17 @@
       <string>es</string>
       <string>ru</string>
   </array>
+
+  <!-- calendar  -->
+  <key>NSCalendarsUsageDescription</key>
+  <string>please???</string>
+  <key>NSRemindersUsageDescription</key>
+  <string>please???</string>
+  <key>NSContactsUsageDescription</key>
+  <string>hello world</string>
+  <key>NSCalendarsFullAccessUsageDescription</key>
+  <string>hello</string>
+  <key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+  <string>hello</string>
 </dict>
 </plist>

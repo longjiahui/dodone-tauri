@@ -37,6 +37,7 @@
 
 <script setup lang="ts">
 import { useWeekdayCH } from "@/const";
+import { useSystemStore } from "@/store/system";
 import { dayjs, Dayjs } from "@/utils/time";
 
 const props = defineProps<{
@@ -75,8 +76,9 @@ let dates = computed(() => {
   });
 });
 
+const systemStore = useSystemStore();
 function isToday(date: number) {
-  let now = new Date();
+  let now = systemStore.now.toDate();
   return (
     props.month.year() === now.getFullYear() &&
     props.month.month() === now.getMonth() &&

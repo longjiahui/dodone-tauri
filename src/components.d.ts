@@ -11,7 +11,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    2: typeof import('./components/Loop copy 2.vue')['default']
     AButton: typeof import('ant-design-vue/es')['Button']
     ACheckbox: typeof import('ant-design-vue/es')['Checkbox']
     ADatePicker: typeof import('ant-design-vue/es')['DatePicker']
@@ -46,8 +45,6 @@ declare module 'vue' {
     ClickableIcon: typeof import('./bizComponents/ClickableIcon.vue')['default']
     ClockCircleOutlined: typeof import('@ant-design/icons-vue')['ClockCircleOutlined']
     ConfirmDialog: typeof import('./components/dialog/commonDialog/ConfirmDialog.vue')['default']
-    copy: typeof import('./components/Loop copy.vue')['default']
-    copy1: typeof import('./components/tree/Tree copy1.vue')['default']
     DatePicker: typeof import('./components/DatePicker.vue')['default']
     DatePickerDialog: typeof import('./components/dialog/commonDialog/DatePickerDialog.vue')['default']
     DateRangeDesc: typeof import('./bizComponents/DateRangeDesc.vue')['default']
@@ -59,7 +56,6 @@ declare module 'vue' {
     DefaultTabs: typeof import('./components/DefaultTabs.vue')['default']
     DeleteOutlined: typeof import('@ant-design/icons-vue')['DeleteOutlined']
     Dialog: typeof import('./components/dialog/Dialog.vue')['default']
-    DragableTree: typeof import('./components/tree/DragableTree.vue')['default']
     DraggableTree: typeof import('./components/tree/DraggableTree.vue')['default']
     DragOutlined: typeof import('@ant-design/icons-vue')['DragOutlined']
     Drawer: typeof import('./components/dialog/Drawer.vue')['default']

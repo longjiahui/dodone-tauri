@@ -13,6 +13,7 @@
     "opener:default",
     "notification:default",
     "dialog:default",
-    "log:default"
+    "log:default",
+    "eventkit:default"
   ]
 }

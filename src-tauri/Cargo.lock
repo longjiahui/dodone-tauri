@@ -1271,6 +1271,7 @@ dependencies = [
  "tauri",
  "tauri-build",
  "tauri-plugin-dialog",
+ "tauri-plugin-eventkit",
  "tauri-plugin-log",
  "tauri-plugin-notification",
  "tauri-plugin-opener",
@@ -5522,6 +5523,17 @@ dependencies = [
  "tauri-plugin-fs",
  "thiserror 2.0.17",
  "url",
+]
+
+[[package]]
+name = "tauri-plugin-eventkit"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "swift-rs",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
