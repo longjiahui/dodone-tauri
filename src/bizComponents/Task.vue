@@ -269,6 +269,7 @@
                     v-if="modelValue.isNextTaskCanFinish && !isFinished"
                     :finish="modelValue.createIndex"
                     :total="modelValue.restRepeatTimes + modelValue.createIndex"
+                    :hue="taskGroup?.color"
                   ></FactorProgressBar>
                 </template>
               </div>
