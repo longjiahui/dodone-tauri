@@ -503,29 +503,31 @@
                             taskGroupOrAnchor.type === 'group' &&
                             taskGroupOrAnchor.group?.id
                           ) {
-                            return taskStore.updateTaskParent(
-                              draggingTask.id,
-                              null,
+                            return taskStore.updateTasksParent([
                               {
+                                id: draggingTask.id,
+                                parentId: null,
                                 groupId: taskGroupOrAnchor.group.id,
-                              }
-                            );
+                              },
+                            ]);
                           } else if (
                             taskGroupOrAnchor.type === 'anchor' &&
                             taskGroupOrAnchor.anchor?.taskId &&
                             taskGroupOrAnchor.anchor.taskGroupId
                           ) {
-                            taskStore.updateTaskParent(
-                              draggingTask.id,
-                              taskGroupOrAnchor.anchor.taskId,
-                              draggingTask.groupId !==
+                            taskStore.updateTasksParent([
+                              {
+                                id: draggingTask.id,
+                                parentId: taskGroupOrAnchor.anchor.taskId,
+                                ...(draggingTask.groupId !==
                                 taskGroupOrAnchor.anchor.taskGroupId
-                                ? {
-                                    groupId:
-                                      taskGroupOrAnchor.anchor.taskGroupId,
-                                  }
-                                : {}
-                            );
+                                  ? {
+                                      groupId:
+                                        taskGroupOrAnchor.anchor.taskGroupId,
+                                    }
+                                  : {}),
+                              },
+                            ]);
                           }
                         }
                       }
@@ -638,10 +640,10 @@
                                     : toParent.data.anchor?.taskId;
                                 //  can be null
                                 if (shouldUpdateToParentId !== undefined) {
-                                  await taskStore.updateTaskParent(
-                                    d.data.anchor.taskId,
-                                    shouldUpdateToParentId,
+                                  await taskStore.updateTasksParent([
                                     {
+                                      id: d.data.anchor.taskId,
+                                      parentId: shouldUpdateToParentId,
                                       ...(toParent.data.group?.id &&
                                       d.data.group?.id !==
                                         toParent.data.group?.id
@@ -649,8 +651,8 @@
                                             groupId: toParent.data.group!.id,
                                           }
                                         : {}),
-                                    }
-                                  );
+                                    },
+                                  ]);
                                 } else {
                                   console.warn(
                                     'Cannot find parentId to update for task',
@@ -709,7 +711,12 @@
                       <Scope
                         :d="{
                           isShowGroupBadge: !!(
-                            data.type === 'group' && pendingLeaveTasksFactor > 0
+                            (
+                              data.type === 'group' &&
+                              pendingLeaveTasksFactor > 0
+                            )
+                            // &&
+                            // data.group?.totalFactor !== pendingLeaveTasksFactor
                           ),
                           isShowAnchorBadge: !!(
                             data.type === 'anchor' &&
@@ -818,7 +825,7 @@
                           >
                             <Badge
                               :invert="isSelected"
-                              :value="pendingLeaveTasksFactor!"
+                              :value="` ${data.type === 'group' && data.group?.totalFactor ? `${(((data.group.totalFactor - pendingLeaveTasksFactor!) / data.group.totalFactor) * 100).toFixed(1)} %` : `${pendingLeaveTasksFactor!}`}`"
                               :hue="data.group?.color"
                             >
                             </Badge>
@@ -1321,36 +1328,11 @@ const [DefineTaskListTemplate, TaskListTemplate] = createReusableTemplate<{
   hideGroupName?: boolean;
 }>();
 
-function handleDropTaskGroup(d: DragData, taskGroup: TaskGroupWithExtra) {
-  const tasks = d.datas as ReadOnlyTaskWithChildren[];
-  return Promise.all(
-    tasks.map(async (t) => {
-      return taskStore.updateTaskParent(t.id, null, {
-        groupId: taskGroup.id,
-      });
-    })
-  );
-}
-
-function handleDropTaskAnchor(
-  d: DragData,
-  taskGroup: TaskGroupWithExtra,
-  taskAnchor: TaskAnchorWithTaskGroupId
-) {
-  const tasks = d.datas as ReadOnlyTaskWithChildren[];
-  return Promise.all(
-    tasks.map(async (t) => {
-      return taskStore.updateTaskParent(t.id, taskAnchor.taskId, {
-        groupId: taskGroup.id,
-      });
-    })
-  );
-}
 function handleDropTaskView(d: DragData, taskView: ReadOnlyTaskViewWithExtra) {
   const tasks = d.datas as ReadOnlyTaskWithChildren[];
   return Promise.all(
     tasks.map(async (t) => {
-      // return taskStore.updateTaskParent(t.id, null, {
+      // return taskStore.updateTasksParent(t.id, null, {
       //   groupId: taskView.id,
       // })
       return taskViewStore.createTaskViewTask({

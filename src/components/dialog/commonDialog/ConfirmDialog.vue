@@ -1,5 +1,5 @@
 <template>
-  <Dialog :dialog :title :width>
+  <Dialog :dialog :title :width resolve-by-enter>
     <template #autoPadding>
       <div v-if="content" class="text-light">
         {{ content }}
@@ -34,16 +34,16 @@ function cancel() {
   return props.dialog.close();
 }
 
-function handleKeyup(e: KeyboardEvent) {
-  if (e.key === "Enter") {
-    resolve();
-  }
-  if (e.key === "Escape") {
-    cancel();
-  }
-}
-document.addEventListener("keyup", handleKeyup);
-onBeforeUnmount(() => {
-  document.removeEventListener("keyup", handleKeyup);
-});
+// function handleKeyup(e: KeyboardEvent) {
+//   if (e.key === "Enter") {
+//     resolve();
+//   }
+//   if (e.key === "Escape") {
+//     cancel();
+//   }
+// }
+// document.addEventListener("keyup", handleKeyup);
+// onBeforeUnmount(() => {
+//   document.removeEventListener("keyup", handleKeyup);
+// });
 </script>

@@ -25,13 +25,17 @@
     "
     @change-parent="
       (d, to) => {
-        return taskStore.updateTaskParent(d.id, to.id, {
-          ...(d.data.groupId !== to.data.groupId
-            ? {
-                groupId: to.data.groupId,
-              }
-            : {}),
-        });
+        return taskStore.updateTasksParent([
+          {
+            id: d.id,
+            parentId: to.id,
+            ...(d.data.groupId !== to.data.groupId
+              ? {
+                  groupId: to.data.groupId,
+                }
+              : {}),
+          },
+        ]);
       }
     "
     :model-value="treeDatas"

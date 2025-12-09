@@ -116,15 +116,19 @@ function _calculateTotalLeaveTaskFactor(
   task: ReadOnlyTaskWithChildren
 ): number {
   const factor = task.factor ?? defaultTaskFactor;
-  if (task.nextTask) {
-    if (task.isNextTaskCanFinish) {
-      return task.restRepeatTimes * factor;
-    } else {
-      // 无法完成的重复任务不计入工作量
-      return 0;
-    }
-  } else {
+  if (task.state === "DONE") {
     return factor;
+  } else {
+    if (task.nextTask) {
+      if (task.isNextTaskCanFinish) {
+        return task.restRepeatTimes * factor;
+      } else {
+        // 无法完成的重复任务不计入工作量
+        return 0;
+      }
+    } else {
+      return factor;
+    }
   }
 }
 
@@ -206,8 +210,8 @@ export function cloneTasks(
 ): BatchCreateTask[] {
   return tasks
     .filter((d) => {
-      // 有createdBy的任务不需要clone，因为这个任务是循环任务创建出来
-      return !d.createdByTaskId;
+      // 克隆子任务时 有createdBy的任务不需要clone，因为这个任务是循环任务创建出来
+      return _isTop || !d.createdByTaskId;
     })
     .map((t) => {
       return {

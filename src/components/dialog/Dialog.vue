@@ -48,6 +48,7 @@ const props = withDefaults(
     width?: string;
     disableEscapeKey?: boolean;
     disableMaskClosable?: boolean;
+    resolveByEnter?: boolean;
   }>(),
   {
     size: "medium",
@@ -71,6 +72,32 @@ const finalWidth = computed(() => {
   } else {
     return undefined;
   }
+});
+
+function handleKeyup(e: KeyboardEvent) {
+  if (e.key === "Enter" && !props.resolveByEnter) {
+    props.dialog.finish();
+  }
+}
+const bindEvents = () => {
+  document.addEventListener("keyup", handleKeyup);
+};
+const unbindEvents = () => {
+  document.removeEventListener("keyup", handleKeyup);
+};
+watch(
+  () => props.resolveByEnter,
+  (v) => {
+    if (v) {
+      bindEvents();
+    } else {
+      unbindEvents();
+    }
+  },
+  { immediate: true }
+);
+onBeforeUnmount(() => {
+  unbindEvents();
 });
 </script>
 

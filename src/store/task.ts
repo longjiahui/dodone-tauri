@@ -304,7 +304,7 @@ export const useTaskStore = defineStore("task", () => {
     flatTasks.value = flatTasks.value.filter((t) => t.groupId !== group.id);
   });
 
-  function _updateTaskParent(
+  async function _updateTaskParent(
     t: ProtocolReturnTask,
     oldParentId: string | null
   ) {
@@ -323,7 +323,7 @@ export const useTaskStore = defineStore("task", () => {
       }
       if (newParent) {
         newParent.children.push(task);
-        localTaskEvent.emit("updateTask", newParent);
+        await localTaskEvent.emit("updateTask", newParent);
       } else {
         // 加到根节点
         treeTasks.value.push(task);
@@ -392,29 +392,43 @@ export const useTaskStore = defineStore("task", () => {
       return backend.updateTaskById({ id, data });
     },
     updateLocalTask,
-    async updateTaskParent(
-      id: string,
-      parentId: string | null,
-      extra: Partial<ReadOnlyTaskWithChildren> = {}
+    async updateTasksParent(
+      tasks: (Pick<Task, "id" | "parentId"> & Pick<Partial<Task>, "groupId">)[]
     ) {
-      const task = tasksDict.value[id];
-      if (task) {
-        const oldParentId = task.parentId;
-        const newParentId = parentId;
-        if (oldParentId !== newParentId || Object.keys(extra).length > 0) {
-          return backend
-            .updateTaskById({ id, data: { parentId, ...extra } })
-            .then(async (t) => {
-              if (t) {
-                return _updateTaskParent(t, oldParentId);
-              } else {
-                console.warn(`Task with id ${id} not found for update parent.`);
-              }
-            });
-        }
-      } else {
-        throw new Error("task not found for update parent");
-      }
+      const oldParentIdDict = Object.fromEntries(
+        tasks.map((t) => {
+          const existingTask = tasksDict.value[t.id];
+          return [t.id, existingTask ? existingTask.parentId : null];
+        })
+      );
+      return this.batchEditTasks({
+        update: tasks.map((t) => ({
+          ...t,
+        })),
+      }).then((d) => {
+        return Promise.all(
+          d.updated.map((t) => _updateTaskParent(t, oldParentIdDict[t.id]))
+        );
+      });
+      // const task = tasksDict.value[id];
+      // if (task) {
+      //   const parentId;
+      //   const oldParentId = task.parentId;
+      //   const newParentId = parentId;
+      //   if (oldParentId !== newParentId || Object.keys(extra).length > 0) {
+      //     return backend
+      //       .updateTaskById({ id, data: { parentId, ...extra } })
+      //       .then(async (t) => {
+      //         if (t) {
+      //           return _updateTaskParent(t, oldParentId);
+      //         } else {
+      //           console.warn(`Task with id ${id} not found for update parent.`);
+      //         }
+      //       });
+      //   }
+      // } else {
+      //   throw new Error("task not found for update parent");
+      // }
     },
     batchEditTasks(...rest: Parameters<typeof backend.batchEditTasks>) {
       const d = rest?.[0] || {};
@@ -465,6 +479,7 @@ export const useTaskStore = defineStore("task", () => {
               })
               .finishPromise((d) => {
                 if (d) {
+                  console.debug(cloneTasks([d], task));
                   extraCreates.push(...cloneTasks([d], task));
                 }
               });

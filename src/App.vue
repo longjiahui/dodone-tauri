@@ -25,13 +25,12 @@ import RULocale from "dayjs/locale/ru";
 import BNLocale from "dayjs/locale/bn";
 import HILocale from "dayjs/locale/hi";
 
-import dayjs from "dayjs";
+import { dayjs } from "./utils/time";
 import { useI18n } from "vue-i18n";
 import { useSystemStore } from "./store/system";
 import { browserLocale } from "./i18n";
 import { useNotificationStore } from "./store/notification";
 import { backendEvent } from "./store/events";
-import { invoke } from "@tauri-apps/api/core";
 
 const i18n = useI18n();
 const systemStore = useSystemStore();

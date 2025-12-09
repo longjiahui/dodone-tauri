@@ -8,10 +8,12 @@
   ></ADatePicker>
 </template>
 <script setup lang="ts">
-import { Dayjs } from "dayjs"
+import { type Dayjs } from "@/utils/time";
 
-const modelValue = defineModel<string | Dayjs>("modelValue", { required: true })
+const modelValue = defineModel<string | Dayjs>("modelValue", {
+  required: true,
+});
 defineProps<{
-  disabledDate?: (date: Dayjs) => boolean
-}>()
+  disabledDate?: (date: Dayjs) => boolean;
+}>();
 </script>

@@ -1,6 +1,6 @@
 import { dialogs } from "@/components/dialog";
 import { ReadOnlyTaskWithChildren } from ".";
-import dayjs from "dayjs";
+import { dayjs } from "@/utils/time";
 import { useTaskStore } from "@/store/task";
 import { defaultTaskFactor, defaultTaskPriority } from "@/const";
 import { PieChartOutlined, ThunderboltOutlined } from "@ant-design/icons-vue";

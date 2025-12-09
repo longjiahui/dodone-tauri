@@ -20,33 +20,17 @@
         </div>
         <div class="stretch v gap-2">
           <div class="font-semibold">{{ $t("name") }}</div>
-          <Input v-model="group.name" />
+          <Input v-focus v-model="group.name" @keyup.enter="resolve" />
         </div>
       </div>
       <div class="v gap-2">
         <div class="font-semibold">{{ $t("description") }}</div>
-        <Input v-model="group.description" />
+        <Input v-model="group.description" @keyup.enter="resolve" />
       </div>
     </template>
     <template #footer>
       <Button @click="dialog.close()">{{ $t("cancel") }}</Button>
-      <Button
-        @click="
-          async () => {
-            taskGroup?.id
-              ? await taskGroupStore.updateTaskGroupById(taskGroup.id, {
-                  name: group.name,
-                  description: group.description,
-                  icon: group.icon || null,
-                  color: group.color.toString(),
-                })
-              : await taskGroupStore.createTaskGroup({ data: group });
-            dialog.finish();
-          }
-        "
-        type="primary"
-        >{{ $t("resolve") }}</Button
-      >
+      <Button @click="resolve" type="primary">{{ $t("resolve") }}</Button>
     </template>
   </Dialog>
 </template>
@@ -79,4 +63,16 @@ const group = ref({
 });
 
 const taskGroupStore = useTaskGroupStore();
+
+async function resolve() {
+  props.taskGroup?.id
+    ? await taskGroupStore.updateTaskGroupById(props.taskGroup.id, {
+        name: group.value.name,
+        description: group.value.description,
+        icon: group.value.icon || null,
+        color: group.value.color.toString(),
+      })
+    : await taskGroupStore.createTaskGroup({ data: group.value });
+  props.dialog.finish();
+}
 </script>

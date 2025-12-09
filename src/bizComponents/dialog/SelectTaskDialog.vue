@@ -90,8 +90,9 @@ const props = defineProps<{
     }
   >;
 
+  // 是否可以选中taskGroup 作为return
   groupSelectable?: boolean;
-  self?: ReadOnlyTaskWithChildren;
+  selfs?: ReadOnlyTaskWithChildren[];
 }>();
 
 const taskStore = useTaskStore();
@@ -115,10 +116,13 @@ const tasks = computed(() => {
     },
     // satisfies LoopData<ReadOnlyTaskWithChildren>
     {
-      ...(props.self?.id
+      ...(props.selfs?.length
         ? {
             preFilter: (t) =>
-              t.id !== props.self!.id && t.groupId === props.self!.groupId,
+              !!(
+                !props.selfs?.map((t) => t.id)?.includes(t.id) &&
+                props.selfs?.map((t) => t.groupId).includes(t.groupId)
+              ),
           }
         : {}),
       sort: (a, b) => sortTasks(a.data, b.data),
@@ -133,7 +137,7 @@ const selectedtaskGroupId = computed(
       : null) ?? finalGroupId.value
 );
 
-const currentGroupId = ref<string | undefined>(props.self?.groupId);
+const currentGroupId = ref<string | undefined>(props.selfs?.[0]?.groupId);
 const finalGroupId = computed(
   () =>
     taskGroupStore.taskGroups.find((g) => g.id === currentGroupId.value)?.id ??

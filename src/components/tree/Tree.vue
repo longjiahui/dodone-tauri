@@ -97,25 +97,26 @@ function getFinalExpand(key: string | number) {
   const state = expands.value[key]?.isExpand;
   const finalState = !!state;
   // 如果没有children，返回false
-  const data = loopDatasDict.value[key];
-  const hasChildren = !!data?.children?.length;
+  // const data = loopDatasDict.value[key];
+  // const hasChildren = !!data?.children?.length;
   if (typeof state !== "boolean") {
     // 如果没有记录
-    if (hasChildren) {
-      // 则根据props.expandStrategy来判断
-      switch (props.expandStrategy) {
-        case "none":
-          return false;
-        case "all":
-          return true;
-        case "firstLayer":
-          return datasLayerDict.value[key] < 1;
-      }
-    } else {
-      return false;
+    // if (hasChildren) {
+    // 则根据props.expandStrategy来判断
+    switch (props.expandStrategy) {
+      case "none":
+        return false;
+      case "all":
+        return true;
+      case "firstLayer":
+        return datasLayerDict.value[key] < 1;
     }
+    // } else {
+    //   return false;
+    // }
   } else {
-    return hasChildren ? finalState : false;
+    // return hasChildren ? finalState : false;
+    return finalState;
   }
 }
 

@@ -81,6 +81,27 @@
                 },
               },
               {
+                name: $t('batchMoveTasks'),
+                async click() {
+                  return dialogs
+                    .SelectTaskDialog({
+                      groupSelectable: true,
+                      selfs: finalShowedTasks,
+                    })
+                    .finishPromise((d) => {
+                      if (d) {
+                        return taskStore.updateTasksParent(
+                          finalShowedTasks.map((t) => ({
+                            id: t.id,
+                            parentId: d.taskId,
+                            groupId: d.groupId,
+                          }))
+                        );
+                      }
+                    });
+                },
+              },
+              {
                 name: $t('batchUnsetTarget'),
                 danger: true,
                 async click() {

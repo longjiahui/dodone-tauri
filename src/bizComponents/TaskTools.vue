@@ -186,13 +186,17 @@
             dialogs
               .SelectTaskDialog({
                 groupSelectable: true,
-                self: realTask,
+                selfs: [realTask],
               })
               .finishPromise((d) => {
                 if (d) {
-                  return taskStore.updateTaskParent(realTask!.id, d.taskId, {
-                    groupId: d.groupId,
-                  });
+                  return taskStore.updateTasksParent([
+                    {
+                      id: realTask!.id,
+                      parentId: d.taskId,
+                      groupId: d.groupId,
+                    },
+                  ]);
                 }
               })
           "
@@ -385,7 +389,7 @@ import {
   TagOutlined,
   ThunderboltOutlined,
 } from "@ant-design/icons-vue";
-import dayjs from "dayjs";
+import { dayjs } from "@/utils/time";
 
 const props = defineProps<{
   task: ReadOnlyTaskWithChildren;

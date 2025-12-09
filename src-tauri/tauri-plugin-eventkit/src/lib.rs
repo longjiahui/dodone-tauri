@@ -5,10 +5,12 @@ use tauri::{
 
 pub use models::*;
 
-#[cfg(desktop)]
-mod desktop;
+#[cfg(target_os = "macos")]
+mod macos;
 #[cfg(mobile)]
 mod mobile;
+#[cfg(target_os = "windows")]
+mod windows;
 
 mod commands;
 mod error;
@@ -16,10 +18,12 @@ mod models;
 
 pub use error::{Error, Result};
 
-#[cfg(desktop)]
-use desktop::Eventkit;
+#[cfg(target_os = "macos")]
+use macos::Eventkit;
 #[cfg(mobile)]
 use mobile::Eventkit;
+#[cfg(target_os = "windows")]
+use windows::Eventkit;
 
 /// Extensions to [`tauri::App`], [`tauri::AppHandle`] and [`tauri::Window`] to access the eventkit APIs.
 pub trait EventkitExt<R: Runtime> {
@@ -41,8 +45,10 @@ pub fn init<R: Runtime>() -> TauriPlugin<R> {
         .setup(|app, api| {
             #[cfg(mobile)]
             let eventkit = mobile::init(app, api)?;
-            #[cfg(desktop)]
-            let eventkit = desktop::init(app, api)?;
+            #[cfg(target_os = "macos")]
+            let eventkit = macos::init(app, api)?;
+            #[cfg(target_os = "windows")]
+            let eventkit = windows::init(app, api)?;
             app.manage(eventkit);
             Ok(())
         })

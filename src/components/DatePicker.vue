@@ -6,7 +6,7 @@
   ></ADatePicker>
 </template>
 <script setup lang="ts">
-import { Dayjs } from "dayjs";
+import { type Dayjs } from "@/utils/time";
 
 const modelValue = defineModel<null | Dayjs>("modelValue", {
   required: true,

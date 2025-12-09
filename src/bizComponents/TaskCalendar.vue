@@ -155,7 +155,7 @@
                               @mouseenter="currentHover = task?.id"
                               @mouseleave="currentHover = undefined"
                               :class="[
-                                'relative h-[32px] px-4 text-sm leading-[32px] duration-300',
+                                'relative h-[32px] px-4 text-sm leading-[32px]',
                                 task?.state === 'UNDONE' ? '' : 'opacity-30!',
                                 isModifying && isModifyingId !== task?.id
                                   ? 'opacity-30'
@@ -278,7 +278,7 @@ import { ReadOnlyTaskWithChildren, StringArrayToUnion } from "@/types";
 import { calculateTheme } from "@/utils/color";
 import { CloseOutlined } from "@ant-design/icons-vue";
 import type { Task } from "@/types";
-import dayjs, { Dayjs } from "dayjs";
+import { dayjs, type Dayjs } from "@/utils/time";
 import { DragData } from "./drag/drag";
 import {
   DefinedConditionKey,
