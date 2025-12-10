@@ -241,160 +241,164 @@
                     </DefaultDropdownMenu> -->
                 </div>
                 <!-- class="gap-2" -->
-                <OrderContainer
-                  v-if="taskViews.length > 0 && isShowTaskViews"
-                  class="order-container-gap-2 overflow-x-hidden"
-                  :drop-channel="() => 'order-taskview'"
-                  :drag-datas="
-                    (d) => [
-                      {
-                        datas: [d],
-                        type: 'order-taskview',
-                      },
-                    ]
-                  "
-                  @order="taskViewStore.changeOrders($event)"
-                  :datas="taskViews.slice()"
-                  #default="{
-                    data: v,
-                    setDragRef: setOrderContainerDragRef,
-                    index,
-                  }"
-                >
-                  <Scope
-                    :d="{
-                      isSelected: finalType === 'taskView' && finalId === v.id,
-                      pendingLeaveTasksFactor: calculatePendingLeaveTasksFactor(
-                        taskViewTasksMap[v.id]?.tasks.slice() || []
-                      ),
-                      // totalLeaveTasksFactor: calculateTotalLeaveTasksFactor(
-                      //   taskViewTasksMap[v.id]?.tasks.slice() || [],
-                      // ),
-                    }"
+                <HeightTransition>
+                  <OrderContainer
+                    v-if="taskViews.length > 0 && isShowTaskViews"
+                    class="order-container-gap-2"
+                    :drop-channel="() => 'order-taskview'"
+                    :drag-datas="
+                      (d) => [
+                        {
+                          datas: [d],
+                          type: 'order-taskview',
+                        },
+                      ]
+                    "
+                    @order="taskViewStore.changeOrders($event)"
+                    :datas="taskViews.slice()"
                     #default="{
-                      isSelected,
-                      pendingLeaveTasksFactor,
-                      // totalLeaveTasksFactor,
+                      data: v,
+                      setDragRef: setOrderContainerDragRef,
+                      index,
                     }"
                   >
-                    <BizDrop
-                      channel="move-tasks"
-                      #default="{ setRef, isDroppingActive }"
-                      @drop="
-                        (channel, d) =>
-                          channel === 'move-tasks'
-                            ? handleDropTaskView(d, v)
-                            : undefined
-                      "
-                      :disabled="v.type === 'AUTO'"
+                    <Scope
+                      :d="{
+                        isSelected:
+                          finalType === 'taskView' && finalId === v.id,
+                        pendingLeaveTasksFactor:
+                          calculatePendingLeaveTasksFactor(
+                            taskViewTasksMap[v.id]?.tasks.slice() || []
+                          ),
+                        // totalLeaveTasksFactor: calculateTotalLeaveTasksFactor(
+                        //   taskViewTasksMap[v.id]?.tasks.slice() || [],
+                        // ),
+                      }"
+                      #default="{
+                        isSelected,
+                        pendingLeaveTasksFactor,
+                        // totalLeaveTasksFactor,
+                      }"
                     >
-                      <div
-                        :ref="
-                          (el) => {
-                            setRef(el);
-                            setOrderContainerDragRef(el);
-                          }
+                      <BizDrop
+                        channel="move-tasks"
+                        #default="{ setRef, isDroppingActive }"
+                        @drop="
+                          (channel, d) =>
+                            channel === 'move-tasks'
+                              ? handleDropTaskView(d, v)
+                              : undefined
                         "
-                        :class="[
-                          'drop-area',
-                          isDroppingActive ? 'dropping-active' : '',
-                        ]"
-                        v-motion
-                        :initial="{
-                          opacity: 0,
-                          x: motionTranslateX,
-                        }"
-                        :enter="{
-                          opacity: 1,
-                          x: 0,
-                          transition: {
-                            delay: motionDelay(index),
-                          },
-                        }"
+                        :disabled="v.type === 'AUTO'"
                       >
-                        <SelectableTag
-                          :title="v.name"
-                          :icon="v.icon || defaultTaskViewIcon(v.type)"
-                          @click="
-                            () => {
-                              currentId = v.id;
+                        <div
+                          :ref="
+                            (el) => {
+                              setRef(el);
+                              setOrderContainerDragRef(el);
                             }
                           "
-                          :progress="(v.finishedFactor / v.totalFactor) * 100"
-                          :selected="isSelected"
-                          :content="v.description"
-                          :menus="[
-                            {
-                              name: $t('edit'),
-                              icon: EditOutlined,
-                              click: () => {
-                                return dialogs
-                                  .EditTaskViewDialog({ taskView: v })
-                                  .finishPromise((d) => {
-                                    if (d) {
-                                      return taskViewStore.updateTaskViewById(
-                                        v.id,
-                                        d
-                                      );
-                                    }
-                                  });
-                              },
-                            },
-                            {
-                              name: $t('delete'),
-                              icon: DeleteOutlined,
-                              danger: true,
-                              click: () =>
-                                dialogs
-                                  .ConfirmDialog({
-                                    content: $t('deleteTaskViewConfirm'),
-                                  })
-                                  .finishPromise(() => {
-                                    return taskViewStore.deleteTaskViewById(
-                                      v.id
-                                    );
-                                  }),
-                            },
+                          :class="[
+                            'drop-area',
+                            isDroppingActive ? 'dropping-active' : '',
                           ]"
+                          v-motion
+                          :initial="{
+                            opacity: 0,
+                            x: motionTranslateX,
+                          }"
+                          :enter="{
+                            opacity: 1,
+                            x: 0,
+                            transition: {
+                              delay: motionDelay(index),
+                            },
+                          }"
                         >
-                          <template
-                            v-if="pendingLeaveTasksFactor > 0"
-                            #title-suffix
+                          <SelectableTag
+                            :title="v.name"
+                            :icon="v.icon || defaultTaskViewIcon(v.type)"
+                            @click="
+                              () => {
+                                currentId = v.id;
+                              }
+                            "
+                            :progress="(v.finishedFactor / v.totalFactor) * 100"
+                            :selected="isSelected"
+                            :content="v.description"
+                            :menus="[
+                              {
+                                name: $t('edit'),
+                                icon: EditOutlined,
+                                click: () => {
+                                  return dialogs
+                                    .EditTaskViewDialog({ taskView: v })
+                                    .finishPromise((d) => {
+                                      if (d) {
+                                        return taskViewStore.updateTaskViewById(
+                                          v.id,
+                                          d
+                                        );
+                                      }
+                                    });
+                                },
+                              },
+                              {
+                                name: $t('delete'),
+                                icon: DeleteOutlined,
+                                danger: true,
+                                click: () =>
+                                  dialogs
+                                    .ConfirmDialog({
+                                      content: $t('deleteTaskViewConfirm'),
+                                    })
+                                    .finishPromise(() => {
+                                      return taskViewStore.deleteTaskViewById(
+                                        v.id
+                                      );
+                                    }),
+                              },
+                            ]"
                           >
-                            <Badge
-                              :invert="isSelected"
-                              :value="pendingLeaveTasksFactor"
-                            ></Badge>
-                            <!-- <span class="text-sm">
-                                / {{ totalLeaveTasksFactor }}
-                              </span> -->
-                          </template>
-                          <template #dropdown-suffix>
-                            <Tooltip
-                              :content="
-                                $t('loadScriptFailed', {
-                                  reason:
-                                    taskViewStore.taskViewTasksMap[v.id]
-                                      ?.scriptLoadedFailedReason,
-                                })
-                              "
+                            <template
+                              v-if="pendingLeaveTasksFactor > 0"
+                              #title-suffix
                             >
-                              <ExclamationCircleOutlined
-                                v-if="
-                                  taskViewStore.taskViewTasksMap[v.id]
-                                    ?.isScriptLoadedFailed
+                              <Badge
+                                :invert="isSelected"
+                                :value="pendingLeaveTasksFactor"
+                              ></Badge>
+                              <!-- <span class="text-sm">
+                                  / {{ totalLeaveTasksFactor }}
+                                </span> -->
+                            </template>
+                            <template #dropdown-suffix>
+                              <Tooltip
+                                :content="
+                                  $t('loadScriptFailed', {
+                                    reason:
+                                      taskViewStore.taskViewTasksMap[v.id]
+                                        ?.scriptLoadedFailedReason,
+                                  })
                                 "
-                                :class="
-                                  isSelected ? '!text-white' : '!text-error'
-                                "
-                              />
-                            </Tooltip>
-                          </template>
-                        </SelectableTag>
-                      </div>
-                    </BizDrop>
-                  </Scope>
-                </OrderContainer>
+                              >
+                                <ExclamationCircleOutlined
+                                  v-if="
+                                    taskViewStore.taskViewTasksMap[v.id]
+                                      ?.isScriptLoadedFailed
+                                  "
+                                  :class="
+                                    isSelected ? '!text-white' : '!text-error'
+                                  "
+                                />
+                              </Tooltip>
+                            </template>
+                          </SelectableTag>
+                        </div>
+                      </BizDrop>
+                    </Scope>
+                  </OrderContainer>
+                </HeightTransition>
               </div>
               <div class="v size-full gap-2 pt-2">
                 <div
@@ -406,452 +410,544 @@
                   <ExpandIcon
                     v-if="taskGroups.length > 0"
                     :is-expand="isShowGroups"
-                    @click="isShowGroups = !isShowGroups"
+                    @click="
+                      (e: GlobalTypes['MouseEvent']) => {
+                        if (e.ctrlKey || e.metaKey) {
+                          const toState = !isShowGroups;
+                          if (toState) {
+                            isShowGroups = toState;
+                            $nextTick(() => {
+                              groupDraggableTreeRef?.toggleAll(toState);
+                            });
+                          } else {
+                            groupDraggableTreeRef?.toggleAll(toState);
+                            $nextTick(() => {
+                              isShowGroups = toState;
+                            });
+                          }
+                        } else {
+                          isShowGroups = !isShowGroups;
+                        }
+                      }
+                    "
                   ></ExpandIcon>
                   <div class="stretch font-semibold">{{ $t("taskGroup") }}</div>
-                  <Button
-                    type="text"
-                    class="text-sm"
-                    @click="
-                      dialogs.EditTaskGroupDialog({
-                        taskGroup: {},
-                      })
-                    "
-                  >
-                    <PlusOutlined></PlusOutlined>
-                  </Button>
+                  <div class="h items-center gap-2">
+                    <DefaultDropdownMenu
+                      :title="$t('colorPreset')"
+                      :menus="
+                        [
+                          {
+                            name: $t('rainbow'),
+                            hues: new Array(taskGroups.length)
+                              .fill(0)
+                              .map((_, i) =>
+                                Math.floor((i * 360) / taskGroups.length)
+                              ),
+                          },
+                        ].map((d) => ({
+                          name: d.name,
+                          click() {
+                            return getWindow().Promise.all(
+                              taskGroups.map(async (t, i) => {
+                                await taskGroupStore.updateTaskGroupById(t.id, {
+                                  color: d.hues[i % d.hues.length].toString(),
+                                });
+                              })
+                            );
+                          },
+                        }))
+                      "
+                    >
+                      <Button type="text">
+                        <div><BgColorsOutlined /></div>
+                      </Button>
+                    </DefaultDropdownMenu>
+                    <Button
+                      type="text"
+                      class="text-sm"
+                      @click="
+                        dialogs.EditTaskGroupDialog({
+                          taskGroup: {},
+                        })
+                      "
+                    >
+                      <PlusOutlined></PlusOutlined>
+                    </Button>
+                  </div>
                 </div>
                 <Scrollbar
                   class="stretch"
                   :view-class="[sidebarPaddingX, 'py-1']"
                 >
-                  <DraggableTree
-                    v-if="isShowGroups"
-                    :model-value="taskGroupTree"
-                    tree-expand-strategy="all"
-                    tree-custom-expand-element
-                    tree-expands-storage-key="taskpage-taskgrouporanchor-tree-expands"
-                    #default="{ item: d, toggle, hasChildren, isExpand }"
-                    :change-parent-channel="() => `move-tasks`"
-                    :drag-datas="
-                      (d) => () => [
-                        ...(d.data.type === 'group'
-                          ? [
-                              {
-                                type: 'order-taskgroup' as const,
-                                datas: [d],
-                              },
-                            ]
-                          : [
-                              {
-                                type: 'order-taskanchor' as const,
-                                datas: [d],
-                              },
-                            ]),
-                        ...(d.data.type === 'anchor' &&
-                        taskStore.tasksDict[d.data.anchor?.task.id!]
-                          ? [
-                              {
-                                type: 'move-tasks' as const,
-                                datas: [
-                                  taskStore.tasksDict[
-                                    d.data.anchor?.task.id!
-                                  ]! as GetDragDataType<'move-tasks'>[number],
-                                ],
-                              },
-                              {
-                                type: 'order-task' as const,
-                                datas: [
-                                  taskStore.tasksDict[
-                                    d.data.anchor?.task.id!
-                                  ]! as GetDragDataType<'order-task'>[number],
-                                ],
-                              },
-                            ]
-                          : []),
-                      ]
-                    "
-                    :order-channel="
-                      (d) => [
-                        // 禁止这个移动
-                        ...(d.data.type === 'anchor'
-                          ? ['move-tasks' as const]
-                          : []),
-                        d.data.type === 'anchor'
-                          ? 'order-taskanchor'
-                          : 'order-taskgroup',
-                      ]
-                    "
-                    :change-parent-channel-data-adapter="
-                      (channel, d) => {
-                        if (channel === 'move-tasks') {
-                          return {
-                            dragData:
-                              d as GetDragDataType<'move-tasks'>[number],
-                          };
-                          // as TaskGroupOrAnchor;
-                        }
-                        return undefined;
-                      }
-                    "
-                    @change-parent="
-                      (dragData, droppedData) => {
-                        const draggingTask = dragData.dragData;
-                        const taskGroupOrAnchor = droppedData.data;
-                        if (draggingTask?.id && taskGroupOrAnchor) {
-                          if (
-                            taskGroupOrAnchor.type === 'group' &&
-                            taskGroupOrAnchor.group?.id
-                          ) {
-                            return taskStore.updateTasksParent([
-                              {
-                                id: draggingTask.id,
-                                parentId: null,
-                                groupId: taskGroupOrAnchor.group.id,
-                              },
-                            ]);
-                          } else if (
-                            taskGroupOrAnchor.type === 'anchor' &&
-                            taskGroupOrAnchor.anchor?.taskId &&
-                            taskGroupOrAnchor.anchor.taskGroupId
-                          ) {
-                            taskStore.updateTasksParent([
-                              {
-                                id: draggingTask.id,
-                                parentId: taskGroupOrAnchor.anchor.taskId,
-                                ...(draggingTask.groupId !==
-                                taskGroupOrAnchor.anchor.taskGroupId
-                                  ? {
-                                      groupId:
-                                        taskGroupOrAnchor.anchor.taskGroupId,
-                                    }
-                                  : {}),
-                              },
-                            ]);
-                          }
-                        }
-                      }
-                    "
-                    :order-channel-data-adapter="
-                      (channel, d) => {
-                        if (channel === 'move-tasks') {
-                          const data =
-                            d as GetDragDataType<'move-tasks'>[number];
-                          // 搜索anchor是否存在，如果有直接使用，没有则使用创建的数据结构
-                          return (
-                            traverse(taskGroupTree, (treeItem) => {
-                              if (
-                                treeItem.data.type === 'anchor' &&
-                                treeItem.data.anchor?.taskId === d.id
-                              ) {
-                                return treeItem;
-                              }
-                            }) ?? {
-                              dragData: data,
-                              // data: {
-                              //   type: 'anchor',
-                              //   anchor: {
-                              //     taskId: data.id,
-                              //   } satisfies Partial<TaskAnchor> as TaskGroupOrAnchor['anchor'],
-                              // } satisfies Partial<TaskGroupOrAnchor> as unknown as TaskGroupOrAnchor,
-                            }
-                          );
-                        } else if (
-                          ['order-taskgroup', 'order-taskanchor'].includes(
-                            channel
-                          )
-                        ) {
-                          const data =
-                            d as GetDragDataType<'order-taskgrouporanchor'>[number];
-                          return data;
-                        }
-                      }
-                    "
-                    @order="
-                      async (newDatas, dragDatas, _, ps) => {
-                        // 目前这一步是非事务性的
-
-                        // 如果有父亲更新，需要更新task的parentId
-                        // 获取自己的父亲、判断当前位置的父亲和自己是否有区别，有区别则更新
-                        if (ps.length) {
-                          // anchors
-                          await getWindow().Promise.all([
-                            ...dragDatas.map(async (d) => {
-                              // 如果有dragData，说明是任务拖拽过来的，类型是ReadOnlyTaskWithChildren
-                              const dragTask =
-                                d.dragData ?? d.data.anchor?.task;
-                              const dragTaskId = dragTask?.id;
-                              const myMeta = d.id
-                                ? getParentFromTree(d.id, taskGroupTree)
-                                : null;
-                              // 没有myParent，说明还没添加anchor
-                              let myParent = myMeta?.ps[myMeta?.ps.length - 1];
-                              if (!myParent) {
-                                const task = taskStore.tasksDict[dragTaskId!];
-                                if (task && dragTaskId) {
-                                  const newAnchor =
-                                    await taskAnchorStore.createTaskAnchor(
-                                      dragTaskId
-                                    );
-                                  const parent = _findParent(task);
-                                  const group = taskGroupTree.find(
-                                    (d) => d.id === task.groupId
-                                  );
-                                  if (!parent) {
-                                    myParent = group;
-                                  } else {
-                                    myParent = traverse(
-                                      group?.children || [],
-                                      (d) => (d.id === parent ? d : undefined)
-                                    );
-                                  }
-                                  // 将newDatas中的自己修改成anchor
-                                  const d = newDatas.find(
-                                    (d) => d.dragData?.id === dragTaskId
-                                  );
-                                  if (d) {
-                                    Object.assign(d, {
-                                      id: newAnchor.id,
-                                      data: {
-                                        id: newAnchor.id,
-                                        parentId: myParent?.data.id || null,
-                                        group: myParent?.data.group,
-                                        children: [],
-                                        type: 'anchor',
-                                        anchor: newAnchor,
-                                      },
-                                    });
-                                  }
-                                } else {
-                                  throw new Error(
-                                    'Cannot find task id from drag data'
-                                  );
-                                }
-                              }
-                              const toParent = ps[ps.length - 1];
-                              if (
-                                d.data.anchor?.taskId &&
-                                myParent &&
-                                myParent.data.id !== toParent.data.id
-                              ) {
-                                const shouldUpdateToParentId =
-                                  toParent.data.type === 'group'
-                                    ? null
-                                    : toParent.data.anchor?.taskId;
-                                //  can be null
-                                if (shouldUpdateToParentId !== undefined) {
-                                  await taskStore.updateTasksParent([
-                                    {
-                                      id: d.data.anchor.taskId,
-                                      parentId: shouldUpdateToParentId,
-                                      ...(toParent.data.group?.id &&
-                                      d.data.group?.id !==
-                                        toParent.data.group?.id
-                                        ? {
-                                            groupId: toParent.data.group!.id,
-                                          }
-                                        : {}),
-                                    },
-                                  ]);
-                                } else {
-                                  console.warn(
-                                    'Cannot find parentId to update for task',
-                                    d
-                                  );
-                                }
-                              }
-                            }),
-                          ]);
-                          if (newDatas.every((d) => d.data.type === 'anchor')) {
-                            // 检查所有anchor是否位于一个parentId下
-                            await taskAnchorStore.changeOrders(
-                              newDatas
-                                .filter((d) => !!d.data.anchor?.id)
-                                .map((d, i) => ({
-                                  id: d.data.anchor!.id!,
-                                  sortOrder: i,
-                                }))
-                            );
-                          }
-                        } else {
-                          // groups
-                          if (newDatas.every((d) => d.data.type === 'group')) {
-                            return taskGroupStore.changeOrders(
-                              newDatas.map((d) => d.data.group!)
-                            );
-                          }
-                        }
-                      }
-                    "
-                  >
-                    <!-- order-channel -->
-                    <!-- move-tasks 可以用于添加anchor -->
-                    <!-- order-taskgrouporanchor 用于调整grouporanchor的顺序 -->
-                    <Scope
-                      :d="{
-                        isSelected: finalId === d.id,
-                        ...(d.data.anchor
-                          ? {
-                              pendingLeaveTasksFactor:
-                                calculatePendingLeaveTasksFactor(
-                                  d.data.anchor.task.children.slice()
-                                ),
-                            }
-                          : d.data.group
-                            ? {
-                                pendingLeaveTasksFactor:
-                                  d.data.group!.totalFactor -
-                                  d.data.group!.finishedFactor,
-                              }
-                            : { pendingLeaveTasksFactor: 0 }),
-                        data: d.data,
-                      }"
-                      #default="{ isSelected, pendingLeaveTasksFactor, data }"
-                    >
-                      <Scope
-                        :d="{
-                          isShowGroupBadge: !!(
-                            (
-                              data.type === 'group' &&
-                              pendingLeaveTasksFactor > 0
-                            )
-                            // &&
-                            // data.group?.totalFactor !== pendingLeaveTasksFactor
-                          ),
-                          isShowAnchorBadge: !!(
-                            data.type === 'anchor' &&
-                            pendingLeaveTasksFactor > 0
-                          ),
+                  <HeightTransition>
+                    <div v-if="isShowGroups">
+                      <DraggableTree
+                        ref="groupDraggableTreeRef"
+                        :model-value="taskGroupTree"
+                        tree-expand-strategy="all"
+                        tree-custom-expand-element
+                        tree-expands-storage-key="taskpage-taskgrouporanchor-tree-expands"
+                        #default="{
+                          item: d,
+                          toggle,
+                          hasChildren,
+                          isExpand,
+                          index,
                         }"
-                        #default="{ isShowAnchorBadge, isShowGroupBadge }"
-                      >
-                        <SelectableTag
-                          @click="
-                            () => {
-                              currentId = d.id;
-                            }
-                          "
-                          :progress="
-                            data.type === 'group' && data.group
-                              ? (data.group.finishedFactor /
-                                  data.group.totalFactor) *
-                                100
-                              : data.type === 'anchor' && data.anchor
-                                ? (calculateFinishLeaveTasksFactor(
-                                    data.anchor.task.children.slice()
-                                  ) /
-                                    calculateTotalLeaveTasksFactorByTask(
-                                      data.anchor.task
-                                    )) *
-                                  100
-                                : undefined
-                          "
-                          :icon="
-                            data.type === 'group'
-                              ? (data.group?.icon ?? defaultTaskGroupIcon)
-                              : undefined
-                          "
-                          :hue="data.group?.color"
-                          :selected="isSelected"
-                          :title="data.anchor?.task.content ?? data.group?.name"
-                          :content="
-                            data.type === 'group' ? data.group?.description : ''
-                          "
-                          :menus="
-                            data.type === 'group' && data.group
+                        :change-parent-channel="() => `move-tasks`"
+                        :drag-datas="
+                          (d) => () => [
+                            ...(d.data.type === 'group'
                               ? [
                                   {
-                                    name: $t('edit'),
-                                    icon: EditOutlined,
-                                    click: () => {
-                                      return dialogs
-                                        .EditTaskGroupDialog({
-                                          taskGroup: d.data.group,
-                                        })
-                                        .finishPromise((g) => {
-                                          if (g) {
-                                            return taskGroupStore.updateTaskGroupById(
-                                              data.group!.id,
-                                              g
-                                            );
-                                          }
-                                        });
-                                    },
-                                  },
-                                  {
-                                    name: $t('archive'),
-                                    icon: FolderOutlined,
-                                    click: () => {
-                                      return taskGroupStore.archiveTaskGroup(
-                                        data.group!.id
-                                      );
-                                    },
-                                  },
-                                  {
-                                    name: $t('delete'),
-                                    icon: DeleteOutlined,
-                                    danger: true,
-                                    click: () => {
-                                      return dialogs
-                                        .ConfirmDialog({
-                                          content: $t('deleteTaskGroupConfirm'),
-                                        })
-                                        .finishPromise(() => {
-                                          return taskGroupStore.deleteTaskGroupById(
-                                            data.group!.id
-                                          );
-                                        });
-                                    },
+                                    type: 'order-taskgroup' as const,
+                                    datas: [d],
                                   },
                                 ]
-                              : data.anchor
-                                ? [
-                                    {
-                                      icon: DeleteOutlined,
-                                      danger: true,
-                                      name: $t('removeAnchor'),
-                                      click: () =>
-                                        taskAnchorStore.deleteTaskAnchorByTaskId(
-                                          data.anchor!.taskId
-                                        ),
-                                    },
-                                  ]
-                                : []
-                          "
-                        >
-                          <template
-                            #title-suffix
-                            v-if="isShowAnchorBadge || isShowGroupBadge"
-                          >
-                            <Badge
-                              :invert="isSelected"
-                              :value="` ${data.type === 'group' && data.group?.totalFactor ? `${(((data.group.totalFactor - pendingLeaveTasksFactor!) / data.group.totalFactor) * 100).toFixed(1)} %` : `${pendingLeaveTasksFactor!}`}`"
-                              :hue="data.group?.color"
-                            >
-                            </Badge>
-                          </template>
-                          <template #title-prefix v-if="hasChildren">
-                            <ExpandIcon
-                              :is-expand
-                              :no-children="!hasChildren"
-                              @click.stop="
-                                (e: GlobalTypes['MouseEvent']) => {
-                                  if (e.ctrlKey || e.metaKey) {
-                                    toggle({
-                                      deep: true,
-                                    });
-                                  } else {
-                                    toggle();
+                              : [
+                                  {
+                                    type: 'order-taskanchor' as const,
+                                    datas: [d],
+                                  },
+                                ]),
+                            ...(d.data.type === 'anchor' &&
+                            taskStore.tasksDict[d.data.anchor?.task.id!]
+                              ? [
+                                  {
+                                    type: 'move-tasks' as const,
+                                    datas: [
+                                      taskStore.tasksDict[
+                                        d.data.anchor?.task.id!
+                                      ]! as GetDragDataType<'move-tasks'>[number],
+                                    ],
+                                  },
+                                  {
+                                    type: 'order-task' as const,
+                                    datas: [
+                                      taskStore.tasksDict[
+                                        d.data.anchor?.task.id!
+                                      ]! as GetDragDataType<'order-task'>[number],
+                                    ],
+                                  },
+                                ]
+                              : []),
+                          ]
+                        "
+                        :order-channel="
+                          (d) => [
+                            // 禁止这个移动
+                            ...(d.data.type === 'anchor'
+                              ? ['move-tasks' as const]
+                              : []),
+                            d.data.type === 'anchor'
+                              ? 'order-taskanchor'
+                              : 'order-taskgroup',
+                          ]
+                        "
+                        :change-parent-channel-data-adapter="
+                          (channel, d) => {
+                            if (channel === 'move-tasks') {
+                              return {
+                                dragData:
+                                  d as GetDragDataType<'move-tasks'>[number],
+                              };
+                              // as TaskGroupOrAnchor;
+                            }
+                            return undefined;
+                          }
+                        "
+                        @change-parent="
+                          (dragData, droppedData) => {
+                            const draggingTask = dragData.dragData;
+                            const taskGroupOrAnchor = droppedData.data;
+                            if (draggingTask?.id && taskGroupOrAnchor) {
+                              if (
+                                taskGroupOrAnchor.type === 'group' &&
+                                taskGroupOrAnchor.group?.id
+                              ) {
+                                return taskStore.updateTasksParent([
+                                  {
+                                    id: draggingTask.id,
+                                    parentId: null,
+                                    groupId: taskGroupOrAnchor.group.id,
+                                  },
+                                ]);
+                              } else if (
+                                taskGroupOrAnchor.type === 'anchor' &&
+                                taskGroupOrAnchor.anchor?.taskId &&
+                                taskGroupOrAnchor.anchor.taskGroupId
+                              ) {
+                                taskStore.updateTasksParent([
+                                  {
+                                    id: draggingTask.id,
+                                    parentId: taskGroupOrAnchor.anchor.taskId,
+                                    ...(draggingTask.groupId !==
+                                    taskGroupOrAnchor.anchor.taskGroupId
+                                      ? {
+                                          groupId:
+                                            taskGroupOrAnchor.anchor
+                                              .taskGroupId,
+                                        }
+                                      : {}),
+                                  },
+                                ]);
+                              }
+                            }
+                          }
+                        "
+                        :order-channel-data-adapter="
+                          (channel, d) => {
+                            if (channel === 'move-tasks') {
+                              const data =
+                                d as GetDragDataType<'move-tasks'>[number];
+                              // 搜索anchor是否存在，如果有直接使用，没有则使用创建的数据结构
+                              return (
+                                traverse(taskGroupTree, (treeItem) => {
+                                  if (
+                                    treeItem.data.type === 'anchor' &&
+                                    treeItem.data.anchor?.taskId === d.id
+                                  ) {
+                                    return treeItem;
                                   }
+                                }) ?? {
+                                  dragData: data,
+                                  // data: {
+                                  //   type: 'anchor',
+                                  //   anchor: {
+                                  //     taskId: data.id,
+                                  //   } satisfies Partial<TaskAnchor> as TaskGroupOrAnchor['anchor'],
+                                  // } satisfies Partial<TaskGroupOrAnchor> as unknown as TaskGroupOrAnchor,
+                                }
+                              );
+                            } else if (
+                              ['order-taskgroup', 'order-taskanchor'].includes(
+                                channel
+                              )
+                            ) {
+                              const data =
+                                d as GetDragDataType<'order-taskgrouporanchor'>[number];
+                              return data;
+                            }
+                          }
+                        "
+                        @order="
+                          async (newDatas, dragDatas, _, ps) => {
+                            // 目前这一步是非事务性的
+
+                            // 如果有父亲更新，需要更新task的parentId
+                            // 获取自己的父亲、判断当前位置的父亲和自己是否有区别，有区别则更新
+                            if (ps.length) {
+                              // anchors
+                              await getWindow().Promise.all([
+                                ...dragDatas.map(async (d) => {
+                                  // 如果有dragData，说明是任务拖拽过来的，类型是ReadOnlyTaskWithChildren
+                                  const dragTask =
+                                    d.dragData ?? d.data.anchor?.task;
+                                  const dragTaskId = dragTask?.id;
+                                  const myMeta = d.id
+                                    ? getParentFromTree(d.id, taskGroupTree)
+                                    : null;
+                                  // 没有myParent，说明还没添加anchor
+                                  let myParent =
+                                    myMeta?.ps[myMeta?.ps.length - 1];
+                                  if (!myParent) {
+                                    const task =
+                                      taskStore.tasksDict[dragTaskId!];
+                                    if (task && dragTaskId) {
+                                      const newAnchor =
+                                        await taskAnchorStore.createTaskAnchor(
+                                          dragTaskId
+                                        );
+                                      const parent = _findParent(task);
+                                      const group = taskGroupTree.find(
+                                        (d) => d.id === task.groupId
+                                      );
+                                      if (!parent) {
+                                        myParent = group;
+                                      } else {
+                                        myParent = traverse(
+                                          group?.children || [],
+                                          (d) =>
+                                            d.id === parent ? d : undefined
+                                        );
+                                      }
+                                      // 将newDatas中的自己修改成anchor
+                                      const d = newDatas.find(
+                                        (d) => d.dragData?.id === dragTaskId
+                                      );
+                                      if (d) {
+                                        Object.assign(d, {
+                                          id: newAnchor.id,
+                                          data: {
+                                            id: newAnchor.id,
+                                            parentId: myParent?.data.id || null,
+                                            group: myParent?.data.group,
+                                            children: [],
+                                            type: 'anchor',
+                                            anchor: newAnchor,
+                                          },
+                                        });
+                                      }
+                                    } else {
+                                      throw new Error(
+                                        'Cannot find task id from drag data'
+                                      );
+                                    }
+                                  }
+                                  const toParent = ps[ps.length - 1];
+                                  if (
+                                    d.data.anchor?.taskId &&
+                                    myParent &&
+                                    myParent.data.id !== toParent.data.id
+                                  ) {
+                                    const shouldUpdateToParentId =
+                                      toParent.data.type === 'group'
+                                        ? null
+                                        : toParent.data.anchor?.taskId;
+                                    //  can be null
+                                    if (shouldUpdateToParentId !== undefined) {
+                                      await taskStore.updateTasksParent([
+                                        {
+                                          id: d.data.anchor.taskId,
+                                          parentId: shouldUpdateToParentId,
+                                          ...(toParent.data.group?.id &&
+                                          d.data.group?.id !==
+                                            toParent.data.group?.id
+                                            ? {
+                                                groupId:
+                                                  toParent.data.group!.id,
+                                              }
+                                            : {}),
+                                        },
+                                      ]);
+                                    } else {
+                                      console.warn(
+                                        'Cannot find parentId to update for task',
+                                        d
+                                      );
+                                    }
+                                  }
+                                }),
+                              ]);
+                              if (
+                                newDatas.every((d) => d.data.type === 'anchor')
+                              ) {
+                                // 检查所有anchor是否位于一个parentId下
+                                await taskAnchorStore.changeOrders(
+                                  newDatas
+                                    .filter((d) => !!d.data.anchor?.id)
+                                    .map((d, i) => ({
+                                      id: d.data.anchor!.id!,
+                                      sortOrder: i,
+                                    }))
+                                );
+                              }
+                            } else {
+                              // groups
+                              if (
+                                newDatas.every((d) => d.data.type === 'group')
+                              ) {
+                                return taskGroupStore.changeOrders(
+                                  newDatas.map((d) => d.data.group!)
+                                );
+                              }
+                            }
+                          }
+                        "
+                      >
+                        <!-- order-channel -->
+                        <!-- move-tasks 可以用于添加anchor -->
+                        <!-- order-taskgrouporanchor 用于调整grouporanchor的顺序 -->
+                        <Scope
+                          :d="{
+                            isSelected: finalId === d.id,
+                            ...(d.data.anchor
+                              ? {
+                                  pendingLeaveTasksFactor:
+                                    calculatePendingLeaveTasksFactor(
+                                      d.data.anchor.task.children.slice()
+                                    ),
+                                }
+                              : d.data.group
+                                ? {
+                                    pendingLeaveTasksFactor:
+                                      d.data.group!.totalFactor -
+                                      d.data.group!.finishedFactor,
+                                  }
+                                : { pendingLeaveTasksFactor: 0 }),
+                            data: d.data,
+                          }"
+                          #default="{
+                            isSelected,
+                            pendingLeaveTasksFactor,
+                            data,
+                          }"
+                        >
+                          <Scope
+                            :d="{
+                              isShowGroupBadge: !!(
+                                (
+                                  data.type === 'group' &&
+                                  pendingLeaveTasksFactor > 0
+                                )
+                                // &&
+                                // data.group?.totalFactor !== pendingLeaveTasksFactor
+                              ),
+                              isShowAnchorBadge: !!(
+                                data.type === 'anchor' &&
+                                pendingLeaveTasksFactor > 0
+                              ),
+                            }"
+                            #default="{ isShowAnchorBadge, isShowGroupBadge }"
+                          >
+                            <SelectableTag
+                              v-motion
+                              :initial="{
+                                opacity: 0,
+                                x: motionTranslateX,
+                              }"
+                              :enter="{
+                                opacity: 1,
+                                x: 0,
+                                transition: {
+                                  delay: motionDelay(index),
+                                },
+                              }"
+                              @click="
+                                () => {
+                                  currentId = d.id;
                                 }
                               "
+                              :progress="
+                                data.type === 'group' && data.group
+                                  ? (data.group.finishedFactor /
+                                      data.group.totalFactor) *
+                                    100
+                                  : data.type === 'anchor' && data.anchor
+                                    ? (calculateFinishLeaveTasksFactor(
+                                        data.anchor.task.children.slice()
+                                      ) /
+                                        calculateTotalLeaveTasksFactorByTask(
+                                          data.anchor.task
+                                        )) *
+                                      100
+                                    : undefined
+                              "
+                              :icon="
+                                data.type === 'group'
+                                  ? (data.group?.icon ?? defaultTaskGroupIcon)
+                                  : undefined
+                              "
+                              :hue="data.group?.color"
+                              :selected="isSelected"
+                              :title="
+                                data.anchor?.task.content ?? data.group?.name
+                              "
+                              :content="
+                                data.type === 'group'
+                                  ? data.group?.description
+                                  : ''
+                              "
+                              :menus="
+                                data.type === 'group' && data.group
+                                  ? [
+                                      {
+                                        name: $t('edit'),
+                                        icon: EditOutlined,
+                                        click: () => {
+                                          return dialogs
+                                            .EditTaskGroupDialog({
+                                              taskGroup: d.data.group,
+                                            })
+                                            .finishPromise((g) => {
+                                              if (g) {
+                                                return taskGroupStore.updateTaskGroupById(
+                                                  data.group!.id,
+                                                  g
+                                                );
+                                              }
+                                            });
+                                        },
+                                      },
+                                      {
+                                        name: $t('archive'),
+                                        icon: FolderOutlined,
+                                        click: () => {
+                                          return taskGroupStore.archiveTaskGroup(
+                                            data.group!.id
+                                          );
+                                        },
+                                      },
+                                      {
+                                        name: $t('delete'),
+                                        icon: DeleteOutlined,
+                                        danger: true,
+                                        click: () => {
+                                          return dialogs
+                                            .ConfirmDialog({
+                                              content: $t(
+                                                'deleteTaskGroupConfirm'
+                                              ),
+                                            })
+                                            .finishPromise(() => {
+                                              return taskGroupStore.deleteTaskGroupById(
+                                                data.group!.id
+                                              );
+                                            });
+                                        },
+                                      },
+                                    ]
+                                  : data.anchor
+                                    ? [
+                                        {
+                                          icon: DeleteOutlined,
+                                          danger: true,
+                                          name: $t('removeAnchor'),
+                                          click: () =>
+                                            taskAnchorStore.deleteTaskAnchorByTaskId(
+                                              data.anchor!.taskId
+                                            ),
+                                        },
+                                      ]
+                                    : []
+                              "
                             >
-                            </ExpandIcon>
-                          </template>
-                        </SelectableTag>
-                      </Scope>
-                    </Scope>
-                  </DraggableTree>
+                              <template
+                                #title-suffix
+                                v-if="isShowAnchorBadge || isShowGroupBadge"
+                              >
+                                <Badge
+                                  :invert="isSelected"
+                                  :value="` ${data.type === 'group' && data.group?.totalFactor ? `${(((data.group.totalFactor - pendingLeaveTasksFactor!) / data.group.totalFactor) * 100).toFixed(1)} %` : `${pendingLeaveTasksFactor!}`}`"
+                                  :hue="data.group?.color"
+                                >
+                                </Badge>
+                              </template>
+                              <template #title-prefix v-if="hasChildren">
+                                <ExpandIcon
+                                  :is-expand
+                                  :no-children="!hasChildren"
+                                  @click.stop="
+                                    (e: GlobalTypes['MouseEvent']) => {
+                                      if (e.ctrlKey || e.metaKey) {
+                                        toggle({
+                                          deep: true,
+                                        });
+                                      } else {
+                                        toggle();
+                                      }
+                                    }
+                                  "
+                                >
+                                </ExpandIcon>
+                              </template>
+                            </SelectableTag>
+                          </Scope>
+                        </Scope>
+                      </DraggableTree>
+                    </div>
+                  </HeightTransition>
                 </Scrollbar>
               </div>
             </Scrollbar>
@@ -1029,6 +1125,7 @@ import type {
   protocols,
 } from "@/protocol";
 import {
+  BgColorsOutlined,
   CalendarOutlined,
   CaretRightOutlined,
   CloseOutlined,
@@ -1076,16 +1173,21 @@ import {
   motionTranslateX,
   sidebarPaddingX,
   taskViewPresets,
+  themeHSL,
 } from "@/const";
 import { backend } from "@/utils/backend";
 import { dayjs } from "@/utils/time";
 import { buildTree, mapTree, traverse } from "@/utils/traverse";
 import { getWindow, GlobalTypes } from "@/utils/window";
-import { DraggableTreeData } from "@/components/tree/DraggableTree.vue";
+import DraggableTree, {
+  DraggableTreeData,
+} from "@/components/tree/DraggableTree.vue";
 import { getParentFromTree } from "@/components/Loop.vue";
 import { parentPort } from "worker_threads";
 import { pending } from "@tauri-apps/plugin-notification";
+import { ComponentExposed } from "vue-component-type-helpers";
 
+const groupDraggableTreeRef = ref<ComponentExposed<typeof DraggableTree>>();
 const inputTaskContent = ref("");
 
 const fetchDataStore = useFetchDataStore();
@@ -1132,7 +1234,7 @@ const taskGroupTree = computed<
   // taskAnchor可能隔了一代，所以需要从taskStore找到自己的roots
   return mapTree(
     buildTree(
-      taskGroups.value
+      taskGroupStore.nonArchivedTaskGroups
         .map(
           (d) =>
             ({

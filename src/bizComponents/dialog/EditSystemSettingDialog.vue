@@ -72,7 +72,7 @@
                   "
                 ></Select>
               </div>
-              <!-- <div class="v gap-2">
+              <div class="v gap-2">
                 <div class="font-semibold">{{ $t("color") }}</div>
                 <div class="h items-center gap-2">
                   <Checkbox
@@ -96,7 +96,7 @@
                   ></Switch>
                   <div>{{ $t("darkMode") }}</div>
                 </div>
-              </div> -->
+              </div>
             </div>
           </div>
           <div v-if="currentTab === 'database'" class="v gap-2">

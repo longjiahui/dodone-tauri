@@ -197,5 +197,8 @@
   "batchSetPropertiesConfirm": "确认批量设置当前列表显示的所有任务的属性吗，修改后不可恢复。",
   "batchUnsetTarget": "批量取消目标",
   "batchDeleteTasks": "批量删除任务",
-  "batchMoveTasks": "批量移动任务"
+  "batchMoveTasks": "批量移动任务",
+
+  "colorPreset": "颜色预设",
+  "rainbow": "彩虹"
 }

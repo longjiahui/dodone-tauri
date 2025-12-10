@@ -1,5 +1,5 @@
 <template>
-  <div class="v">
+  <div class="v overflow-hidden">
     <DefineBizDropStyle
       #default="{ setRef, isDroppingActive, isDragging, isTop }"
     >

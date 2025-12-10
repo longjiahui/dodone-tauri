@@ -36,6 +36,7 @@
               isExpand,
               index,
               datas,
+              layer,
             }"
           ></slot>
         </div>
@@ -144,5 +145,28 @@ onMounted(() => {
       immediate: true,
     }
   );
+});
+
+defineExpose({
+  toggles: (keys: string[], toState: boolean, deep = false) => {
+    keys.forEach((k) => {
+      expands.value[k] = { isExpand: toState };
+      if (deep) {
+        const data = loopDatasDict.value[k];
+        if (data?.children?.length) {
+          traverse(data.children, (d) => {
+            expands.value[d.id] = { isExpand: toState };
+          });
+        }
+      }
+    });
+  },
+  toggleAll: (toState: boolean) => {
+    Object.keys(loopDatasDict.value).forEach((k) => {
+      console.debug("hello world toggle all", toState);
+      expands.value[k] = { isExpand: toState };
+    });
+    console.debug(expands.value);
+  },
 });
 </script>

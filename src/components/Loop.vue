@@ -26,49 +26,7 @@
       ></slot>
       <!-- 如果不触发transition 会有问题，不能展开时可以检查一下是否触发transitionend -->
       <!-- 这里不使用 overflow-hidden 是因为 table使用sticky做冻结列的时候会因为overflow-hidden而不生效 -->
-      <transition
-        :css="false"
-        @enter="
-          (el, done) => {
-            const htmlEl = el as GlobalTypes['HTMLElement'];
-            gsap
-              .fromTo(
-                htmlEl,
-                {
-                  height: 0,
-                  opacity: 0,
-                },
-                {
-                  opacity: 1,
-                  height: htmlEl.scrollHeight,
-                  duration,
-                  ease: 'power3.out',
-                }
-              )
-              .then(() => {
-                htmlEl.style.height = 'auto';
-                done();
-              });
-          }
-        "
-        @leave="
-          (el, done) => {
-            const htmlEl = el as GlobalTypes['HTMLElement'];
-            gsap
-              .fromTo(
-                htmlEl,
-                { opacity: 1, height: htmlEl.scrollHeight },
-                {
-                  height: 0,
-                  opacity: 0,
-                  duration,
-                  ease: 'power3.out',
-                }
-              )
-              .then(() => done());
-          }
-        "
-      >
+      <HeightTransition>
         <!-- @leave="(el, done) => $motions.subLoop.leave(done)" -->
         <!-- v-motion="subLoop" -->
         <div v-if="expands[item.id]?.isExpand">
@@ -98,7 +56,7 @@
             </template>
           </Loop>
         </div>
-      </transition>
+      </HeightTransition>
       <!-- </transition> -->
     </div>
   </div>
@@ -139,9 +97,6 @@ export function getParentFromTree<D extends LoopData<any>>(
 import { traverse, traverseAsync } from "@/utils/traverse";
 import { GlobalTypes } from "@/utils/window";
 // import { traverseAsync } from "@/utils/traverse";
-
-import gsap from "gsap";
-const duration = ref(0.4);
 const subLoopRefs = ref<
   | {
       toggle: typeof toggle;

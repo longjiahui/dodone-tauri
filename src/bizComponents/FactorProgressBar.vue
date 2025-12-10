@@ -3,7 +3,7 @@
     <div
       :class="[
         'bg-[var(--theme-light-3)]',
-        'stretch relative h-1 shrink-0 overflow-auto rounded',
+        'stretch relative h-[4px] mx-2 mb-1 shrink-0 overflow-auto rounded',
       ]"
     >
       <!-- <span class="text-primary rounded bg-white px-1">
@@ -34,42 +34,42 @@
   </div>
 </template>
 <script setup lang="ts">
-import { defaultPrimaryHue, themeHSColorL, themeHSColorS } from "@/const"
-import { useTheme } from "@/utils/color"
+import { defaultPrimaryHue, themeHSColorL, themeHSColorS } from "@/const";
+import { useTheme } from "@/utils/color";
 
 const props = withDefaults(
   defineProps<{
-    finish?: number
-    total?: number
-    progress?: number
-    hideFinishTotal?: boolean
+    finish?: number;
+    total?: number;
+    progress?: number;
+    hideFinishTotal?: boolean;
 
-    hue?: string
-    s?: number
-    l?: number
+    hue?: string;
+    s?: number;
+    l?: number;
   }>(),
   {
     hue: defaultPrimaryHue,
     s: themeHSColorS,
     l: themeHSColorL,
-  },
-)
+  }
+);
 const showFinishTotal = computed(
-  () => !props.hideFinishTotal && props.finish != null && props.total != null,
-)
+  () => !props.hideFinishTotal && props.finish != null && props.total != null
+);
 const finalProgress = computed(() => {
   if (props.total && props.finish) {
-    return Math.max(0, Math.min(100, (props.finish! / props.total!) * 100))
+    return Math.max(0, Math.min(100, (props.finish! / props.total!) * 100));
   } else {
-    return Math.min(Math.max(0, +(props.progress ?? 0)), 100)
+    return Math.min(Math.max(0, +(props.progress ?? 0)), 100);
   }
-})
+});
 const theme = useTheme(
   computed(() => props.hue),
   computed(() => ({
     a: 1,
     s: props.s,
     l: props.l,
-  })),
-)
+  }))
+);
 </script>

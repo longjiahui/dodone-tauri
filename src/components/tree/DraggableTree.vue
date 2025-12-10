@@ -84,6 +84,7 @@
     </div>
   </Define>
   <Tree
+    ref="treeRef"
     class="overflow-hidden"
     :loop-datas="props.modelValue"
     v-if="props.modelValue.length > 0"
@@ -183,10 +184,10 @@ export interface DraggableTreeData<D, T> extends LoopData<D> {
 </script>
 <script setup lang="ts" generic="Data extends DraggableTreeData<any, any>">
 import { traverse, traverseSome } from "@/utils/traverse";
-import { ComponentProps } from "vue-component-type-helpers";
+import { ComponentExposed, ComponentProps } from "vue-component-type-helpers";
 import BizDrop from "@/bizComponents/drag/BizDrop.vue";
 import BizDrag from "@/bizComponents/drag/BizDrag.vue";
-import { TreeExpandStrategy } from "./Tree.vue";
+import Tree, { TreeExpandStrategy } from "./Tree.vue";
 import { DragDataType } from "@/bizComponents/drag/drag";
 import { LoopData } from "../Loop.vue";
 
@@ -232,6 +233,7 @@ defineEmits<{
   ): void;
   (e: "change-parent", dragData: Data, droppaedData: Data): void;
 }>();
+
 type D = DraggableTreeData<any, any>;
 const [Define, Template] = createReusableTemplate<{
   isTop: boolean;
@@ -240,4 +242,15 @@ const [Define, Template] = createReusableTemplate<{
   datas: D[];
   index: number;
 }>();
+
+type TreeType = ComponentExposed<typeof Tree>;
+const treeRef = ref<TreeType>();
+defineExpose({
+  toggles(...rest: Parameters<TreeType["toggles"]>) {
+    return treeRef.value?.toggles(...rest);
+  },
+  toggleAll(...rest: Parameters<TreeType["toggleAll"]>) {
+    return treeRef.value?.toggleAll(...rest);
+  },
+});
 </script>

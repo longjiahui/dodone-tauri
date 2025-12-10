@@ -79,6 +79,7 @@ declare module 'vue' {
     FilterOutlined: typeof import('@ant-design/icons-vue')['FilterOutlined']
     FloatingDropdown: typeof import('./components/dropdown/FloatingDropdown.vue')['default']
     GanttChart_copy: typeof import('./components/GanttChart/GanttChart_copy.vue')['default']
+    HeightTransition: typeof import('./components/transition/HeightTransition.vue')['default']
     HitBlockRaid: typeof import('./bizComponents/HitBlockRaid.vue')['default']
     HSLAHuePicker: typeof import('./components/HSLAHuePicker.vue')['default']
     Icon: typeof import('./bizComponents/icon/Icon.vue')['default']
