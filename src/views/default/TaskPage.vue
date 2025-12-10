@@ -1246,16 +1246,24 @@ const taskGroupTree = computed<
             }) satisfies TaskGroupOrAnchor as TaskGroupOrAnchor
         )
         .concat(
-          ...taskAnchors.value.map((d) => {
-            return {
-              id: d.id,
-              type: "anchor",
-              anchor: d,
-              group: taskGroupStore.taskGroupsDict[d.taskGroupId],
-              parentId: _findParent(d.task) || d.taskGroupId,
-              children: [],
-            } satisfies TaskGroupOrAnchor as TaskGroupOrAnchor;
-          })
+          ...taskAnchors.value
+            .filter((d) => {
+              // 过滤掉没有没有taskGroup的anchor，因为可能这个anchor所在的group被archived了
+              return (
+                d.taskGroupId &&
+                !taskGroupStore.taskGroupsDict[d.taskGroupId]?.isArchived
+              );
+            })
+            .map((d) => {
+              return {
+                id: d.id,
+                type: "anchor",
+                anchor: d,
+                group: taskGroupStore.taskGroupsDict[d.taskGroupId],
+                parentId: _findParent(d.task) || d.taskGroupId,
+                children: [],
+              } satisfies TaskGroupOrAnchor as TaskGroupOrAnchor;
+            })
         )
     ),
     (d) => ({
