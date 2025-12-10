@@ -15,6 +15,20 @@
         <!-- <ClickableIcon :icon="FolderOutlined"></ClickableIcon>
         <ClickableIcon :icon="RobotOutlined"></ClickableIcon> -->
         <ClickableIcon
+          :icon="FolderOutlined"
+          :tooltip="$t('taskGroup')"
+          :selected="isShowTaskGroups"
+          @click="isShowTaskGroups = !isShowTaskGroups"
+          placement="right"
+        ></ClickableIcon>
+        <ClickableIcon
+          :icon="UnorderedListOutlined"
+          :tooltip="$t('taskList')"
+          :selected="isShowTaskList"
+          @click="isShowTaskList = !isShowTaskList"
+          placement="right"
+        ></ClickableIcon>
+        <ClickableIcon
           @click="isShowCalendarView = !isShowCalendarView"
           :icon="TableOutlined"
           :selected="isShowCalendarView"
@@ -142,6 +156,10 @@
         class="h size-full items-stretch"
         v-if="taskGroups.length > 0"
         storage-key="task-page-sidebar-tasklist"
+        :disable1="!isShowTaskGroups"
+        :disable2="
+          !isShowTaskList && !isShowCalendarView && !isShowScheduleView
+        "
       >
         <template #1>
           <div
@@ -969,6 +987,7 @@
           <ResizeDiv
             initial-width="50%"
             storage-key="task-page-main-right"
+            :disable1="!isShowTaskList"
             :disable2="!isShowCalendarView && !isShowScheduleView"
           >
             <template #1>
@@ -1085,7 +1104,10 @@
           </ResizeDiv>
         </template>
       </ResizeDiv>
-      <div v-else class="h size-full items-center justify-center">
+      <div
+        v-if="taskGroups.length === 0"
+        class="h size-full items-center justify-center"
+      >
         <div class="v gap-4 max-w-80">
           <div class="text-md leading-multi">
             {{ $t("createTutorialDescription") }}
@@ -1128,17 +1150,20 @@ import {
   BgColorsOutlined,
   CalendarOutlined,
   CaretRightOutlined,
+  CheckOutlined,
   CloseOutlined,
   DeleteOutlined,
   EditOutlined,
   ExclamationCircleOutlined,
   FolderOutlined,
+  OrderedListOutlined,
   PlayCircleOutlined,
   PlusOutlined,
   ReloadOutlined,
   SettingOutlined,
   SmileOutlined,
   TableOutlined,
+  UnorderedListOutlined,
 } from "@ant-design/icons-vue";
 import { useTaskStore } from "@/store/task";
 import { useTaskAnchorStore } from "@/store/taskAnchor";
@@ -1293,6 +1318,14 @@ const treeTasksGroupByGroupId = computed(
   () => taskStore.treeTasksGroupByTaskGroupId
 );
 
+const isShowTaskList = useLocalStorage<boolean>(
+  "task-page-isShowTaskList",
+  true
+);
+const isShowTaskGroups = useLocalStorage<boolean>(
+  "task-page-isShowTaskGroups",
+  true
+);
 // type CalendarViewType = "calendar" | "Schedule"
 const isShowCalendarView = useLocalStorage<boolean>(
   "task-page-isShowCalendarView",
